@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { PDFFileService } from '../../services/pdffile-service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { Constants } from '../../models/constants';
 
 @Component({
 	selector: 'app-upload-pdfview',
@@ -21,7 +22,7 @@ export class UploadPDFView {
 			const file = input.files[0];
 
 			this.fileService.setFile(file)
-			this.router.navigate(["/edit-pdf"]);
+			this.router.navigate([Constants.EDIT_PDF_VIEW]);
 		}
 	}
 
@@ -40,14 +41,12 @@ export class UploadPDFView {
 			return;
 
 		this.showGlassySvg = false;
-		console.log("DragLeave")
 	}
 
 	//--------------------------------------------------------------------------------//
 	public onDragEnd(event: DragEvent) {
 		event.preventDefault();
 		this.showGlassySvg = false;
-		console.log("DragEnd")
 	}
 
 	//--------------------------------------------------------------------------------//

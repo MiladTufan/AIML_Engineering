@@ -1,0 +1,36 @@
+<div class="fixed h-12 flex items-center justify-left text-center top-[2%] z-10
+            translucentStyle  left-1/2 transform -translate-x-1/2 rounded-xl"
+            [@slideInOut]="this.textEditService.getCurrentTextStyleEditor().isCollapsed ? 'out' : 'in'"
+            id="colorBar">
+    <span id="text">Text</span>
+    <div class="vertical_line"></div>
+
+    <div *ngFor="let color of colors"
+        class="color-container"
+        [ngClass]="{ 'color-white': color === '#FFFFFF' }"
+        [style.background-color] = "color"
+        [title] = "color"
+        (click)="onColorSelect(color)">
+    </div>
+
+  <!-- <div class="color-container" style="background-color: #000000;" title="Black" (click)="onColorSelect(Black)"></div>
+  <div class="color-container" style="background-color: #8B0000;" title="Dark Red"></div>
+  <div class="color-container" style="background-color: #800000;" title="Maroon"></div>
+  <div class="color-container" style="background-color: #8B4513;" title="Saddle Brown"></div>
+  <div class="color-container" style="background-color: #FF8C00;" title="Dark Orange"></div>
+  <div class="color-container" style="background-color: #DAA520;" title="Goldenrod"></div>
+  <div class="color-container" style="background-color: #808000;" title="Olive"></div>
+  <div class="color-container" style="background-color: #228B22;" title="Forest Green"></div>
+  <div class="color-container" style="background-color: #008080;" title="Teal"></div>
+  <div class="color-container" style="background-color: #4682B4;" title="Steel Blue"></div>
+  <div class="color-container" style="background-color: #4169E1;" title="Royal Blue"></div>
+  <div class="color-container" style="background-color: #4B0082;" title="Indigo"></div>
+  <div class="color-container" style="background-color: #9400D3;" title="Dark Violet"></div>
+  <div class="color-container" style="background-color: #BA55D3;" title="Medium Orchid"></div>
+  <div class="color-container" style="background-color: #DDA0DD;" title="Plum"></div>
+  <div class="color-container" style="background-color: #708090;" title="Slate Gray"></div>
+  <div class="color-container" style="background-color: #778899;" title="Light Slate Gray"></div>
+  <div class="color-container" style="background-color: #D3D3D3;" title="Light Gray"></div>
+  <div class="color-container" style="background-color: #DCDCDC;" title="Gainsboro"></div>
+  <div class="color-container" style="background-color: #FFFFFF; border: 1px solid #999; margin-right:7px" title="White" (click)="onColorSelect(White)"></div> -->
+</div>

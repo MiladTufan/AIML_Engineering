@@ -1,2 +1,49 @@
 /* You can add global styles to this file, and also import other style files */
 @import "tailwindcss";
+
+
+@theme {
+  --font-standard: Inter
+}
+
+body {
+  background-color: var(--main_bg_color);
+  overflow: hidden;
+}
+
+
+:root {
+  --btn_hover_color: #F3F5F7 ;
+  --btn_border_color: #D9DDE1;
+  --main_bg_color: #F9F9F9;
+}
+
+.hiddenCanvasElement {
+  display: none !important;
+  /* or */
+  visibility: hidden !important;
+  position: absolute;
+  left: -9999px;
+}
+
+/* .asdasdd {
+  @apply absolute w-[100px] h-[30px] border border-dashed border-gray-700 px-2 py-1 bg-transparent cursor-move flex justify-left items-left rounded-md text-sm text-gray-800 shadow-sm hover:border-gray-900 hover:shadow-md transition-all
+} */
+
+.normalTailwindBtn {
+  @apply bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow cursor-pointer;
+}
+
+.translucentStyle {
+  @apply bg-white/10 backdrop-blur-lg  shadow-lg border border-gray-300/40
+}
+
+.toolbarBtnStyle {
+  @apply flex items-center rounded-md text-sm font-medium text-gray-800 bg-transparent 
+       hover:bg-white/100 backdrop-blur-sm h-12 transition duration-200 ease-in-out cursor-pointer font-standard
+}
+
+
+.textBoxStyle {
+  @apply absolute flex rounded-md text-sm text-black
+}

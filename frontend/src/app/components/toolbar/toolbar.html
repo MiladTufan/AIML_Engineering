@@ -1,0 +1,33 @@
+<div class="fixed w-300 h-14 px-6 flex items-center justify-left text-center top-[2%] z-50
+            translucentStyle left-[49%] transform -translate-x-[49%] rounded-2xl">
+
+    <!-- Insert TextBoxCreate Button -->
+    <button class="toolbarBtnStyle px-4 py-1" #TextButtonContainer title="Enter Text"
+        (click)="OnTextBtnClicked($event)">
+
+        <span id="textBtnText" class=>Text</span>
+        <div class="flex w-[20px] h-[20px] bg-black rounded-[5px] ml-[7px]"
+            [style.background-color]="textEditService.getCurrentTextStyleEditor().currentColor"
+            [ngStyle]="{ 'background-color': textEditService.getCurrentTextStyleEditor().currentColor }"
+            [ngClass]="{'borderedColorContainer': textEditService.getCurrentTextStyleEditor().currentColor === '#FFFFFF'}">
+        </div>
+    </button>
+
+    <!-- Vertical Line -->
+    <div class="w-[2px] h-[80%] bg-[var(--btn_border_color)] mx-[5px]"></div>
+
+    <!-- Insert Img Button -->
+    <button class="toolbarBtnStyle px-3 py-2" title="Paste Image" (click)="OnInsertImageBtnClicked($event)">
+        <img class="flex w-[22px] h-[22px]" src="/icons/paste_image.svg">
+    </button>
+
+    <!-- Vertical Line -->
+    <div class="w-[2px] h-[80%] bg-[var(--btn_border_color)] mx-[5px]"></div>
+
+    <!-- Insert Download Button -->
+    <button class="toolbarBtnStyle px-3 py-2 ml-auto" title="Download File" (click)="OnDownloadBtnClicked($event)">
+        <img class="flex w-[30px] h-[30px]" src="/icons/downloadIcon.svg">
+    </button>
+</div>
+
+<app-text-style-editor-component></app-text-style-editor-component>
