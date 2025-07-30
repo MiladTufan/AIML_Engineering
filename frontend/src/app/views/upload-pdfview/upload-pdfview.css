@@ -1,0 +1,31 @@
+
+.upload_area_container, .title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.upload_area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 1100px;
+    height: auto;
+    z-index: 2;
+}
+
+.glassyOverlay {
+    position: absolute; /* 👈 KEY FIX */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 1100px;
+    height: auto;
+    z-index: 5;
+}
+
+#upload_btn_default, #upload_btn_hover{
+    width: 500px;
+    height: auto;
+}
