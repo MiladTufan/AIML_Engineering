@@ -1,5 +1,5 @@
 
-<img src="/icons/uploadAreaTitle.svg" width="400px" class="mx-auto w-64 mt-2 mb-2 "/>
+<img src="/assets/icons/uploadAreaTitle.svg" width="400px" class="mx-auto w-64 mt-2 mb-2 "/>
 
 <div class="upload_area_container">
 
@@ -16,7 +16,7 @@
         (dragend)="onDragEnd($event)"
     >
 
-    <img *ngIf="showGlassySvg" src="/icons/glassy_overlay.svg" width="1920" height="1080" class="glassyOverlay"/>
+    <img *ngIf="showGlassySvg" src="/assets/icons/glassy_overlay.svg" width="1920" height="1080" class="glassyOverlay"/>
         <svg width="2600" height="1080" viewBox="0 0 2600 1080" fill="none" xmlns="http://www.w3.org/2000/svg"  
             [ngClass]="showGlassySvg ? 'opacity-15' : 'opacity-100'"
             class="upload_area">

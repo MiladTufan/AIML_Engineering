@@ -1,14 +1,6 @@
 
-<app-toolbar (textBoxClicked)="startDraggingTextBox()"></app-toolbar>
-<div class="w-screen h-screen bg-gradient-to-br to-gray-300 from-gray-150 relative" (click)="onMouseClick($event)">
-    <ngx-extended-pdf-viewer class="absolute top-[8%] w-full h-full overflow-auto z-0 pt-2" #pdfViewer
-            [src]="this.pdfSrc()"
-            [backgroundColor]="'transparent'"
-            [showToolbar]="false"
-            [handTool]="false"
-            [(page)]="pageNum"
-            [showPageLabel]="true">
-    </ngx-extended-pdf-viewer>
+<app-toolbar-component></app-toolbar-component>
+<app-pdf-viewer-component #pdfViewer
+    class="w-screen flex flex-col items-center justify-center border-red-500 mt-16 px-4"
 
-    <ng-container #dynamicContainer ></ng-container>
-</div>
+></app-pdf-viewer-component>

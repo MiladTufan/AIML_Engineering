@@ -43,7 +43,6 @@ body {
        hover:bg-white/100 backdrop-blur-sm h-12 transition duration-200 ease-in-out cursor-pointer font-standard
 }
 
-
 .textBoxStyle {
   @apply absolute flex rounded-md text-sm text-black
 }

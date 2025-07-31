@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { TextStyleEditorComponent } from './text-style-editor-component';
+import { PdfViewerComponent } from './pdf-viewer-component';
 
-describe('TextStyleEditorComponent', () => {
-  let component: TextStyleEditorComponent;
-  let fixture: ComponentFixture<TextStyleEditorComponent>;
+describe('PdfViewerComponent', () => {
+  let component: PdfViewerComponent;
+  let fixture: ComponentFixture<PdfViewerComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TextStyleEditorComponent]
+      imports: [PdfViewerComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(TextStyleEditorComponent);
+    fixture = TestBed.createComponent(PdfViewerComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -1,18 +1,16 @@
-import { Component, Output } from '@angular/core';
+import { Component } from '@angular/core';
 import { TextEditService } from '../../../services/text-edit-service';
-import { EventEmitter } from 'stream';
 import { CommonModule } from '@angular/common';
 import { SlideInOutToolbarExtension } from '../../../animations/animations';
 
 @Component({
-	selector: 'app-text-style-editor-component',
+	selector: 'app-text-style-bar',
 	imports: [CommonModule],
-	templateUrl: './text-style-editor-component.html',
-	styleUrl: './text-style-editor-component.css',
+	templateUrl: './text-style-bar.html',
+	styleUrl: './text-style-bar.css',
 	animations: [SlideInOutToolbarExtension]
 })
-
-export class TextStyleEditorComponent {
+export class TextStyleBar {
 	constructor(public textEditService: TextEditService) { }
 
 	isCollapsed: Boolean = true;
@@ -35,4 +33,5 @@ export class TextStyleEditorComponent {
 	collapseColorPallet() {
 		this.textEditService.getCurrentTextStyleEditor().isCollapsed = true;
 	}
+
 }

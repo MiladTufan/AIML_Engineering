@@ -1,9 +1,0 @@
-.borderedColorContainer {
-    display: flex;
-    width: 20px;
-    height: 20px;
-    background-color: black;
-    border-radius: 5px;
-    margin-left: 7px;
-    border: 1px solid #999;
-}

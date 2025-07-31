@@ -18,16 +18,21 @@
 
     <!-- Insert Img Button -->
     <button class="toolbarBtnStyle px-3 py-2" title="Paste Image" (click)="OnInsertImageBtnClicked($event)">
-        <img class="flex w-[22px] h-[22px]" src="/icons/paste_image.svg">
+        <img class="flex w-[22px] h-[22px]" src="/assets/icons/paste_image.svg">
     </button>
+
+    <span class="absolute left-1/2 transform -translate-x-1/2 text-center font-medium">
+       <input type="number" [(ngModel)]="currentPage" (ngModelChange)="onPageChange($event)" class="w-6 border-none outline-none hover:border hover:border-gray-400 hover:rounded"
+       />  / {{ this.pdfViewerService.totalPages }}
+    </span>
 
     <!-- Vertical Line -->
     <div class="w-[2px] h-[80%] bg-[var(--btn_border_color)] mx-[5px]"></div>
 
     <!-- Insert Download Button -->
     <button class="toolbarBtnStyle px-3 py-2 ml-auto" title="Download File" (click)="OnDownloadBtnClicked($event)">
-        <img class="flex w-[30px] h-[30px]" src="/icons/downloadIcon.svg">
+        <img class="flex w-[30px] h-[30px]" src="/assets/icons/downloadIcon.svg">
     </button>
 </div>
 
-<app-text-style-editor-component></app-text-style-editor-component>
+<app-text-style-bar></app-text-style-bar>

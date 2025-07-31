@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
-import { PDFFileService } from '../../services/pdffile-service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Constants } from '../../models/constants';
+import { PDFFileService } from '../../services/pdffile-service';
 
 @Component({
 	selector: 'app-upload-pdfview',
