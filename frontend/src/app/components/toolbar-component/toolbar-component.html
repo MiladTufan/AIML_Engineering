@@ -22,8 +22,9 @@
     </button>
 
     <span class="absolute left-1/2 transform -translate-x-1/2 text-center font-medium">
-       <input type="number" [(ngModel)]="currentPage" (ngModelChange)="onPageChange($event)" class="w-6 border-none outline-none hover:border hover:border-gray-400 hover:rounded"
-       />  / {{ this.pdfViewerService.totalPages }}
+       <input type="text" [(ngModel)]="currentPage" (ngModelChange)="onPageChange($event)" 
+              class="w-6  outline-none hover:border hover:border-gray-400 hover:rounded text-center"
+       />/ {{ this.pdfViewerService.totalPages }}
     </span>
 
     <!-- Vertical Line -->
