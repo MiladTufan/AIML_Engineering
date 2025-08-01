@@ -24,12 +24,14 @@ export class PdfViewerComponent {
 	private devicePixelRatio = window.devicePixelRatio || 1;
 	private scale = 1.0 * this.devicePixelRatio;
 	private pageNumberSub!: Subscription;
-	private visiblePages = new BehaviorSubject<Set<number>>(new Set());
+	private visiblePages = new Set<number>();
 	private renderedPages = new Set<number>();
 	private alreadyRanObserver = false;
 
 	private minScale = 0.6
 	private maxScale = 2.3
+
+	private observer: any;
 
 	//=================================================== Public variables ==================================================
 	public totalPages: number = 0;
@@ -44,18 +46,6 @@ export class PdfViewerComponent {
 	constructor(private fileService: PDFFileService, private pdfViewerService: PDFViewerService, private textEditService: TextEditService) { }
 
 	//==================================================== Inputs ===========================================================
-
-	appendVisibilePages(pageNumber: number) {
-		const currentVals = this.visiblePages.getValue()
-		currentVals.add(pageNumber)
-		this.visiblePages.next(new Set(currentVals));
-	}
-
-	removeVisiblePages(pageNumber: number) {
-		const currentVals = this.visiblePages.getValue()
-		currentVals.delete(pageNumber)
-		this.visiblePages.next(new Set(currentVals));
-	}
 
 	//==================================================== NG ===============================================================
 	async ngOnInit() {
@@ -76,12 +66,6 @@ export class PdfViewerComponent {
 			this.currentPageNumber = val;
 		});
 
-		this.visiblePages.subscribe(set => {
-			console.log("Visible pages:", Array.from(set));
-			// Array.from(set).forEach(async elem => {
-			// 	await this.renderPage(elem)
-			// })
-		});
 
 	}
 	ngAfterViewInit() {
@@ -90,23 +74,25 @@ export class PdfViewerComponent {
 
 	getCanvasForPage(pageNumber: number) {
 		const container = this.pdfContainer.nativeElement.querySelector(`#pageContainer-${pageNumber}`);
-		return this.pdfViewerService.getCanvasForPageContainer(container, pageNumber)
+		return container
 	}
 
 	async createObserver() {
 
 		this.alreadyRanObserver = true;
-		const observer = new IntersectionObserver(
+		this.observer = new IntersectionObserver(
 			async entries => {
 				for (const entry of entries) {
 					const id = entry.target.id;
 					const pageNumber = parseInt(id?.split('-')[1]);
 
 					if (entry.isIntersecting) {
-						this.appendVisibilePages(pageNumber)
+						this.visiblePages.add(pageNumber)
+						this.renderPage(pageNumber, false)
+						
 					}
 					else {
-						this.removeVisiblePages(pageNumber)
+						this.visiblePages.delete(pageNumber)
 					}
 				}
 				console.log("Current Visbile Pages", this.visiblePages);
@@ -117,10 +103,12 @@ export class PdfViewerComponent {
 			}
 		);
 
-		for (let i = 1; i <= this.totalPages; i++) {
-			const canvas = this.getCanvasForPage(i)
-			if (canvas) observer.observe(canvas)
-		}
+		requestAnimationFrame(() => {
+			for (let i = 1; i <= this.totalPages; i++) {
+				const pageContainer = this.getCanvasForPage(i);
+				if (pageContainer) this.observer.observe(pageContainer);
+			}
+		});
 	}
 
 	ngOnDestroy() {
@@ -182,11 +170,12 @@ export class PdfViewerComponent {
 
 	// Render a specific page of the PDF.
 	async renderPage(pageNumber: number, renderdummy: Boolean = true) {
+
 		let page: any;
 		let viewport: any;
 		if (pageNumber === 1)
 			renderdummy = false;
-
+		
 		page = await this.pdfDocument.getPage(pageNumber);
 
 		if (!renderdummy) {
@@ -198,26 +187,31 @@ export class PdfViewerComponent {
 		const container = this.pdfContainer.nativeElement;
 		const canvas = document.createElement("canvas");
 		const text_layer = document.createElement("div");
-		const pageContainer = document.createElement("div");
+		let pageContainer = document.createElement("div");
+
 		canvas.id = `page-${pageNumber}`;
 		pageContainer.id = `pageContainer-${pageNumber}`;
 		text_layer.className = "text-layer"
 
+		// remove old layers
 		const oldPage = container.querySelector("#" + pageContainer.id)
-
 		const correctCanvas = oldPage?.querySelector("#" + canvas.id)
 		const textLayerOld = oldPage?.querySelector(Constants.OVERLAY_TEXT)
 		textLayerOld?.remove();
 
-		if (oldPage && oldPage.parentNode && correctCanvas) {
-			oldPage.parentNode.replaceChild(pageContainer, oldPage)
+		if (oldPage && textLayerOld && oldPage.contains(textLayerOld)) {
+			oldPage.replaceChild(text_layer, textLayerOld)
+			// oldPage.parentNode.replaceChild(pageContainer, oldPage)
+			pageContainer = oldPage as HTMLDivElement
+		}
+		else
+		{
+			oldPage?.appendChild(text_layer)
 		}
 
+		// scale margin top
 		let baseMarginScale = 16
-
 		if (this.scale > 1.0 && pageNumber > 1) baseMarginScale = this.getScaledMargin(this.scale)
-
-
 
 		if (!renderdummy) {
 			pageContainer.className = "mt-4 mx-auto relative block w-fit";
@@ -226,7 +220,7 @@ export class PdfViewerComponent {
 		}
 		else {
 			pageContainer.className = `mt-4 mx-auto relative block w-fit h-[900px]`;
-			canvas.className = `page-${pageNumber} border border-gray-300 shadow-lg  h-[900px] w-[600px]`;
+			canvas.className = `page-${pageNumber} border border-gray-300 shadow-lg  h-[841.92px] w-[595.32px]`;
 		}
 
 		const boxesForPage = this.textEditService.textboxes.filter(b => b.pageId == pageNumber)
@@ -241,8 +235,8 @@ export class PdfViewerComponent {
 
 		pageContainer.appendChild(text_layer)
 		pageContainer.appendChild(canvas)
-
 		container.appendChild(pageContainer);
+		// if(this.observer) this.observer.unobserve(oldPage)
 
 		if (!renderdummy) {
 			const context = canvas.getContext("2d")!;
