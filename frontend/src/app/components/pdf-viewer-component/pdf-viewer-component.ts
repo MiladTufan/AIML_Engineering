@@ -69,9 +69,9 @@ export class PdfViewerComponent {
 		if (this.dynamicContainer) this.pdfViewerService.setDynamicContainerRef(this.dynamicContainer)
 	}
 
-	getPageContainer(pageNumber: number) {
+	getCanvasForPage(pageNumber: number) {
 		const container = this.pdfContainer.nativeElement.querySelector(`#pageContainer-${pageNumber}`);
-		return container;
+		return this.pdfViewerService.getCanvasForPageContainer(container, pageNumber)
 	}
 
 	async createObserver() {
@@ -84,33 +84,24 @@ export class PdfViewerComponent {
 					const pageNumber = parseInt(id?.split('-')[1]);
 
 					if (entry.isIntersecting) {
-						if (!this.renderedPages.has(pageNumber)) {
-							this.renderedPages.add(pageNumber)
-							// this.rerenderPageOnZoom(pageNumber).then(() => {
-							// 	this.renderedPages.delete(pageNumber)
-							// 	this.visiblePages.add(pageNumber);
-							// })
-						}
-					} else {
-						if (!this.renderedPages.has(pageNumber)) {
-							this.visiblePages.delete(pageNumber);
-						} else {
-							// observer.unobserve(entry.target);
-							// observer.observe(entry.target);
-						}
+						this.visiblePages.add(pageNumber)
+						await this.renderPage(pageNumber, false)
+					} 
+					else {
+						this.visiblePages.delete(pageNumber);
 					}
 				}
-
+				console.log("Current Visbile Pages", Array.from(this.visiblePages));
 			},
 			{
 				root: this.pdfContainer.nativeElement,
-				threshold: 0.1 // Trigger if at least 10% is visible
+				threshold: 0.7 // Trigger if at least 10% is visible
 			}
 		);
 
 		for (let i = 1; i <= this.totalPages; i++) {
-			const page = this.getPageContainer(i)
-			if (page) observer.observe(page)
+			const canvas = this.getCanvasForPage(i)
+			if (canvas) observer.observe(canvas)
 		}
 	}
 
@@ -212,12 +203,12 @@ export class PdfViewerComponent {
 
 		if (!renderdummy) {
 			pageContainer.className = "mt-4 mx-auto relative block w-fit";
-			canvas.className = `page-${pageNumber} border border-gray-300 shadow-lg mt-4 mx-auto`;
+			canvas.className = `page-${pageNumber} border border-gray-300 shadow-lg mx-auto`;
 
 		}
 		else {
 			pageContainer.className = `mt-4 mx-auto relative block w-fit h-[900px]`;
-			canvas.className = `page-${pageNumber} border border-gray-300 shadow-lg mt-4  h-[900px] w-[600px]`;
+			canvas.className = `page-${pageNumber} border border-gray-300 shadow-lg  h-[900px] w-[600px]`;
 		}
 
 		const boxesForPage = this.textEditService.textboxes.filter(b => b.pageId == pageNumber)

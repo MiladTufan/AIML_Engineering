@@ -42,6 +42,10 @@ export class PDFViewerService {
 		const page = this.allRenderedPages.find(p => p.pageNum == pageNumber)
 		return page
 	}
+	getCanvasForPageContainer(pageContainer: any, pageNumber: number)
+	{
+		return pageContainer.querySelector(`#page-${pageNumber}`)
+	}
 
 	getPageNumberFromScrolltop(scrolltop: number | null = null) {
 		let pageNum: number = this.totalPages;
