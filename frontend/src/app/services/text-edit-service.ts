@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
+import { ComponentRef, ElementRef, Injectable, ViewContainerRef } from '@angular/core';
 import { TextBox } from '../models/TextBox';
 import { TextStyleEditor } from '../models/TextStyleEditor';
+import { CustomTextEditBox } from '../components/custom-text-edit-box/custom-text-edit-box';
 
 @Injectable({
     providedIn: 'root'
@@ -8,6 +9,9 @@ import { TextStyleEditor } from '../models/TextStyleEditor';
 export class TextEditService {
     public textboxes: TextBox[] = [];
     public currentFocusTextBoxId: number = 0;
+    public pdfViewerContainer: ElementRef | null = null;
+    public dynamicContainer: ViewContainerRef | null = null;
+
     constructor() { }
 
     public getIndexOfCurrentFocusBox(id: number = -99) {
@@ -32,6 +36,53 @@ export class TextEditService {
 
     public getCurrentTextStyleEditorById(id: number) {
         return this.textboxes[this.getIndexOfCurrentFocusBox(id)].textStyleEditorState;
+    }
+
+    onTextBoxEditClick(id: number, editState: Boolean) {
+        if (editState) {
+
+            this.currentFocusTextBoxId = id;
+            // this.toolbar.enableTextStyleEditor(editState);
+        }
+        else {
+            if (id === this.currentFocusTextBoxId) {}
+                // this.toolbar.enableTextStyleEditor(editState);
+        }
+    }
+
+
+    public updateTextBoxPos(id: number, pos: { top: number, left: number }, pageNum: number, scale: number, scrollTop: number) {
+        const savedBox = this.textboxes.find(b => b.id === id);
+        const rect = (this.pdfViewerContainer!.nativeElement as HTMLElement).getBoundingClientRect();
+
+
+        if (savedBox) {
+            savedBox.top = (pos.top - rect.top) * scale + scrollTop;
+            savedBox.left = pos.left * scale;
+            savedBox.pageId = pageNum;
+        }
+    }
+
+    public createTextBoxContainer(editTextBoxComp: ComponentRef<CustomTextEditBox>, textBox: TextBox, pageNum: number, scale: number, scrollTop: number) {
+        editTextBoxComp.instance.box = textBox;
+        editTextBoxComp.instance.textBoxEditClicked.subscribe((event: any) => this.onTextBoxEditClick(textBox.id, event))
+        editTextBoxComp.instance.positionChanged.subscribe((event: any) => this.updateTextBoxPos(textBox.id, event, pageNum, scale, scrollTop))
+        // editTextBoxComp.instance.textBoxEditClicked.subscribe((event: any) => this.removeTextBox(newTextBox.id, event))
+
+        return editTextBoxComp
+    }
+
+    public createTextBox(top: number, left: number, pageNum: number, scale: number, scrollTop: number, containerRef: ViewContainerRef) {
+        // this.mouseY += (pageHeight * (this.pageNum - 1))
+
+        const newTextBox = new TextBox(this.textboxes.length + 1, pageNum,
+            top, left, "Text", new TextStyleEditor())
+
+        this.textboxes.push(newTextBox);
+        let editTextBoxComp = containerRef.createComponent(CustomTextEditBox)
+
+        editTextBoxComp = this.createTextBoxContainer(editTextBoxComp, newTextBox, pageNum, scale, scrollTop);
+        return editTextBoxComp
     }
 
 

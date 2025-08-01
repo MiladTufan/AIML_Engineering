@@ -1,9 +1,10 @@
-import { Component, ElementRef, Input, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, ViewChild, ViewContainerRef } from '@angular/core';
 
 import * as pdfjsLib from "pdfjs-dist";
 import { PDFFileService } from '../../services/pdffile-service';
 import { PDFViewerService } from '../../services/pdfviewer-service';
 import { Subscription } from 'rxjs';
+import { TextEditService } from '../../services/text-edit-service';
 (pdfjsLib as any).GlobalWorkerOptions.workerSrc = "assets/pdf.worker.min.mjs";
 
 @Component({
@@ -25,6 +26,9 @@ export class PdfViewerComponent {
 	private renderedPages = new Set<number>();
 	private alreadyRanObserver = false;
 
+	private minScale = 0.6
+	private maxScale = 2.3
+
 	//=================================================== Public variables ==================================================
 	public totalPages: number = 0;
 	public pdfSrc: string | Uint8Array = ""
@@ -32,9 +36,10 @@ export class PdfViewerComponent {
 
 	//==================================================== Children =========================================================
 	@ViewChild("pdfContainer", { static: true }) pdfContainer!: ElementRef<HTMLDivElement>;
+	@ViewChild('dynamicContainer', { read: ViewContainerRef }) dynamicContainer!: ViewContainerRef;
 
 
-	constructor(private fileService: PDFFileService, private pdfViewerService: PDFViewerService) { }
+	constructor(private fileService: PDFFileService, private pdfViewerService: PDFViewerService, private textEditService: TextEditService) { }
 
 	//==================================================== Inputs ===========================================================
 
@@ -64,7 +69,6 @@ export class PdfViewerComponent {
 
 	async createObserver() {
 
-		console.log("called Observer")
 		this.alreadyRanObserver = true;
 		const observer = new IntersectionObserver(
 			async entries => {
@@ -82,7 +86,6 @@ export class PdfViewerComponent {
 						}
 					} else {
 						if (!this.renderedPages.has(pageNumber)) {
-							console.log("loading took too long I am deleting the page: ", pageNumber)
 							this.visiblePages.delete(pageNumber);
 						} else {
 							// observer.unobserve(entry.target);
@@ -91,8 +94,6 @@ export class PdfViewerComponent {
 					}
 				}
 
-				console.log('Visible pages:', Array.from(this.visiblePages));
-				console.log('rendering pages:', Array.from(this.renderedPages));
 			},
 			{
 				root: this.pdfContainer.nativeElement,
@@ -170,6 +171,24 @@ export class PdfViewerComponent {
 		}
 	}
 
+	getScaledMargin(scale: number) {
+		if (scale === 1.0) return 16;
+		let scaler = 0.1
+
+		if (scale > 1.2)
+			scaler+=0.2
+		if (scale > 1.9)
+			scaler+=0.1
+
+		const fract = scale - Math.floor(scale)
+		const fractFull = (Math.floor(scale) - 1) + fract
+
+
+		const multiplier = 10 + ((fractFull-scaler)*10)
+		const marginOffset = fractFull * multiplier;
+		return 16*(8*marginOffset);
+	}
+
 	async rerenderPageOnZoom(pageNumber: number) {
 		const page = await this.pdfDocument.getPage(pageNumber);
 		const viewport = page.getViewport({ scale: this.scale });
@@ -178,31 +197,41 @@ export class PdfViewerComponent {
 		const canvas = document.createElement("canvas");
 		const text_layer = document.createElement("div");
 		const pageContainer = document.createElement("div");
-		pageContainer.className = "mt-4 mx-auto relative block w-fit";
+		pageContainer.className = "mx-auto relative block w-fit";
+		let baseMarginScale = 16
+
+		if (this.scale > 1.0 && pageNumber > 1) baseMarginScale = this.getScaledMargin(this.scale)
+
+		pageContainer.style.marginTop = `${baseMarginScale}px`;
+		pageContainer.style.width = `${viewport.width}px`;
+		pageContainer.style.height = `${viewport.height}px`;
 		pageContainer.id = `pageContainer-${pageNumber}`;
+
 		text_layer.className = "text-layer"
 
-		canvas.className = `page-${pageNumber} border border-gray-300 shadow-lg mt-4 mx-auto`;
+		canvas.className = `page-${pageNumber} border border-gray-300 shadow-lg mx-auto relative`;
 		canvas.id = `page-${pageNumber}`;
-		canvas.appendChild(text_layer);
 
 		const span = document.createElement("span")
-		span.textContent = "MOIGASDASDASDSADSDSDSAADSDA";
+		span.textContent = `CURRENT SCALE IS: ${this.scale}`;
 		span.className = "absolute bg-red-500 z-50 text-[30px]";
 
-		const [x, y] = viewport.convertToViewportPoint(500, 600);
+		const [x, y] = viewport.convertToViewportPoint(200, 600);
 		span.style.position = "absolute";
 		span.style.left = `${x}px`; // Already scaled by viewport
 		span.style.top = `${y}px`;
 
 		span.style.fontSize = `${12 * this.scale}px`;
-	
+
 		pageContainer.style.transform = `scale(${this.scale})`;
 		pageContainer.style.transformOrigin = "top left";
-		
+
+		this.textEditService.textboxes.forEach(box => {
+			const textBoxComp = this.textEditService.createTextBox(box.top, box.left, pageNumber, this.scale, this.pdfViewerService.currentScrollTop, this.dynamicContainer)
+			text_layer.appendChild(textBoxComp.location.nativeElement)
+		})
 
 		pageContainer.appendChild(text_layer)
-		pageContainer.appendChild(span)
 		pageContainer.appendChild(canvas)
 
 
@@ -225,7 +254,6 @@ export class PdfViewerComponent {
 		this.pdfViewerService.setPageHeight(viewport.height);
 
 		await page.render(renderContext).promise;
-		console.log("rendered page: ", pageNumber)
 	}
 
 	// Render a specific page of the PDF.
@@ -262,7 +290,11 @@ export class PdfViewerComponent {
 
 
 		canvas.id = `page-${pageNumber}`;
-		canvas.appendChild(text_layer);
+
+		this.textEditService.textboxes.forEach(box => {
+			const textBoxComp = this.textEditService.createTextBox(box.top, box.left, pageNumber, this.scale, this.pdfViewerService.currentScrollTop, this.dynamicContainer)
+			text_layer.appendChild(textBoxComp.location.nativeElement)
+		})
 
 		pageContainer.appendChild(text_layer)
 		pageContainer.appendChild(canvas)
@@ -288,15 +320,17 @@ export class PdfViewerComponent {
 	public onWheel(event: WheelEvent) {
 		if (event.ctrlKey) {
 			event.preventDefault();
-			if (event.deltaY < 0) {
+			if (event.deltaY < 0 && this.scale < this.maxScale+0.01) {
 				this.scale += 0.1;
-				this.rerenderPageOnZoom(this.currentPageNumber)
+				for (let i = 1; i <= this.totalPages; i++)
+					this.rerenderPageOnZoom(i)
 			}
-			else {
+			else if (this.scale > this.minScale) {
 				this.scale -= 0.1;
-				this.rerenderPageOnZoom(this.currentPageNumber)
+				for (let i = 1; i <= this.totalPages; i++)
+					this.rerenderPageOnZoom(i)
 			}
+
 		}
 	}
-
 }
