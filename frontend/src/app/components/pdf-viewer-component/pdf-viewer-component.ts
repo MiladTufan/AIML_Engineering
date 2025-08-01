@@ -3,7 +3,7 @@ import { Component, ElementRef, Input, ViewChild, ViewContainerRef } from '@angu
 import * as pdfjsLib from "pdfjs-dist";
 import { PDFFileService } from '../../services/pdffile-service';
 import { PDFViewerService } from '../../services/pdfviewer-service';
-import { Subscription } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import { TextEditService } from '../../services/text-edit-service';
 import { Page } from '../../models/Page';
 import { Constants } from '../../models/constants';
@@ -24,7 +24,7 @@ export class PdfViewerComponent {
 	private devicePixelRatio = window.devicePixelRatio || 1;
 	private scale = 1.0 * this.devicePixelRatio;
 	private pageNumberSub!: Subscription;
-	private visiblePages = new Set<number>();
+	private visiblePages = new BehaviorSubject<Set<number>>(new Set());
 	private renderedPages = new Set<number>();
 	private alreadyRanObserver = false;
 
@@ -45,6 +45,18 @@ export class PdfViewerComponent {
 
 	//==================================================== Inputs ===========================================================
 
+	appendVisibilePages(pageNumber: number) {
+		const currentVals = this.visiblePages.getValue()
+		currentVals.add(pageNumber)
+		this.visiblePages.next(new Set(currentVals));
+	}
+
+	removeVisiblePages(pageNumber: number) {
+		const currentVals = this.visiblePages.getValue()
+		currentVals.delete(pageNumber)
+		this.visiblePages.next(new Set(currentVals));
+	}
+
 	//==================================================== NG ===============================================================
 	async ngOnInit() {
 		this.loadPDF();
@@ -62,6 +74,13 @@ export class PdfViewerComponent {
 
 		this.pageNumberSub = this.pdfViewerService.currentPage$.subscribe(val => {
 			this.currentPageNumber = val;
+		});
+
+		this.visiblePages.subscribe(set => {
+			console.log("Visible pages:", Array.from(set));
+			// Array.from(set).forEach(async elem => {
+			// 	await this.renderPage(elem)
+			// })
 		});
 
 	}
@@ -84,18 +103,17 @@ export class PdfViewerComponent {
 					const pageNumber = parseInt(id?.split('-')[1]);
 
 					if (entry.isIntersecting) {
-						this.visiblePages.add(pageNumber)
-						await this.renderPage(pageNumber, false)
-					} 
+						this.appendVisibilePages(pageNumber)
+					}
 					else {
-						this.visiblePages.delete(pageNumber);
+						this.removeVisiblePages(pageNumber)
 					}
 				}
-				console.log("Current Visbile Pages", Array.from(this.visiblePages));
+				console.log("Current Visbile Pages", this.visiblePages);
 			},
 			{
 				root: this.pdfContainer.nativeElement,
-				threshold: 0.7 // Trigger if at least 10% is visible
+				threshold: 0.1 // Trigger if at least 10% is visible
 			}
 		);
 
@@ -148,17 +166,17 @@ export class PdfViewerComponent {
 		let scaler = 0.1
 
 		if (scale > 1.2)
-			scaler+=0.2
+			scaler += 0.2
 		if (scale > 1.9)
-			scaler+=0.1
+			scaler += 0.1
 
 		const fract = scale - Math.floor(scale)
 		const fractFull = (Math.floor(scale) - 1) + fract
 
 
-		const multiplier = 10 + ((fractFull-scaler)*10)
+		const multiplier = 10 + ((fractFull - scaler) * 10)
 		const marginOffset = fractFull * multiplier;
-		return 16*(8*marginOffset);
+		return 16 * (8 * marginOffset);
 	}
 
 
@@ -214,8 +232,7 @@ export class PdfViewerComponent {
 		const boxesForPage = this.textEditService.textboxes.filter(b => b.pageId == pageNumber)
 
 		boxesForPage.forEach(box => {
-			if (box.pageId === pageNumber)
-			{
+			if (box.pageId === pageNumber) {
 				const [left, top] = viewport.convertToViewportPoint(box.left, box.top);
 				const textBoxComp = this.textEditService.createTextBox(top, left, pageNumber, this.scale, this.pdfViewerService.currentScrollTop)
 				text_layer.appendChild(textBoxComp.location.nativeElement)
@@ -243,7 +260,15 @@ export class PdfViewerComponent {
 			};
 
 			await page.render(renderContext).promise;
-			this.pdfViewerService.allRenderedPages.push(new Page(pageNumber, viewport, boxesForPage, viewport.height, viewport.width, 0, pageContainer))
+			const newPage = new Page(pageNumber, viewport, boxesForPage, viewport.height, viewport.width, 0, pageContainer)
+			const renderedPage = this.pdfViewerService.allRenderedPages.find(p => p.pageNum === pageNumber)
+			if (renderedPage) {
+				const idx = this.pdfViewerService.allRenderedPages.indexOf(renderedPage);
+
+				this.pdfViewerService.allRenderedPages.splice(idx, 1, newPage);
+			}
+			else
+				this.pdfViewerService.allRenderedPages.push(newPage)
 		}
 
 	}
@@ -251,15 +276,15 @@ export class PdfViewerComponent {
 	public onWheel(event: WheelEvent) {
 		if (event.ctrlKey) {
 			event.preventDefault();
-			if (event.deltaY < 0 && this.scale < this.maxScale+0.01) {
+			if (event.deltaY < 0 && this.scale < this.maxScale + 0.01) {
 				this.scale += 0.1;
 				// for (let i = 1; i <= this.totalPages; i++)
-					// this.rerenderPageOnZoom(i)
+				// this.rerenderPageOnZoom(i)
 			}
 			else if (this.scale > this.minScale) {
 				this.scale -= 0.1;
 				// for (let i = 1; i <= this.totalPages; i++)
-					// this.rerenderPageOnZoom(i)
+				// this.rerenderPageOnZoom(i)
 			}
 			this.pdfViewerService.currentScale = this.scale;
 
