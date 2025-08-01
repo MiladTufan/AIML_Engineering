@@ -5,6 +5,8 @@ import { PDFFileService } from '../../services/pdffile-service';
 import { PDFViewerService } from '../../services/pdfviewer-service';
 import { Subscription } from 'rxjs';
 import { TextEditService } from '../../services/text-edit-service';
+import { Page } from '../../models/Page';
+import { Constants } from '../../models/constants';
 (pdfjsLib as any).GlobalWorkerOptions.workerSrc = "assets/pdf.worker.min.mjs";
 
 @Component({
@@ -48,6 +50,8 @@ export class PdfViewerComponent {
 		this.loadPDF();
 		if (this.pdfContainer) {
 			this.pdfViewerService.setPDFScrollContainer(this.pdfContainer);
+			this.pdfViewerService.dynamicContainer = this.dynamicContainer;
+
 			this.pdfContainer.nativeElement.addEventListener('scroll', (event) => {
 				this.pdfViewerService.currentScrollTop = this.pdfContainer.nativeElement.scrollTop;
 				this.currentPageNumber = this.pdfViewerService.getPageNumberFromScrolltop()
@@ -60,6 +64,9 @@ export class PdfViewerComponent {
 			this.currentPageNumber = val;
 		});
 
+	}
+	ngAfterViewInit() {
+		if (this.dynamicContainer) this.pdfViewerService.setDynamicContainerRef(this.dynamicContainer)
 	}
 
 	getPageContainer(pageNumber: number) {
@@ -79,10 +86,10 @@ export class PdfViewerComponent {
 					if (entry.isIntersecting) {
 						if (!this.renderedPages.has(pageNumber)) {
 							this.renderedPages.add(pageNumber)
-							this.rerenderPageOnZoom(pageNumber).then(() => {
-								this.renderedPages.delete(pageNumber)
-								this.visiblePages.add(pageNumber);
-							})
+							// this.rerenderPageOnZoom(pageNumber).then(() => {
+							// 	this.renderedPages.delete(pageNumber)
+							// 	this.visiblePages.add(pageNumber);
+							// })
 						}
 					} else {
 						if (!this.renderedPages.has(pageNumber)) {
@@ -144,32 +151,6 @@ export class PdfViewerComponent {
 		}
 	}
 
-	async unrenderPage(pageNumber: number) {
-		const page = await this.pdfDocument.getPage(pageNumber);
-		const viewport = page.getViewport({ scale: this.scale });
-
-		const container = this.pdfContainer.nativeElement;
-		const canvas = document.createElement("canvas");
-		const text_layer = document.createElement("div");
-		const pageContainer = document.createElement("div");
-		pageContainer.className = "mt-4 mx-auto relative block w-fit h-[900px]";
-		pageContainer.id = `pageContainer-${pageNumber}`;
-		text_layer.className = "text-layer"
-
-		canvas.className = `page-${pageNumber} border border-gray-300 shadow-lg mt-4 mx-auto  h-[900px] w-[600px]`;
-		canvas.id = `page-${pageNumber}`;
-		canvas.appendChild(text_layer);
-
-		pageContainer.appendChild(text_layer)
-		pageContainer.appendChild(canvas)
-
-		const oldPage = container.querySelector("#" + pageContainer.id)
-		const correctCanvas = oldPage?.querySelector("#" + canvas.id)
-
-		if (oldPage && oldPage.parentNode && correctCanvas) {
-			oldPage.parentNode.replaceChild(pageContainer, oldPage)
-		}
-	}
 
 	getScaledMargin(scale: number) {
 		if (scale === 1.0) return 16;
@@ -189,72 +170,6 @@ export class PdfViewerComponent {
 		return 16*(8*marginOffset);
 	}
 
-	async rerenderPageOnZoom(pageNumber: number) {
-		const page = await this.pdfDocument.getPage(pageNumber);
-		const viewport = page.getViewport({ scale: this.scale });
-
-		const container = this.pdfContainer.nativeElement;
-		const canvas = document.createElement("canvas");
-		const text_layer = document.createElement("div");
-		const pageContainer = document.createElement("div");
-		pageContainer.className = "mx-auto relative block w-fit";
-		let baseMarginScale = 16
-
-		if (this.scale > 1.0 && pageNumber > 1) baseMarginScale = this.getScaledMargin(this.scale)
-
-		pageContainer.style.marginTop = `${baseMarginScale}px`;
-		pageContainer.style.width = `${viewport.width}px`;
-		pageContainer.style.height = `${viewport.height}px`;
-		pageContainer.id = `pageContainer-${pageNumber}`;
-
-		text_layer.className = "text-layer"
-
-		canvas.className = `page-${pageNumber} border border-gray-300 shadow-lg mx-auto relative`;
-		canvas.id = `page-${pageNumber}`;
-
-		const span = document.createElement("span")
-		span.textContent = `CURRENT SCALE IS: ${this.scale}`;
-		span.className = "absolute bg-red-500 z-50 text-[30px]";
-
-		const [x, y] = viewport.convertToViewportPoint(200, 600);
-		span.style.position = "absolute";
-		span.style.left = `${x}px`; // Already scaled by viewport
-		span.style.top = `${y}px`;
-
-		span.style.fontSize = `${12 * this.scale}px`;
-
-		pageContainer.style.transform = `scale(${this.scale})`;
-		pageContainer.style.transformOrigin = "top left";
-
-		this.textEditService.textboxes.forEach(box => {
-			const textBoxComp = this.textEditService.createTextBox(box.top, box.left, pageNumber, this.scale, this.pdfViewerService.currentScrollTop, this.dynamicContainer)
-			text_layer.appendChild(textBoxComp.location.nativeElement)
-		})
-
-		pageContainer.appendChild(text_layer)
-		pageContainer.appendChild(canvas)
-
-
-		const oldPage = container.querySelector("#" + pageContainer.id)
-		const correctCanvas = oldPage?.querySelector("#" + canvas.id)
-
-		if (oldPage && oldPage.parentNode && correctCanvas) {
-			oldPage.parentNode.replaceChild(pageContainer, oldPage)
-		}
-
-		const context = canvas.getContext("2d")!;
-		canvas.height = viewport.height;
-		canvas.width = viewport.width;
-
-		const renderContext = {
-			canvasContext: context,
-			viewport: viewport,
-		};
-
-		this.pdfViewerService.setPageHeight(viewport.height);
-
-		await page.render(renderContext).promise;
-	}
 
 	// Render a specific page of the PDF.
 	async renderPage(pageNumber: number, renderdummy: Boolean = true) {
@@ -275,6 +190,26 @@ export class PdfViewerComponent {
 		const canvas = document.createElement("canvas");
 		const text_layer = document.createElement("div");
 		const pageContainer = document.createElement("div");
+		canvas.id = `page-${pageNumber}`;
+		pageContainer.id = `pageContainer-${pageNumber}`;
+		text_layer.className = "text-layer"
+
+		const oldPage = container.querySelector("#" + pageContainer.id)
+
+		const correctCanvas = oldPage?.querySelector("#" + canvas.id)
+		const textLayerOld = oldPage?.querySelector(Constants.OVERLAY_TEXT)
+		textLayerOld?.remove();
+
+		if (oldPage && oldPage.parentNode && correctCanvas) {
+			oldPage.parentNode.replaceChild(pageContainer, oldPage)
+		}
+
+		let baseMarginScale = 16
+
+		if (this.scale > 1.0 && pageNumber > 1) baseMarginScale = this.getScaledMargin(this.scale)
+
+
+
 		if (!renderdummy) {
 			pageContainer.className = "mt-4 mx-auto relative block w-fit";
 			canvas.className = `page-${pageNumber} border border-gray-300 shadow-lg mt-4 mx-auto`;
@@ -285,15 +220,15 @@ export class PdfViewerComponent {
 			canvas.className = `page-${pageNumber} border border-gray-300 shadow-lg mt-4  h-[900px] w-[600px]`;
 		}
 
-		pageContainer.id = `pageContainer-${pageNumber}`;
-		text_layer.className = "text-layer"
+		const boxesForPage = this.textEditService.textboxes.filter(b => b.pageId == pageNumber)
 
-
-		canvas.id = `page-${pageNumber}`;
-
-		this.textEditService.textboxes.forEach(box => {
-			const textBoxComp = this.textEditService.createTextBox(box.top, box.left, pageNumber, this.scale, this.pdfViewerService.currentScrollTop, this.dynamicContainer)
-			text_layer.appendChild(textBoxComp.location.nativeElement)
+		boxesForPage.forEach(box => {
+			if (box.pageId === pageNumber)
+			{
+				const [left, top] = viewport.convertToViewportPoint(box.left, box.top);
+				const textBoxComp = this.textEditService.createTextBox(top, left, pageNumber, this.scale, this.pdfViewerService.currentScrollTop)
+				text_layer.appendChild(textBoxComp.location.nativeElement)
+			}
 		})
 
 		pageContainer.appendChild(text_layer)
@@ -306,6 +241,10 @@ export class PdfViewerComponent {
 			canvas.height = viewport.height;
 			canvas.width = viewport.width;
 
+			pageContainer.style.marginTop = `${baseMarginScale}px`;
+			pageContainer.style.width = `${viewport.width}px`;
+			pageContainer.style.height = `${viewport.height}px`;
+
 			const renderContext = {
 				canvasContext: context,
 				viewport: viewport,
@@ -313,6 +252,7 @@ export class PdfViewerComponent {
 			};
 
 			await page.render(renderContext).promise;
+			this.pdfViewerService.allRenderedPages.push(new Page(pageNumber, viewport, boxesForPage, viewport.height, viewport.width, 0, pageContainer))
 		}
 
 	}
@@ -322,14 +262,15 @@ export class PdfViewerComponent {
 			event.preventDefault();
 			if (event.deltaY < 0 && this.scale < this.maxScale+0.01) {
 				this.scale += 0.1;
-				for (let i = 1; i <= this.totalPages; i++)
-					this.rerenderPageOnZoom(i)
+				// for (let i = 1; i <= this.totalPages; i++)
+					// this.rerenderPageOnZoom(i)
 			}
 			else if (this.scale > this.minScale) {
 				this.scale -= 0.1;
-				for (let i = 1; i <= this.totalPages; i++)
-					this.rerenderPageOnZoom(i)
+				// for (let i = 1; i <= this.totalPages; i++)
+					// this.rerenderPageOnZoom(i)
 			}
+			this.pdfViewerService.currentScale = this.scale;
 
 		}
 	}

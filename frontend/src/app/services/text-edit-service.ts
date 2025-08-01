@@ -1,7 +1,9 @@
-import { ComponentRef, ElementRef, Injectable, ViewContainerRef } from '@angular/core';
+import { ComponentRef, ElementRef, Injectable, ViewContainerRef, inject } from '@angular/core';
 import { TextBox } from '../models/TextBox';
 import { TextStyleEditor } from '../models/TextStyleEditor';
 import { CustomTextEditBox } from '../components/custom-text-edit-box/custom-text-edit-box';
+import { PDFViewerService } from './pdfviewer-service';
+import { Constants } from '../models/constants';
 
 @Injectable({
     providedIn: 'root'
@@ -11,6 +13,7 @@ export class TextEditService {
     public currentFocusTextBoxId: number = 0;
     public pdfViewerContainer: ElementRef | null = null;
     public dynamicContainer: ViewContainerRef | null = null;
+    public pdfViewerService = inject(PDFViewerService)
 
     constructor() { }
 
@@ -55,7 +58,6 @@ export class TextEditService {
         const savedBox = this.textboxes.find(b => b.id === id);
         const rect = (this.pdfViewerContainer!.nativeElement as HTMLElement).getBoundingClientRect();
 
-
         if (savedBox) {
             savedBox.top = (pos.top - rect.top) * scale + scrollTop;
             savedBox.left = pos.left * scale;
@@ -72,16 +74,23 @@ export class TextEditService {
         return editTextBoxComp
     }
 
-    public createTextBox(top: number, left: number, pageNum: number, scale: number, scrollTop: number, containerRef: ViewContainerRef) {
+    public createTextBox(top: number, left: number, pageNum: number, scale: number, scrollTop: number) {
         // this.mouseY += (pageHeight * (this.pageNum - 1))
 
         const newTextBox = new TextBox(this.textboxes.length + 1, pageNum,
             top, left, "Text", new TextStyleEditor())
-
+        
+        const page = this.pdfViewerService.getPageWithNumber(pageNum)
+        
         this.textboxes.push(newTextBox);
-        let editTextBoxComp = containerRef.createComponent(CustomTextEditBox)
+        page?.appendTextBox(newTextBox)
 
+        let editTextBoxComp = this.pdfViewerService.dynamicContainer!.createComponent(CustomTextEditBox)
         editTextBoxComp = this.createTextBoxContainer(editTextBoxComp, newTextBox, pageNum, scale, scrollTop);
+
+        const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
+        text_layer?.appendChild(editTextBoxComp.location.nativeElement)
+
         return editTextBoxComp
     }
 

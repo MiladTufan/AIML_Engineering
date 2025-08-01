@@ -7,6 +7,8 @@ import { TextBox } from '../../models/TextBox';
 import { PDFViewerService } from '../../services/pdfviewer-service';
 import { TextEditService } from '../../services/text-edit-service';
 import { TextStyleEditor } from '../../models/TextStyleEditor';
+import { Subscription } from 'rxjs';
+import { Constants } from '../../models/constants';
 
 
 
@@ -25,9 +27,10 @@ export class EditPDFView {
 
 	//=================================================== Public variables ==================================================
 	public pdfSrc = signal(new Uint8Array)
-	public pageNum: number = 1;
+	public currentPageNumber: number = 1;
 	public scrollMode: number = 0;
 	public currentZoom: number = 1.0;
+	private pageNumberSub!: Subscription;
 
 	//==================================================== Children =========================================================
 	@ViewChild('pdfViewer', { read: ElementRef }) pdfViewerRef!: ElementRef;
@@ -48,12 +51,16 @@ export class EditPDFView {
 	trackmouse(event: MouseEvent) {
 		const rect = (this.pdfViewerRef.nativeElement as HTMLElement).getBoundingClientRect();
 		this.mouseX = event.clientX;
-		this.mouseY = event.clientY - rect.top;
+		this.mouseY = event.clientY
 	}
 
 	async ngOnInit() {
 		if (this.pdfViewerRef) this.textEditService.pdfViewerContainer = this.pdfViewerRef
 		if (this.dynamicContainer) this.textEditService.dynamicContainer = this.viewContainerRef
+
+		this.pageNumberSub = this.pdfViewService.currentPage$.subscribe(val => {
+			this.currentPageNumber = val;
+		});
 	}
 
 	public onMouseClick(event: Event) {
@@ -67,53 +74,16 @@ export class EditPDFView {
 		this.isDragging = true;
 	}
 
-	onTextBoxEditClick(id: number, editState: Boolean) {
-		if (editState) {
-
-			this.textEditService.currentFocusTextBoxId = id;
-			this.toolbar.enableTextStyleEditor(editState);
-		}
-		else {
-			if (id === this.textEditService.currentFocusTextBoxId)
-				this.toolbar.enableTextStyleEditor(editState);
-		}
-	}
-
 	//------------------------------------------------------------------------------------
-
-	public updateTextBoxPos(id: number, pos: { top: number, left: number }) {
-		const savedBox = this.textEditService.textboxes.find(b => b.id === id);
-		const rect = (this.pdfViewerRef.nativeElement as HTMLElement).getBoundingClientRect();
-
-
-		if (savedBox) {
-			savedBox.top = (pos.top - rect.top) * this.currentZoom //+ this.scrollableContainer!.scrollTop;
-			savedBox.left = pos.left * this.currentZoom;
-			savedBox.pageId = this.pageNum;
-		}
-	}
-
-	public createTextBoxContainer(textBox: TextBox) {
-		const editTextBoxComp = this.viewContainerRef.createComponent(CustomTextEditBox)
-		editTextBoxComp.instance.box = textBox;
-		editTextBoxComp.instance.textBoxEditClicked.subscribe((event: any) => this.onTextBoxEditClick(textBox.id, event))
-		editTextBoxComp.instance.positionChanged.subscribe((event: any) => this.updateTextBoxPos(textBox.id, event))
-		return editTextBoxComp
-	}
-
 	public createTextBox() {
-		this.mouseY += (this.pdfViewService.pageHeight * (this.pageNum - 1))
-		const newTextBox = new TextBox(this.textEditService.textboxes.length + 1, this.pageNum,
-			this.mouseY, this.mouseX, "Text", new TextStyleEditor())
+		const page = this.pdfViewService.getPageWithNumber(this.currentPageNumber)
+		const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
 
-		this.textEditService.textboxes.push(newTextBox);
+		const rect = (text_layer as HTMLElement).getBoundingClientRect();
+		const top = this.mouseY - rect.top
+		const left = this.mouseX - rect.left
 
-		const editTextBoxComp = this.createTextBoxContainer(newTextBox);
-		// editTextBoxComp.instance.textBoxEditClicked.subscribe((event: any) => this.removeTextBox(newTextBox.id, event))
-		const editTextBoxCompRef = editTextBoxComp.location.nativeElement;
-		this.renderer.setStyle(editTextBoxCompRef, 'z-index', '50'); // Make sure it's above PDF
-
-		console.log(newTextBox)
-		return editTextBoxComp
+		this.mouseY += (this.pdfViewService.pageHeight * (this.currentPageNumber - 1))
+		this.textEditService.createTextBox(top, left, this.currentPageNumber, this.pdfViewService.currentScale, this.pdfViewService.currentScrollTop)
 	}
 }	

@@ -12,7 +12,9 @@ export class Constants {
 
 
     // overlay constants
-    public static OVERLAY_TEXT: string = ".text-overlay";
+    public static OVERLAY_TEXT: string = ".text-layer";
     public static OVERLAY_STACK_PAGES_HORIZONTALLY: string = "relative inline-block mt-4";
+
+    
 
 }
