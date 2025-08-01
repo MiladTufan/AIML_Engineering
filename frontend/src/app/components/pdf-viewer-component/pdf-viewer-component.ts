@@ -88,8 +88,9 @@ export class PdfViewerComponent {
 
 					if (entry.isIntersecting) {
 						this.visiblePages.add(pageNumber)
-						this.renderPage(pageNumber, false)
-						
+						if (!this.pdfViewerService.allRenderedPages.find(p => p.pageNum === pageNumber))
+							this.renderPage(pageNumber, false)
+
 					}
 					else {
 						this.visiblePages.delete(pageNumber)
@@ -171,11 +172,14 @@ export class PdfViewerComponent {
 	// Render a specific page of the PDF.
 	async renderPage(pageNumber: number, renderdummy: Boolean = true) {
 
+
 		let page: any;
 		let viewport: any;
-		if (pageNumber === 1)
-			renderdummy = false;
-		
+		// if (pageNumber === 1)
+		// 	renderdummy = false;
+
+		console.log("Rendering correct page: ", renderdummy)
+
 		page = await this.pdfDocument.getPage(pageNumber);
 
 		if (!renderdummy) {
@@ -187,27 +191,12 @@ export class PdfViewerComponent {
 		const container = this.pdfContainer.nativeElement;
 		const canvas = document.createElement("canvas");
 		const text_layer = document.createElement("div");
-		let pageContainer = document.createElement("div");
+		const pageContainer = document.createElement("div");
 
 		canvas.id = `page-${pageNumber}`;
 		pageContainer.id = `pageContainer-${pageNumber}`;
 		text_layer.className = "text-layer"
 
-		// remove old layers
-		const oldPage = container.querySelector("#" + pageContainer.id)
-		const correctCanvas = oldPage?.querySelector("#" + canvas.id)
-		const textLayerOld = oldPage?.querySelector(Constants.OVERLAY_TEXT)
-		textLayerOld?.remove();
-
-		if (oldPage && textLayerOld && oldPage.contains(textLayerOld)) {
-			oldPage.replaceChild(text_layer, textLayerOld)
-			// oldPage.parentNode.replaceChild(pageContainer, oldPage)
-			pageContainer = oldPage as HTMLDivElement
-		}
-		else
-		{
-			oldPage?.appendChild(text_layer)
-		}
 
 		// scale margin top
 		let baseMarginScale = 16
@@ -235,8 +224,21 @@ export class PdfViewerComponent {
 
 		pageContainer.appendChild(text_layer)
 		pageContainer.appendChild(canvas)
-		container.appendChild(pageContainer);
-		// if(this.observer) this.observer.unobserve(oldPage)
+		const exists = container.querySelector("#" + pageContainer.id)
+		if (exists != null) {
+			const textOld = exists.querySelector(Constants.OVERLAY_TEXT)
+			const CanvasOld = exists.querySelector("#" + canvas.id)
+			exists.replaceChild(text_layer, textOld!)
+			exists.replaceChild(canvas, CanvasOld!)
+
+			if (!renderdummy)
+			{
+				exists.className = "mt-4 mx-auto relative block w-fit"
+			}
+		}
+		else {
+			container.appendChild(pageContainer);
+		}
 
 		if (!renderdummy) {
 			const context = canvas.getContext("2d")!;
