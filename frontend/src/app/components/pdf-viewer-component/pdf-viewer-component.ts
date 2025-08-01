@@ -188,7 +188,14 @@ export class PdfViewerComponent {
 
 		const span = document.createElement("span")
 		span.textContent = "MOIGASDASDASDSADSDSDSAADSDA";
-		span.className = "absolute top-16 left-16 bg-red-500 z-50 text-[30px]";
+		span.className = "absolute bg-red-500 z-50 text-[30px]";
+
+		const [x, y] = viewport.convertToViewportPoint(500, 600);
+		span.style.position = "absolute";
+		span.style.left = `${x}px`; // Already scaled by viewport
+		span.style.top = `${y}px`;
+
+		span.style.fontSize = `${12 * this.scale}px`;
 	
 		pageContainer.style.transform = `scale(${this.scale})`;
 		pageContainer.style.transformOrigin = "top left";
