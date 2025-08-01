@@ -1,0 +1,77 @@
+from PyPDF2 import PdfReader, PdfWriter
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from io import BytesIO
+from rembg import remove
+from PIL import Image
+from reportlab.lib.utils import ImageReader
+import io
+
+
+class PDFEditor(object):
+    def __init__(self):
+        pass
+    
+    
+    @staticmethod
+    def create_pdf_from_bytes(bytes: io.BytesIO):
+        reader = PdfReader(bytes)
+        
+        writer = PdfWriter()
+        
+        for page in reader.pages:
+            writer.add_page(page)
+            
+        out_stream = io.BytesIO()
+        writer.write(out_stream)
+        out_stream.seek(0)
+        
+        
+        headers = {"Content-Disposition": 'attachment; filename="modified.pdf"'}
+        
+        return out_stream, headers
+        
+    
+    @staticmethod
+    def _remove_bg_from_image(img_path) -> ImageReader:
+        img = None
+        with open(img_path, "rb") as f:
+            img = f.read()
+
+        pil_image = Image.open(io.BytesIO(remove(img)))
+        img_buffer = io.BytesIO()
+        
+        pil_image.save(img_buffer, format="PNG")
+        img_buffer.seek(0)
+        img_reader = ImageReader(img_buffer)
+        return img_reader
+
+
+    @staticmethod
+    def paste_img_into_pdf(img_pos, img_size, page_num, pdf_path, img_path, remove_bg=False):
+        packet = BytesIO()
+        can = canvas.Canvas(packet, pagesize=A4)
+        if not remove_bg:
+            can.drawImage(img_path, img_pos[0], img_pos[1], img_size[0], img_size[1])
+        else:
+            img_reader = PDFEditor._remove_bg_from_image(img_path)
+            can.drawImage(img_reader, img_pos[0], img_pos[1], img_size[0], img_size[1], mask="auto")
+        can.save()
+
+        packet.seek(0)
+
+        overlay_pdf = PdfReader(packet)
+        existing_pdf = PdfReader(pdf_path)
+        output = PdfWriter()
+
+        page_num = page_num - 1
+        for i, page in enumerate(existing_pdf.pages):
+            if i == page_num:
+                page.merge_page(overlay_pdf.pages[0])
+            output.add_page(page)
+        
+        # Save the result
+        with open("merged_output.pdf", "wb") as f:
+            output.write(f)
+
+

@@ -1,0 +1,8 @@
+.box {
+    background: red;
+    width: 5vw;
+    height: 10vh;
+    position: absolute;
+    top: 10vh;
+    left: 5vw;
+}

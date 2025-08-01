@@ -40,7 +40,7 @@ export class PdfViewerComponent {
 
 	//==================================================== NG ===============================================================
 	async ngOnInit() {
-		await this.loadPDF();
+		this.loadPDF();
 		if (this.pdfContainer) {
 			this.pdfViewerService.setPDFScrollContainer(this.pdfContainer);
 			this.pdfContainer.nativeElement.addEventListener('scroll', (event) => {
@@ -63,37 +63,47 @@ export class PdfViewerComponent {
 	}
 
 	async createObserver() {
+
 		console.log("called Observer")
 		this.alreadyRanObserver = true;
 		const observer = new IntersectionObserver(
-			(entries) => {
+			async entries => {
 				for (const entry of entries) {
 					const id = entry.target.id;
 					const pageNumber = parseInt(id?.split('-')[1]);
 
 					if (entry.isIntersecting) {
-						this.visiblePages.add(pageNumber);
-						this.rerenderPageOnZoom(pageNumber)
-						observer.unobserve(entry.target);
+						if (!this.renderedPages.has(pageNumber)) {
+							this.renderedPages.add(pageNumber)
+							this.rerenderPageOnZoom(pageNumber).then(() => {
+								this.renderedPages.delete(pageNumber)
+								this.visiblePages.add(pageNumber);
+							})
+						}
 					} else {
-						this.visiblePages.delete(pageNumber);
+						if (!this.renderedPages.has(pageNumber)) {
+							console.log("loading took too long I am deleting the page: ", pageNumber)
+							this.visiblePages.delete(pageNumber);
+						} else {
+							// observer.unobserve(entry.target);
+							// observer.observe(entry.target);
+						}
 					}
 				}
 
 				console.log('Visible pages:', Array.from(this.visiblePages));
+				console.log('rendering pages:', Array.from(this.renderedPages));
 			},
 			{
 				root: this.pdfContainer.nativeElement,
-				threshold: 0.01 // Trigger if at least 10% is visible
+				threshold: 0.1 // Trigger if at least 10% is visible
 			}
 		);
 
-		let pages: any[] = []
-		for(let i = 1; i <= this.totalPages; i++)
-		{
-			pages.push(this.getPageContainer(i))
+		for (let i = 1; i <= this.totalPages; i++) {
+			const page = this.getPageContainer(i)
+			if (page) observer.observe(page)
 		}
-		pages.forEach((page: Element) => observer.observe(page));
 	}
 
 	ngOnDestroy() {
@@ -126,7 +136,7 @@ export class PdfViewerComponent {
 						this.renderPage(pageNum, true);
 					}
 				}
-				
+
 			}
 		} catch (error) {
 			console.error("Error loading PDF:", error);
@@ -176,7 +186,16 @@ export class PdfViewerComponent {
 		canvas.id = `page-${pageNumber}`;
 		canvas.appendChild(text_layer);
 
+		const span = document.createElement("span")
+		span.textContent = "MOIGASDASDASDSADSDSDSAADSDA";
+		span.className = "absolute top-16 left-16 bg-red-500 z-50 text-[30px]";
+	
+		pageContainer.style.transform = `scale(${this.scale})`;
+		pageContainer.style.transformOrigin = "top left";
+		
+
 		pageContainer.appendChild(text_layer)
+		pageContainer.appendChild(span)
 		pageContainer.appendChild(canvas)
 
 
@@ -194,13 +213,12 @@ export class PdfViewerComponent {
 		const renderContext = {
 			canvasContext: context,
 			viewport: viewport,
-			intent: "print"
 		};
 
 		this.pdfViewerService.setPageHeight(viewport.height);
 
 		await page.render(renderContext).promise;
-		this.renderedPages.add(pageNumber)
+		console.log("rendered page: ", pageNumber)
 	}
 
 	// Render a specific page of the PDF.
@@ -212,8 +230,7 @@ export class PdfViewerComponent {
 
 		page = await this.pdfDocument.getPage(pageNumber);
 
-		if (!renderdummy)
-		{
+		if (!renderdummy) {
 			page = await this.pdfDocument.getPage(pageNumber);
 			viewport = page.getViewport({ scale: this.scale });
 			this.pdfViewerService.setPageHeight(viewport.height);
@@ -223,22 +240,20 @@ export class PdfViewerComponent {
 		const canvas = document.createElement("canvas");
 		const text_layer = document.createElement("div");
 		const pageContainer = document.createElement("div");
-		if (!renderdummy)
-		{
+		if (!renderdummy) {
 			pageContainer.className = "mt-4 mx-auto relative block w-fit";
 			canvas.className = `page-${pageNumber} border border-gray-300 shadow-lg mt-4 mx-auto`;
 
 		}
-		else
-		{
+		else {
 			pageContainer.className = `mt-4 mx-auto relative block w-fit h-[900px]`;
 			canvas.className = `page-${pageNumber} border border-gray-300 shadow-lg mt-4  h-[900px] w-[600px]`;
 		}
-			
+
 		pageContainer.id = `pageContainer-${pageNumber}`;
 		text_layer.className = "text-layer"
 
-		
+
 		canvas.id = `page-${pageNumber}`;
 		canvas.appendChild(text_layer);
 
@@ -247,8 +262,7 @@ export class PdfViewerComponent {
 
 		container.appendChild(pageContainer);
 
-		if (!renderdummy)
-		{
+		if (!renderdummy) {
 			const context = canvas.getContext("2d")!;
 			canvas.height = viewport.height;
 			canvas.width = viewport.width;
