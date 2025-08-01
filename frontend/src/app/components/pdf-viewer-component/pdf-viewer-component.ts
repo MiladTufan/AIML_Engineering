@@ -24,12 +24,13 @@ export class PdfViewerComponent {
 	private devicePixelRatio = window.devicePixelRatio || 1;
 	private scale = 1.0 * this.devicePixelRatio;
 	private pageNumberSub!: Subscription;
-	private visiblePages = new Set<number>();
-	private renderedPages = new Set<number>();
+	private visiblePages = new BehaviorSubject<Set<number>>(new Set<number>());;
 	private alreadyRanObserver = false;
 
+	private currentScale = 1.0;
+
 	private minScale = 0.6
-	private maxScale = 2.3
+	private maxScale = 3.0
 
 	private observer: any;
 
@@ -47,6 +48,17 @@ export class PdfViewerComponent {
 
 	//==================================================== Inputs ===========================================================
 
+	addVisiblePages(pageNumber: number) {
+		const current = this.visiblePages.getValue();
+		current.add(pageNumber); // Add your number
+		this.visiblePages.next(new Set(current));
+	}
+
+	removeVisiblePages(pageNumber: number) {
+		const current = this.visiblePages.getValue();
+		current.delete(pageNumber); // Remove the number
+		this.visiblePages.next(new Set(current)); // Emit a new Set
+	}
 	//==================================================== NG ===============================================================
 	async ngOnInit() {
 		this.loadPDF();
@@ -64,6 +76,17 @@ export class PdfViewerComponent {
 
 		this.pageNumberSub = this.pdfViewerService.currentPage$.subscribe(val => {
 			this.currentPageNumber = val;
+		});
+
+		this.visiblePages.subscribe(set => {
+			console.log("Visible pages:", Array.from(set));
+			if (this.currentScale != this.scale) {
+				for (const p of set)
+					this.renderPage(p, false)
+
+				this.currentScale = this.scale;
+			}
+
 		});
 
 
@@ -87,20 +110,20 @@ export class PdfViewerComponent {
 					const pageNumber = parseInt(id?.split('-')[1]);
 
 					if (entry.isIntersecting) {
-						this.visiblePages.add(pageNumber)
+						this.addVisiblePages(pageNumber)
 						if (!this.pdfViewerService.allRenderedPages.find(p => p.pageNum === pageNumber))
 							this.renderPage(pageNumber, false)
 
 					}
 					else {
-						this.visiblePages.delete(pageNumber)
+						this.removeVisiblePages(pageNumber)
 					}
 				}
 				console.log("Current Visbile Pages", this.visiblePages);
 			},
 			{
 				root: this.pdfContainer.nativeElement,
-				threshold: 0.1 // Trigger if at least 10% is visible
+				threshold: 0.01 // Trigger if at least 10% is visible
 			}
 		);
 
@@ -155,7 +178,7 @@ export class PdfViewerComponent {
 		let scaler = 0.1
 
 		if (scale > 1.2)
-			scaler += 0.2
+			scaler += 0.1
 		if (scale > 1.9)
 			scaler += 0.1
 
@@ -191,7 +214,7 @@ export class PdfViewerComponent {
 		const container = this.pdfContainer.nativeElement;
 		const canvas = document.createElement("canvas");
 		const text_layer = document.createElement("div");
-		const pageContainer = document.createElement("div");
+		let pageContainer = document.createElement("div");
 
 		canvas.id = `page-${pageNumber}`;
 		pageContainer.id = `pageContainer-${pageNumber}`;
@@ -228,13 +251,27 @@ export class PdfViewerComponent {
 		if (exists != null) {
 			const textOld = exists.querySelector(Constants.OVERLAY_TEXT)
 			const CanvasOld = exists.querySelector("#" + canvas.id)
+
+			const span = document.createElement("span")
+			span.textContent = "ASDASDASDASDASDASDASDSD";
+			span.className = "bg-red-500 text-[42px]"
+
+
+			const [x, y] = viewport.convertToViewportPoint(500, 600);
+			span.style.position = "absolute";
+			span.style.left = `${x}px`; // Already scaled by viewport
+			span.style.top = `${y}px`;
+
+			span.style.fontSize = `${12 * this.scale}px`;
+			text_layer.appendChild(span)
 			exists.replaceChild(text_layer, textOld!)
 			exists.replaceChild(canvas, CanvasOld!)
 
-			if (!renderdummy)
-			{
-				exists.className = "mt-4 mx-auto relative block w-fit"
+			if (!renderdummy) {
+				exists.className = "mt-4 mx-auto relative block w-fit";
 			}
+
+			pageContainer = exists as HTMLDivElement
 		}
 		else {
 			container.appendChild(pageContainer);
@@ -245,9 +282,9 @@ export class PdfViewerComponent {
 			canvas.height = viewport.height;
 			canvas.width = viewport.width;
 
-			pageContainer.style.marginTop = `${baseMarginScale}px`;
-			pageContainer.style.width = `${viewport.width}px`;
-			pageContainer.style.height = `${viewport.height}px`;
+			// pageContainer.style.marginTop = `${baseMarginScale}px`;
+			// pageContainer.style.width = `${viewport.width}px`;
+			// pageContainer.style.height = `${viewport.height}px`;
 
 			const renderContext = {
 				canvasContext: context,
@@ -272,15 +309,16 @@ export class PdfViewerComponent {
 	public onWheel(event: WheelEvent) {
 		if (event.ctrlKey) {
 			event.preventDefault();
-			if (event.deltaY < 0 && this.scale < this.maxScale + 0.01) {
+			if (event.deltaY < 0 && this.scale < this.maxScale) {
 				this.scale += 0.1;
-				// for (let i = 1; i <= this.totalPages; i++)
-				// this.rerenderPageOnZoom(i)
+				for (const p of this.visiblePages.getValue())
+					this.renderPage(p, false)
 			}
-			else if (this.scale > this.minScale) {
+			else if (this.scale > this.minScale && event.deltaY > 0) {
 				this.scale -= 0.1;
-				// for (let i = 1; i <= this.totalPages; i++)
-				// this.rerenderPageOnZoom(i)
+				for (const p of this.visiblePages.getValue())
+					this.renderPage(p, false)
+
 			}
 			this.pdfViewerService.currentScale = this.scale;
 
