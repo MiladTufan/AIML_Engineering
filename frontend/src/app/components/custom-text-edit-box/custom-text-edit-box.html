@@ -1,6 +1,7 @@
 
-<div class="textBoxStyle border border-dashed border-gray-700
-           hover:border-gray-900 hover:shadow-md cursor-move resize both overflow-hidden"
+
+<div class="textBoxStyle border-2 border-dashed border-blue-300
+           hover:border-blue-700 hover:shadow-md cursor-move resize both overflow-hidden"
     (mousedown)="onDragStart($event)"
     (dragend)="onDragEnd($event)"
     draggable="true"
@@ -9,15 +10,20 @@
                 left: box.BoxDims.left + 'px',
                 width: box.BoxDims.width + 'px',
                 height: box.BoxDims.height + 'px'}">
-
-  <textarea
-    class="textBoxStyle w-full h-full
-          outline-none border border-gray-300 overflow-hidden leading-normal"
-    [style.color]="textEditService.getCurrentTextStyleEditorById(box.id).currentColor"
-    contenteditable="true"
-    [ngStyle]="{ 'font-size': box.textStyleEditorState.font_size + 'px'}"
-    (input)="onInput($event)"> {{ box.text }}
-  </textarea>
+  
+      
+      <div>
+        <span>width: {{roundedWidth(box.BoxDims.width)}}</span>   
+        <textarea
+          class="textBoxStyle w-full h-full
+                outline-none  overflow-hidden leading-normal"
+          [style.color]="textEditService.getCurrentTextStyleEditorById(box.id).currentColor"
+          contenteditable="true"
+          [ngStyle]="{ 'font-size': box.textStyleEditorState.font_size + 'px'}"
+          (input)="onInput($event)"> {{ box.text }}
+        </textarea>
+        <span>|  height: {{roundedWidth(box.BoxDims.height)}}</span>  
+      </div>
 
   
     <!-- <div

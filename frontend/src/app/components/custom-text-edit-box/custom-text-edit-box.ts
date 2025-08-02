@@ -55,6 +55,10 @@ export class CustomTextEditBox {
 		});
 	}
 
+	roundedWidth(w: number){
+		return Math.round(w);
+	}
+
 
 	ngAfterViewInit() {
 		this.resizeObserver.observe(this.editableDiv.nativeElement);
