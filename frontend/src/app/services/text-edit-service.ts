@@ -26,6 +26,8 @@ export class TextEditService {
         return ret;
     }
 
+    
+
     public getCurrentTextBox() {
         return this.textboxes[this.getIndexOfCurrentFocusBox()]
     }
@@ -56,11 +58,17 @@ export class TextEditService {
 
     public updateTextBoxPos(id: number, pos: { top: number, left: number }, pageNum: number, scale: number, scrollTop: number) {
         const savedBox = this.textboxes.find(b => b.id === id);
-        const rect = (this.pdfViewerContainer!.nativeElement as HTMLElement).getBoundingClientRect();
+        const page = this.pdfViewerService.getPageWithNumber(pageNum)
+		const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
+
+		const rect = (text_layer as HTMLElement).getBoundingClientRect();
 
         if (savedBox) {
-            savedBox.BoxDims.top = (pos.top - rect.top) * scale + scrollTop;
-            savedBox.BoxDims.left = pos.left * scale;
+            savedBox.BoxDims.top = (pos.top - rect.top);
+            savedBox.BoxDims.left = pos.left - rect.left;
+            
+            savedBox.baseLeft = pos.left - rect.left;
+            savedBox.baseTop = pos.top - rect.top;
             savedBox.pageId = pageNum;
         }
     }

@@ -79,12 +79,15 @@ export class PdfViewerComponent {
 		});
 
 		this.visiblePages.subscribe(set => {
-			console.log("Visible pages:", Array.from(set));
+			
 				for (const pageNum of set)
 				{
 					const page = this.pdfViewerService.allRenderedPages.find(p => p.pageNum === pageNum)
 					if (page?.currentScale != this.scale)
+					{
 						this.renderPage(pageNum, false)
+						console.log("re-rendering page: ", pageNum)
+					}
 				}
 		});
 
@@ -195,6 +198,7 @@ export class PdfViewerComponent {
 		if (pageNumber === 1)
 			renderdummy = false;
 
+		console.log("rendering page: ", pageNumber)
 		page = await this.pdfDocument.getPage(pageNumber);
 
 		if (!renderdummy) {
@@ -250,15 +254,15 @@ export class PdfViewerComponent {
 						newBaseHeight = box.BoxDims.resizedHeight;
 					}
 
-					const finalWidth = newBaseWidth * this.scale
-					const finalHeight = newBaseHeight * this.scale
+					const finalWidth = condition ? newBaseWidth: newBaseWidth * this.scale
+					const finalHeight = condition ? newBaseHeight: newBaseHeight * this.scale
 
-					const box_dims = {top: (box.baseTop) * (this.scale / box.BoxDims.creationScale), 
+					const box_dims = {top: box.baseTop * (this.scale / box.BoxDims.creationScale), 
 									  left: box.baseLeft * (this.scale / box.BoxDims.creationScale), 
 									  width: finalWidth, 
 									  height: finalHeight,
-									  resizedHeight:  finalHeight,
-									  resizedWidth:  finalWidth,
+									  resizedHeight:  newBaseHeight,
+									  resizedWidth:  newBaseWidth,
 									  currentScale: this.scale,
 									  creationScale: box.BoxDims.creationScale,
 									}
@@ -321,19 +325,26 @@ export class PdfViewerComponent {
 
 	}
 
-	public onWheel(event: WheelEvent) {
+	async onWheel(event: WheelEvent) {
 		if (event.ctrlKey) {
 			event.preventDefault();
 			if (event.deltaY < 0 && this.scale < this.maxScale) {
 				this.scale += 0.1;
 				for (const p of this.visiblePages.getValue())
-					this.renderPage(p, false)
+				{
+					console.log("rendering page:", p, "for scale: ", this.scale);
+					await this.renderPage(p, false)
+				}
 				this.pdfViewerService.currentScale = this.scale;
 			}
 			else if (this.scale > this.minScale && event.deltaY > 0) {
 				this.scale -= 0.1;
 				for (const p of this.visiblePages.getValue())
-					this.renderPage(p, false)
+				{
+					console.log("rendering page:", p, "for scale: ", this.scale);
+					await this.renderPage(p, false)
+
+				}
 
 				this.pdfViewerService.currentScale = this.scale;
 			}

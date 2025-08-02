@@ -47,7 +47,6 @@ export class CustomTextEditBox {
 				const box = this.textEditService.textboxes.find(b => b.id === this.box.id);
 
 				if (box) {
-					console.log('Div resized:', width, height, box, box.baseHeight, box.baseWidth);
 					box.BoxDims.resizedWidth = width
 					box.BoxDims.resizedHeight = height
 				}

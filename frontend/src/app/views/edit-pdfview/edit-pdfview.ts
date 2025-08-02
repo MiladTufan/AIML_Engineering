@@ -55,12 +55,16 @@ export class EditPDFView {
 	}
 
 	async ngOnInit() {
-		if (this.pdfViewerRef) this.textEditService.pdfViewerContainer = this.pdfViewerRef
 		if (this.dynamicContainer) this.textEditService.dynamicContainer = this.viewContainerRef
 
 		this.pageNumberSub = this.pdfViewService.currentPage$.subscribe(val => {
 			this.currentPageNumber = val;
 		});
+	}
+
+	ngAfterViewInit()
+	{
+		if (this.pdfViewerRef) this.textEditService.pdfViewerContainer = this.pdfViewerRef
 	}
 
 	public onMouseClick(event: Event) {

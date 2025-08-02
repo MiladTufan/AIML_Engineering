@@ -13,7 +13,7 @@
   
       
       <div>
-        <span>width: {{roundedWidth(box.BoxDims.width)}}</span>   
+        <span>top: {{roundedWidth(box.baseTop)}}</span>   
         <textarea
           class="textBoxStyle w-full h-full
                 outline-none  overflow-hidden leading-normal"
@@ -22,7 +22,7 @@
           [ngStyle]="{ 'font-size': box.textStyleEditorState.font_size + 'px'}"
           (input)="onInput($event)"> {{ box.text }}
         </textarea>
-        <span>|  height: {{roundedWidth(box.BoxDims.height)}}</span>  
+        <span>|  basleft: {{roundedWidth(box.baseLeft)}}</span>  
       </div>
 
   
