@@ -58,4 +58,8 @@ export class Page {
     appendTextBox(textBox: TextBox) {
         this.textboxes.push(textBox)
     }
+    replaceTextBox(nexTextBox: TextBox, idx: number) 
+    {
+        this.textboxes.splice(idx, 1, nexTextBox);
+    }
 }

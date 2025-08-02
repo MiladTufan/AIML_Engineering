@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { TextEditService } from '../../services/text-edit-service';
 import { CommonModule } from '@angular/common';
+import { TextBox } from '../../models/TextBox';
 
 @Component({
 	selector: 'app-custom-text-edit-box',
@@ -24,6 +25,7 @@ export class CustomTextEditBox {
 	mouseY: number = 0;
 	cntr = 0;
 	currentEventTarget: EventTarget | null = null;
+	private resizeObserver!: ResizeObserver;
 
 	//=================================================== Inputs =================================================
 	@Input() box: any;
@@ -35,8 +37,32 @@ export class CustomTextEditBox {
 	//=================================================== Children =================================================
 	@ViewChild('editableDiv') editableDiv!: ElementRef;
 
-	constructor(public textEditService: TextEditService) { }
 
+	constructor(public textEditService: TextEditService) { }
+	ngOnInit() {
+		console.log("init TextBoxComponent")
+		this.resizeObserver = new ResizeObserver(entries => {
+			for (const entry of entries) {
+				const { width, height } = entry.target.getBoundingClientRect();
+				const box = this.textEditService.textboxes.find(b => b.id === this.box.id);
+
+				if (box) {
+					console.log('Div resized:', width, height, box, box.baseHeight, box.baseWidth);
+					box.BoxDims.resizedWidth = width
+					box.BoxDims.resizedHeight = height
+				}
+			}
+		});
+	}
+
+
+	ngAfterViewInit() {
+		this.resizeObserver.observe(this.editableDiv.nativeElement);
+	}
+
+	getEditableDiv() {
+		return this.editableDiv;
+	}
 
 	onDragEnd(event: DragEvent) {
 		if (!event.clientX || !event.clientY) return;
@@ -84,8 +110,7 @@ export class CustomTextEditBox {
 			}
 
 		}
-		catch (error)
-		{
+		catch (error) {
 			// handle error here
 		}
 

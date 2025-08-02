@@ -76,13 +76,23 @@ export class TextEditService {
 
     // Box dims = top, left, width, height
     //
-    public createTextBox(box_dims: BoxDimensions, styleState: TextStyleEditor, pageNum: number, scale: number, 
-                         scrollTop: number, rerender: Boolean = false) {
+    public createTextBox(box_dims: BoxDimensions, styleState: TextStyleEditor, pageNum: number, scale: number,
+        scrollTop: number, rerender: Boolean = false, id: number = this.textboxes.length + 1) {
         // this.mouseY += (pageHeight * (this.pageNum - 1))
-        
-        const newTextBox = new TextBox(this.textboxes.length + 1, pageNum, box_dims, "Text", styleState)
+
+        const newTextBox = new TextBox(id, pageNum, box_dims, "Text", styleState)
 
         const page = this.pdfViewerService.getPageWithNumber(pageNum)
+        const oldBox: any = this.textboxes.find(b => b.id === newTextBox.id)
+        if (oldBox) {
+            const idx = this.textboxes.indexOf(oldBox);
+            newTextBox.baseTop = oldBox.baseTop;
+            newTextBox.baseLeft =oldBox.baseLeft;
+            newTextBox.baseHeight =  oldBox.baseHeight;
+            newTextBox.baseWidth =  oldBox.baseWidth;
+            this.textboxes.splice(idx, 1, newTextBox);
+            page?.replaceTextBox(newTextBox, idx)
+        }
 
         if (!rerender) {
             this.textboxes.push(newTextBox);
@@ -102,7 +112,7 @@ export class TextEditService {
         }
 
 
-        return editTextBoxComp
+        return {comp: editTextBoxComp, box: newTextBox}
     }
 
 

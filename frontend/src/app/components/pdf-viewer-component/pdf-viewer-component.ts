@@ -118,7 +118,6 @@ export class PdfViewerComponent {
 						this.removeVisiblePages(pageNumber)
 					}
 				}
-				console.log("Current Visbile Pages", this.visiblePages);
 			},
 			{
 				root: this.pdfContainer.nativeElement,
@@ -137,6 +136,7 @@ export class PdfViewerComponent {
 
 	ngOnDestroy() {
 		this.pageNumberSub.unsubscribe();
+		this.observer.disconnect();
 	}
 
 	//==================================================== Methods ==========================================================
@@ -195,8 +195,6 @@ export class PdfViewerComponent {
 		if (pageNumber === 1)
 			renderdummy = false;
 
-		console.log("Rendering correct page: ", renderdummy)
-
 		page = await this.pdfDocument.getPage(pageNumber);
 
 		if (!renderdummy) {
@@ -241,19 +239,38 @@ export class PdfViewerComponent {
 			const CanvasOld = exists.querySelector("#" + canvas.id)
 			boxesForPage.forEach(box => {
 				if (box.pageId === pageNumber) {
-					const box_dims = {top: (box.baseTop - baseMarginScale+16) * (this.scale / box.BoxDims.creationScale), 
+
+					let newBaseWidth = box.baseWidth;
+					let newBaseHeight = box.baseHeight;
+					const diff = box.BoxDims.width - box.BoxDims.resizedWidth
+					const condition = (diff > 0.1 || diff < -0.1)
+					if (condition)
+					{
+						newBaseWidth = box.BoxDims.resizedWidth;
+						newBaseHeight = box.BoxDims.resizedHeight;
+					}
+
+					const finalWidth = (condition) ? newBaseWidth : newBaseWidth * this.scale
+					const finalHeight = (condition) ? newBaseHeight : newBaseHeight * this.scale
+
+					const box_dims = {top: (box.baseTop) * (this.scale / box.BoxDims.creationScale), 
 									  left: box.baseLeft * (this.scale / box.BoxDims.creationScale), 
-									  width: box.baseWidth * this.scale, 
-									  height:  box.baseHeight * this.scale,
+									  width: finalWidth, 
+									  height: finalHeight,
+									  resizedHeight:  box.BoxDims.resizedHeight,
+									  resizedWidth:  box.BoxDims.resizedWidth,
 									  currentScale: this.scale,
 									  creationScale: box.BoxDims.creationScale,
 									}
 
 					box.textStyleEditorState.font_size = box.textStyleEditorState.baseFontSize * this.scale;
 					//const [left, top] = box.left, box.top //viewport.convertToViewportPoint(box.left, box.top);
-					const textBoxComp = this.textEditService.createTextBox(box_dims, box.textStyleEditorState, pageNumber, 
-						this.scale, this.pdfViewerService.currentScrollTop, true)
-					text_layer.appendChild(textBoxComp.location.nativeElement)
+					const ret = this.textEditService.createTextBox(box_dims, box.textStyleEditorState, pageNumber, 
+						this.scale, this.pdfViewerService.currentScrollTop, true, box.id)
+					
+					ret.box.baseHeight = newBaseHeight
+					ret.box.baseWidth = newBaseWidth
+					text_layer.appendChild(ret.comp.location.nativeElement)
 				}
 			})
 

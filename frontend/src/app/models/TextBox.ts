@@ -21,6 +21,8 @@ export type BoxDimensions = {
   left: number;
   width: number;
   height: number;
+  resizedHeight: number;
+  resizedWidth: number;
   currentScale: number;
   creationScale: number;
 };

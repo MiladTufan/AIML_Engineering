@@ -90,6 +90,8 @@ export class EditPDFView {
 							left: left, 
 							width: width * this.pdfViewService.currentScale, 
 							height: height * this.pdfViewService.currentScale, 
+							resizedHeight: height * this.pdfViewService.currentScale, 
+							resizedWidth: width * this.pdfViewService.currentScale, 
 							currentScale: this.pdfViewService.currentScale,
 							creationScale: this.pdfViewService.currentScale }
 	
