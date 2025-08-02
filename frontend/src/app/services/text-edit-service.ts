@@ -4,6 +4,7 @@ import { TextStyleEditor } from '../models/TextStyleEditor';
 import { CustomTextEditBox } from '../components/custom-text-edit-box/custom-text-edit-box';
 import { PDFViewerService } from './pdfviewer-service';
 import { Constants } from '../models/constants';
+import { ToolbarComponent } from '../components/toolbar-component/toolbar-component';
 
 @Injectable({
     providedIn: 'root'
@@ -14,6 +15,7 @@ export class TextEditService {
     public pdfViewerContainer: ElementRef | null = null;
     public dynamicContainer: ViewContainerRef | null = null;
     public pdfViewerService = inject(PDFViewerService)
+    private toolbarComponent?: ToolbarComponent;
 
     constructor() { }
 
@@ -26,8 +28,9 @@ export class TextEditService {
         return ret;
     }
 
-    
-
+    setToolbar(toolbar: ToolbarComponent) {
+        this.toolbarComponent = toolbar;
+    }
     public getCurrentTextBox() {
         return this.textboxes[this.getIndexOfCurrentFocusBox()]
     }
@@ -47,11 +50,11 @@ export class TextEditService {
         if (editState) {
 
             this.currentFocusTextBoxId = id;
-            // this.toolbar.enableTextStyleEditor(editState);
+            this.toolbarComponent!.enableTextStyleEditor(editState);
         }
         else {
             if (id === this.currentFocusTextBoxId) { }
-            // this.toolbar.enableTextStyleEditor(editState);
+            this.toolbarComponent!.enableTextStyleEditor(editState);
         }
     }
 
@@ -59,14 +62,14 @@ export class TextEditService {
     public updateTextBoxPos(id: number, pos: { top: number, left: number }, pageNum: number, scale: number, scrollTop: number) {
         const savedBox = this.textboxes.find(b => b.id === id);
         const page = this.pdfViewerService.getPageWithNumber(pageNum)
-		const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
+        const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
 
-		const rect = (text_layer as HTMLElement).getBoundingClientRect();
+        const rect = (text_layer as HTMLElement).getBoundingClientRect();
 
         if (savedBox) {
             savedBox.BoxDims.top = (pos.top - rect.top);
             savedBox.BoxDims.left = pos.left - rect.left;
-            
+
             savedBox.baseLeft = pos.left - rect.left;
             savedBox.baseTop = pos.top - rect.top;
             savedBox.pageId = pageNum;
@@ -95,9 +98,9 @@ export class TextEditService {
         if (oldBox) {
             const idx = this.textboxes.indexOf(oldBox);
             newTextBox.baseTop = oldBox.baseTop;
-            newTextBox.baseLeft =oldBox.baseLeft;
-            newTextBox.baseHeight =  oldBox.baseHeight;
-            newTextBox.baseWidth =  oldBox.baseWidth;
+            newTextBox.baseLeft = oldBox.baseLeft;
+            newTextBox.baseHeight = oldBox.baseHeight;
+            newTextBox.baseWidth = oldBox.baseWidth;
             this.textboxes.splice(idx, 1, newTextBox);
             page?.replaceTextBox(newTextBox, idx)
         }
@@ -120,7 +123,7 @@ export class TextEditService {
         }
 
 
-        return {comp: editTextBoxComp, box: newTextBox}
+        return { comp: editTextBoxComp, box: newTextBox }
     }
 
 

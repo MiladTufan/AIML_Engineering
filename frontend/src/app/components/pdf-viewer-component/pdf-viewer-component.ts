@@ -241,7 +241,7 @@ export class PdfViewerComponent {
 		const container = this.pdfContainer.nativeElement;
 		const canvas = document.createElement("canvas");
 		const text_box_layer = document.createElement("div");
-		const text_layer = document.createElement("div");
+		let text_layer = document.createElement("div");
 		let pageContainer = document.createElement("div");
 
 		canvas.id = `page-${pageNumber}`;
@@ -354,46 +354,62 @@ export class PdfViewerComponent {
 			else
 				this.pdfViewerService.allRenderedPages.push(newPage)
 
-			text_layer.style.position = 'absolute';
-			text_layer.style.top = '0';
-			text_layer.style.left = '0';
-			text_layer.style.width = `${viewport.width}px`;
-			text_layer.style.height = `${viewport.height}px`;
-			text_layer.style.pointerEvents = 'none'; // optional, disables selection
-			text_layer.className = '.textLayer'; // optional, disables selection
 
+			//============================ EXPERIMENTAL ====================================
+			// use this for editing the PDF
 
-
-			// TODO This has all the PDF text ... use this for editing
-			page.getTextContent().then((textContent: any) => {
-				console.log("Text items:", textContent.items);
-				// textContent.items.forEach((item: any) => {
-				// 	const textDiv = document.createElement('div');
-				// 	// textDiv.textContent = item.str;
-
-				// 	// Positionierung nach PDF Koordinaten (vereinfacht)
-				// 	const tx = pdfjsLib.Util.transform(
-				// 		viewport.transform,
-				// 		item.transform
-				// 	);
-
-				// 	textDiv.style.position = 'absolute';
-				// 	textDiv.style.left = `${tx[4]}px`;
-				// 	textDiv.style.top = `${tx[5] - item.height}px`; // adjust Y
-				// 	textDiv.style.fontSize = `${item.height}px`;
-				// 	textDiv.style.fontFamily = item.fontName;
-				// 	textDiv.style.border = '2px solid black';
-
-				// 	text_layer.appendChild(textDiv);
-				// });
-			})
+			// text_layer.style.position = 'absolute';
+			// text_layer.style.top = '0';
+			// text_layer.style.left = '0';
+			// text_layer.style.width = `${viewport.width}px`;
+			// text_layer.style.height = `${viewport.height}px`;
+			// text_layer.style.pointerEvents = 'none'; // optional, disables selection
+			// text_layer.className = 'textLayer'; // optional, disables selection
 
 			// const exists = pageContainer.querySelector(".textLayer")
 			// if (exists != null) {
-			// 	const textOld = exists.querySelector(Constants.OVERLAY_TEXT)
-			// 	const CanvasOld = exists.querySelector("#" + canvas.id)
-			// 	pageContainer.appendChild(text_layer)
+			// 	exists.replaceChildren()
+			// 	text_layer = exists as HTMLDivElement;
 			// }
+
+			// // TODO This has all the PDF text ... use this for editing
+			// page.getTextContent().then((textContent: any) => {
+			// 	textContent.items.forEach((item: any) => {
+			// 		const textDiv = document.createElement('div');
+			// 		textDiv.textContent = item.str;
+
+			// 		// Positionierung nach PDF Koordinaten (vereinfacht)
+			// 		const tx = pdfjsLib.Util.transform(
+			// 			viewport.transform,
+			// 			item.transform
+			// 		);
+
+			// 		textDiv.style.position = 'absolute';
+			// 		textDiv.style.left = `${tx[4]}px`;
+			// 		textDiv.style.top = `${tx[5] - item.height}px`; // adjust Y
+			// 		textDiv.style.fontSize = `${item.height*1.5}px`;
+			// 		textDiv.style.fontFamily = item.fontName;
+			// 		textDiv.style.border = '2px solid black';
+			// 		textDiv.style.width = item.width;
+			// 		textDiv.style.height = item.height;
+			// 		textDiv.style.border = '1px dashed blue';
+
+			// 		text_layer.appendChild(textDiv);
+			// 	});
+			// 	if (!exists)
+			// 		pageContainer.appendChild(text_layer)
+
+			// })
+
+
+			// Annotations .. e.g. formular Felder usw.
+			// page.getAnnotations().then((annotations: any) => {
+			// 	console.log(annotations)
+			// })
+
+			// context.clearRect(0, 0, canvas.width, canvas.height);
+
+
 		}
 
 	}

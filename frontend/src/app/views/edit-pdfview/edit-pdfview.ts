@@ -65,6 +65,7 @@ export class EditPDFView {
 	ngAfterViewInit()
 	{
 		if (this.pdfViewerRef) this.textEditService.pdfViewerContainer = this.pdfViewerRef
+		if (this.toolbar) this.textEditService.setToolbar(this.toolbar);
 	}
 
 	public onMouseClick(event: Event) {
