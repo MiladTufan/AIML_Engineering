@@ -250,8 +250,8 @@ export class PdfViewerComponent {
 						newBaseHeight = box.BoxDims.resizedHeight;
 					}
 
-					const finalWidth = (condition) ? newBaseWidth : newBaseWidth * this.scale
-					const finalHeight = (condition) ? newBaseHeight : newBaseHeight * this.scale
+					const finalWidth = newBaseWidth * this.scale
+					const finalHeight = newBaseHeight * this.scale
 
 					const box_dims = {top: (box.baseTop) * (this.scale / box.BoxDims.creationScale), 
 									  left: box.baseLeft * (this.scale / box.BoxDims.creationScale), 
