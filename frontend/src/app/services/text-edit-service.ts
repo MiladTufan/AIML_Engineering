@@ -1,5 +1,5 @@
 import { ComponentRef, ElementRef, Injectable, ViewContainerRef, inject } from '@angular/core';
-import { TextBox } from '../models/TextBox';
+import { BoxDimensions, TextBox } from '../models/TextBox';
 import { TextStyleEditor } from '../models/TextStyleEditor';
 import { CustomTextEditBox } from '../components/custom-text-edit-box/custom-text-edit-box';
 import { PDFViewerService } from './pdfviewer-service';
@@ -59,8 +59,8 @@ export class TextEditService {
         const rect = (this.pdfViewerContainer!.nativeElement as HTMLElement).getBoundingClientRect();
 
         if (savedBox) {
-            savedBox.top = (pos.top - rect.top) * scale + scrollTop;
-            savedBox.left = pos.left * scale;
+            savedBox.BoxDims.top = (pos.top - rect.top) * scale + scrollTop;
+            savedBox.BoxDims.left = pos.left * scale;
             savedBox.pageId = pageNum;
         }
     }
@@ -76,17 +76,20 @@ export class TextEditService {
 
     // Box dims = top, left, width, height
     //
-    public createTextBox(box_dims: any, styleState: TextStyleEditor, pageNum: number, scale: number, 
+    public createTextBox(box_dims: BoxDimensions, styleState: TextStyleEditor, pageNum: number, scale: number, 
                          scrollTop: number, rerender: Boolean = false) {
         // this.mouseY += (pageHeight * (this.pageNum - 1))
         
-        const newTextBox = new TextBox(this.textboxes.length + 1, pageNum,
-            box_dims.top, box_dims.left, box_dims.width, box_dims.height, "Text", styleState)
+        const newTextBox = new TextBox(this.textboxes.length + 1, pageNum, box_dims, "Text", styleState)
 
         const page = this.pdfViewerService.getPageWithNumber(pageNum)
 
         if (!rerender) {
             this.textboxes.push(newTextBox);
+            newTextBox.baseTop = box_dims.top;
+            newTextBox.baseLeft = box_dims.left;
+            newTextBox.baseHeight = box_dims.height / this.pdfViewerService.currentScale;
+            newTextBox.baseWidth = box_dims.width / this.pdfViewerService.currentScale;
             page?.appendTextBox(newTextBox)
         }
 

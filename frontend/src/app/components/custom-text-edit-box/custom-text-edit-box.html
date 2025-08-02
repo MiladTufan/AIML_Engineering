@@ -5,10 +5,10 @@
     (dragend)="onDragEnd($event)"
     draggable="true"
     #editableDiv
-    [ngStyle]="{ top: box.top + 'px', 
-                left: box.left + 'px',
-                width: box.width + 'px',
-                height: box.height + 'px'}">
+    [ngStyle]="{ top: box.BoxDims.top + 'px', 
+                left: box.BoxDims.left + 'px',
+                width: box.BoxDims.width + 'px',
+                height: box.BoxDims.height + 'px'}">
 
   <textarea
     class="textBoxStyle w-full h-full

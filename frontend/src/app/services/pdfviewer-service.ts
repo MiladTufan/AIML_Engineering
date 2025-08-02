@@ -13,6 +13,7 @@ export class PDFViewerService {
 	public PDFScrollContainer: ElementRef | null = null;
 	public dynamicContainer: ViewContainerRef | null = null;
 	public currentScale: number = 1.0;
+	public currentBaseMarginScale: number = 1.0;
 	public allPageContainers: any
 	public allRenderedPages: Page[] = []
 

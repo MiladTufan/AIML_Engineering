@@ -70,7 +70,7 @@ export class EditPDFView {
 		}
 	}
 
-	startDraggingTextBox(){
+	startDraggingTextBox() {
 		this.isDragging = true;
 	}
 
@@ -80,15 +80,29 @@ export class EditPDFView {
 		const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
 
 		const rect = (text_layer as HTMLElement).getBoundingClientRect();
-		const top = this.mouseY - rect.top
-		const left = this.mouseX - rect.left
+		// const rect = (this.pdfViewerRef.nativeElement as HTMLElement).getBoundingClientRect();
+		const top = (this.mouseY) - rect.top
+		const left = (this.mouseX ) - rect.left
 		const width = 110
 		const height = 30
 
-		const box_dims = {top: top, left: left, width: width, height: height}
-		const styleState = new TextStyleEditor()
+		const box_dims = {  top: top, 
+							left: left, 
+							width: width * this.pdfViewService.currentScale, 
+							height: height * this.pdfViewService.currentScale, 
+							currentScale: this.pdfViewService.currentScale,
+							creationScale: this.pdfViewService.currentScale }
+	
 
-		this.mouseY += (this.pdfViewService.pageHeight * (this.currentPageNumber - 1))
+			// top: (box.BoxDims.top - baseMarginScale+16) * this.scale, 
+			// 						  left: box.BoxDims.left  * this.scale, 
+			// 						  width: box.BoxDims.width * this.scale, 
+			// 						  height:  box.BoxDims.height * this.scale,
+
+		const styleState = new TextStyleEditor()
+		styleState.font_size = styleState.baseFontSize * this.pdfViewService.currentScale
+
+		// this.mouseY += (this.pdfViewService.pageHeight * (this.currentPageNumber - 1))
 		this.textEditService.createTextBox(box_dims, styleState, this.currentPageNumber, this.pdfViewService.currentScale, this.pdfViewService.currentScrollTop)
 	}
 }	

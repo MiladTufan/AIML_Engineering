@@ -80,13 +80,12 @@ export class PdfViewerComponent {
 
 		this.visiblePages.subscribe(set => {
 			console.log("Visible pages:", Array.from(set));
-			if (this.currentScale != this.scale) {
-				for (const p of set)
-					this.renderPage(p, false)
-
-				this.currentScale = this.scale;
-			}
-
+				for (const pageNum of set)
+				{
+					const page = this.pdfViewerService.allRenderedPages.find(p => p.pageNum === pageNum)
+					if (page?.currentScale != this.scale)
+						this.renderPage(pageNum, false)
+				}
 		});
 
 
@@ -123,6 +122,7 @@ export class PdfViewerComponent {
 			},
 			{
 				root: this.pdfContainer.nativeElement,
+				rootMargin: '200px 0px 200px 0px', // top, right, bottom, left
 				threshold: 0.01 // Trigger if at least 10% is visible
 			}
 		);
@@ -175,20 +175,14 @@ export class PdfViewerComponent {
 
 	getScaledMargin(scale: number) {
 		if (scale === 1.0) return 16;
-		let scaler = 0.1
-
-		if (scale > 1.2)
-			scaler += 0.1
-		if (scale > 1.9)
-			scaler += 0.1
 
 		const fract = scale - Math.floor(scale)
 		const fractFull = (Math.floor(scale) - 1) + fract
 
 
-		const multiplier = 10 + ((fractFull - scaler) * 10)
+		const multiplier = 10
 		const marginOffset = fractFull * multiplier;
-		return 16 * (8 * marginOffset);
+		return 16 * (marginOffset);
 	}
 
 
@@ -198,8 +192,8 @@ export class PdfViewerComponent {
 
 		let page: any;
 		let viewport: any;
-		// if (pageNumber === 1)
-		// 	renderdummy = false;
+		if (pageNumber === 1)
+			renderdummy = false;
 
 		console.log("Rendering correct page: ", renderdummy)
 
@@ -245,17 +239,15 @@ export class PdfViewerComponent {
 		if (exists != null) {
 			const textOld = exists.querySelector(Constants.OVERLAY_TEXT)
 			const CanvasOld = exists.querySelector("#" + canvas.id)
-
-			const span = document.createElement("span")
-			span.textContent = "ASDASDASDASDASDASDASDSD";
-			span.className = "bg-red-500 text-[42px]"
-
 			boxesForPage.forEach(box => {
 				if (box.pageId === pageNumber) {
-					const box_dims = {top: box.top * this.scale, 
-									  left: box.left  * this.scale, 
-									  width: box.width * this.scale, 
-									  height:  box.height * this.scale}
+					const box_dims = {top: (box.baseTop - baseMarginScale+16) * (this.scale / box.BoxDims.creationScale), 
+									  left: box.baseLeft * (this.scale / box.BoxDims.creationScale), 
+									  width: box.baseWidth * this.scale, 
+									  height:  box.baseHeight * this.scale,
+									  currentScale: this.scale,
+									  creationScale: box.BoxDims.creationScale,
+									}
 
 					box.textStyleEditorState.font_size = box.textStyleEditorState.baseFontSize * this.scale;
 					//const [left, top] = box.left, box.top //viewport.convertToViewportPoint(box.left, box.top);
@@ -265,13 +257,6 @@ export class PdfViewerComponent {
 				}
 			})
 
-			const [x, y] = viewport.convertToViewportPoint(500, 600);
-			span.style.position = "absolute";
-			span.style.left = `${x}px`; // Already scaled by viewport
-			span.style.top = `${y}px`;
-
-			span.style.fontSize = `${12 * this.scale}px`;
-			text_layer.appendChild(span)
 			exists.replaceChild(text_layer, textOld!)
 			exists.replaceChild(canvas, CanvasOld!)
 
@@ -290,9 +275,14 @@ export class PdfViewerComponent {
 			canvas.height = viewport.height;
 			canvas.width = viewport.width;
 
-			// pageContainer.style.marginTop = `${baseMarginScale}px`;
-			// pageContainer.style.width = `${viewport.width}px`;
-			// pageContainer.style.height = `${viewport.height}px`;
+			pageContainer.style.marginTop = `${baseMarginScale}px`;
+			pageContainer.style.width = `${viewport.width}px`;
+			pageContainer.style.height = `${viewport.height}px`;
+
+			if (pageNumber == this.pdfViewerService.totalPages)
+				pageContainer.style.marginBottom = "128px";
+
+			this.pdfViewerService.currentBaseMarginScale = baseMarginScale
 
 			const renderContext = {
 				canvasContext: context,
@@ -301,7 +291,7 @@ export class PdfViewerComponent {
 			};
 
 			await page.render(renderContext).promise;
-			const newPage = new Page(pageNumber, viewport, boxesForPage, viewport.height, viewport.width, 0, pageContainer)
+			const newPage = new Page(pageNumber, viewport, boxesForPage, viewport.height, viewport.width, 0, pageContainer, this.scale)
 			const renderedPage = this.pdfViewerService.allRenderedPages.find(p => p.pageNum === pageNumber)
 			if (renderedPage) {
 				const idx = this.pdfViewerService.allRenderedPages.indexOf(renderedPage);
@@ -321,14 +311,16 @@ export class PdfViewerComponent {
 				this.scale += 0.1;
 				for (const p of this.visiblePages.getValue())
 					this.renderPage(p, false)
+				this.pdfViewerService.currentScale = this.scale;
 			}
 			else if (this.scale > this.minScale && event.deltaY > 0) {
 				this.scale -= 0.1;
 				for (const p of this.visiblePages.getValue())
 					this.renderPage(p, false)
 
+				this.pdfViewerService.currentScale = this.scale;
 			}
-			this.pdfViewerService.currentScale = this.scale;
+			
 
 		}
 	}

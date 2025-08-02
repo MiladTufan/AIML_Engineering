@@ -9,6 +9,7 @@ export class Page {
     private _width: number = 0;
     private _rotation: number = 0;
     private _htmlContainer: any
+    private _currentScale: number = 1.0
 
     constructor(
         pageNum: number = 0,
@@ -17,7 +18,8 @@ export class Page {
         height: number = 0,
         width: number = 0,
         rotation: number = 0,
-        htmlContainer: any
+        htmlContainer: any,
+        currentScale: number = 0,
     ) {
         this._pageNum = pageNum;
         this._viewport = viewport;
@@ -26,6 +28,7 @@ export class Page {
         this._width = width;
         this._rotation = rotation;
         this._htmlContainer = htmlContainer;
+        this._currentScale = currentScale;
     }
 
     get pageNum(): number { return this._pageNum; }
@@ -48,6 +51,9 @@ export class Page {
 
     get htmlContainer(): any { return this._htmlContainer; }
     set htmlContainer(value: any) { this._htmlContainer = value; }
+
+    get currentScale(): any { return this._currentScale; }
+    set currentScale(value: any) { this._currentScale = value; }
 
     appendTextBox(textBox: TextBox) {
         this.textboxes.push(textBox)
