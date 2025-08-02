@@ -48,8 +48,8 @@ export class TextEditService {
             // this.toolbar.enableTextStyleEditor(editState);
         }
         else {
-            if (id === this.currentFocusTextBoxId) {}
-                // this.toolbar.enableTextStyleEditor(editState);
+            if (id === this.currentFocusTextBoxId) { }
+            // this.toolbar.enableTextStyleEditor(editState);
         }
     }
 
@@ -74,22 +74,30 @@ export class TextEditService {
         return editTextBoxComp
     }
 
-    public createTextBox(top: number, left: number, pageNum: number, scale: number, scrollTop: number) {
+    // Box dims = top, left, width, height
+    //
+    public createTextBox(box_dims: any, styleState: TextStyleEditor, pageNum: number, scale: number, 
+                         scrollTop: number, rerender: Boolean = false) {
         // this.mouseY += (pageHeight * (this.pageNum - 1))
-
+        
         const newTextBox = new TextBox(this.textboxes.length + 1, pageNum,
-            top, left, "Text", new TextStyleEditor())
-        
+            box_dims.top, box_dims.left, box_dims.width, box_dims.height, "Text", styleState)
+
         const page = this.pdfViewerService.getPageWithNumber(pageNum)
-        
-        this.textboxes.push(newTextBox);
-        page?.appendTextBox(newTextBox)
+
+        if (!rerender) {
+            this.textboxes.push(newTextBox);
+            page?.appendTextBox(newTextBox)
+        }
 
         let editTextBoxComp = this.pdfViewerService.dynamicContainer!.createComponent(CustomTextEditBox)
         editTextBoxComp = this.createTextBoxContainer(editTextBoxComp, newTextBox, pageNum, scale, scrollTop);
 
-        const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
-        text_layer?.appendChild(editTextBoxComp.location.nativeElement)
+        if (!rerender) {
+            const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
+            text_layer?.appendChild(editTextBoxComp.location.nativeElement)
+        }
+
 
         return editTextBoxComp
     }

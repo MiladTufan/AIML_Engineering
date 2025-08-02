@@ -1,17 +1,21 @@
 
-<div class="textBoxStyle w-[110px] h-[30px]  border border-dashed border-gray-700
+<div class="textBoxStyle border border-dashed border-gray-700
            hover:border-gray-900 hover:shadow-md cursor-move resize both overflow-hidden"
     (mousedown)="onDragStart($event)"
     (dragend)="onDragEnd($event)"
     draggable="true"
     #editableDiv
-    [ngStyle]="{ top: box.top + 'px', left: box.left + 'px' }">
+    [ngStyle]="{ top: box.top + 'px', 
+                left: box.left + 'px',
+                width: box.width + 'px',
+                height: box.height + 'px'}">
 
   <textarea
     class="textBoxStyle w-full h-full
-          outline-none border border-gray-300 text-sm overflow-hidden leading-normal"
+          outline-none border border-gray-300 overflow-hidden leading-normal"
     [style.color]="textEditService.getCurrentTextStyleEditorById(box.id).currentColor"
     contenteditable="true"
+    [ngStyle]="{ 'font-size': box.textStyleEditorState.font_size + 'px'}"
     (input)="onInput($event)"> {{ box.text }}
   </textarea>
 

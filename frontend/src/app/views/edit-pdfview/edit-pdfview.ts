@@ -82,8 +82,13 @@ export class EditPDFView {
 		const rect = (text_layer as HTMLElement).getBoundingClientRect();
 		const top = this.mouseY - rect.top
 		const left = this.mouseX - rect.left
+		const width = 110
+		const height = 30
+
+		const box_dims = {top: top, left: left, width: width, height: height}
+		const styleState = new TextStyleEditor()
 
 		this.mouseY += (this.pdfViewService.pageHeight * (this.currentPageNumber - 1))
-		this.textEditService.createTextBox(top, left, this.currentPageNumber, this.pdfViewService.currentScale, this.pdfViewService.currentScrollTop)
+		this.textEditService.createTextBox(box_dims, styleState, this.currentPageNumber, this.pdfViewService.currentScale, this.pdfViewService.currentScrollTop)
 	}
 }	

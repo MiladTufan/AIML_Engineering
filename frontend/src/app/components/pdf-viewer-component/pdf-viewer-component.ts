@@ -237,13 +237,7 @@ export class PdfViewerComponent {
 
 		const boxesForPage = this.textEditService.textboxes.filter(b => b.pageId == pageNumber)
 
-		boxesForPage.forEach(box => {
-			if (box.pageId === pageNumber) {
-				const [left, top] = viewport.convertToViewportPoint(box.left, box.top);
-				const textBoxComp = this.textEditService.createTextBox(top, left, pageNumber, this.scale, this.pdfViewerService.currentScrollTop)
-				text_layer.appendChild(textBoxComp.location.nativeElement)
-			}
-		})
+
 
 		pageContainer.appendChild(text_layer)
 		pageContainer.appendChild(canvas)
@@ -256,6 +250,20 @@ export class PdfViewerComponent {
 			span.textContent = "ASDASDASDASDASDASDASDSD";
 			span.className = "bg-red-500 text-[42px]"
 
+			boxesForPage.forEach(box => {
+				if (box.pageId === pageNumber) {
+					const box_dims = {top: box.top * this.scale, 
+									  left: box.left  * this.scale, 
+									  width: box.width * this.scale, 
+									  height:  box.height * this.scale}
+
+					box.textStyleEditorState.font_size = box.textStyleEditorState.baseFontSize * this.scale;
+					//const [left, top] = box.left, box.top //viewport.convertToViewportPoint(box.left, box.top);
+					const textBoxComp = this.textEditService.createTextBox(box_dims, box.textStyleEditorState, pageNumber, 
+						this.scale, this.pdfViewerService.currentScrollTop, true)
+					text_layer.appendChild(textBoxComp.location.nativeElement)
+				}
+			})
 
 			const [x, y] = viewport.convertToViewportPoint(500, 600);
 			span.style.position = "absolute";
