@@ -1,6 +1,6 @@
-<div class="w-full h-[99vh] overflow-auto" #pdfContainer
-    (wheel)="onWheel($event)"
-  
-></div>
+<div class="w-full h-[99vh] overflow-auto" #pdfContainer 
+    [style.transform]="cssScale"
+    [style.transformOrigin]="transformOrigin" (wheel)="onWheel($event)"
+    style="transform-origin: top left;"></div>
 
 <ng-template #dynamicContainer></ng-template>
