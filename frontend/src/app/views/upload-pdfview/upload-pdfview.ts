@@ -7,7 +7,7 @@ import { PDFFileService } from '../../services/pdffile-service';
 @Component({
 	selector: 'app-upload-pdfview',
 	imports: [CommonModule],
-	templateUrl: './upload-pdfview.html',
+	templateUrl: './upload-pdfview_remade.html',
 	styleUrl: './upload-pdfview.css'
 })
 export class UploadPDFView {

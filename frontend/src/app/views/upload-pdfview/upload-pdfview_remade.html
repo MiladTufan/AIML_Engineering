@@ -1,0 +1,42 @@
+<img src="/assets/icons/uploadAreaTitle.svg" width="400px" class="mx-auto w-48 sm:w-64 mt-1 sm:mt-2 mb-1 sm:mb-2" />
+
+<div class="overflow-auto h-[99%]">
+<div class="w-[95%] flex justify-center items-center relative 
+            bg-[var(--upload_bg_color)] rounded-lg  mx-auto mt-16 aspect-square sm:aspect-auto">
+
+    <input #folderInput type="file" accept="application/pdf" style="display: none"
+        (change)="onUploadBtnClicked($event)" />
+
+    <div class="dropAreaContainer w-full flex-col flex justify-center items-center aspect-square sm:aspect-auto
+            relative sm:border-2 border-1 border-dashed border-white rounded sm:m-4 m-2"
+        (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)"
+        (dragend)="onDragEnd($event)">
+
+        <img src="assets/icons/pdf_upload_img.svg" />
+
+        <button (click)="folderInput.click()" class="upload_btn justify-center items-center">
+            <div class="w-full max-w-[33rem] h-16 sm:h-8 lg:h-25 bg-[#FF0000] flex items-center 
+                            justify-center cursor-pointer rounded-md md:rounded-xl
+                          hover:bg-[#CC0000] transition-colors duration-200
+                            sm:max-w-[24rem] md:max-w-[33rem]">
+                <span class="text-white font-bold text-xl md:text-2xl lg:text-4xl font-standard m-4">Upload PDF File</span>
+            </div>
+        </button>
+
+        <span class="text-xs md:text-lg text-white font-inter mt-3 mb-4">or drop PDF here</span>
+    </div>
+
+    
+</div>
+
+<p class="w-full max-w-[90%] sm:max-w-[200px] mx-auto mt-3 sm:mt-5 rounded bg-gray-100 font-standard">⚠️ <strong>Privacy
+        First:</strong> We never store your files or data unless you explicitly choose to save them. All processing
+    happens securely in your browser or is deleted immediately after use.</p>
+
+<ul class="w-full max-w-[90%] sm:max-w-[200px] mx-auto mt-3 sm:mt-5 rounded bg-gray-100 font-standard">
+    <li>✅ <strong>No registration</strong> – Start editing instantly, no sign-up needed</li>
+    <li>✅ <strong>Completely free</strong> – For a limited time only. Don’t miss out!</li>
+    <li>✅ <strong>No hassle</strong> – Just drag, drop, and edit your PDFs with ease</li>
+</ul>
+
+</div>

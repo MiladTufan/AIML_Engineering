@@ -16,6 +16,7 @@ body {
   --btn_hover_color: #F3F5F7 ;
   --btn_border_color: #D9DDE1;
   --main_bg_color: #F9F9F9;
+  --upload_bg_color: #151B23;
 }
 
 .hiddenCanvasElement {
