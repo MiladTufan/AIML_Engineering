@@ -9,7 +9,7 @@ import { AlertComponent } from '../../shared/alert/alert';
 @Component({
 	selector: 'app-upload-pdfview',
 	imports: [CommonModule],
-	templateUrl: './upload-pdfview_remade.html',
+	templateUrl: './upload-pdfview_remade_translucent.html',
 	styleUrl: './upload-pdfview.css'
 })
 export class UploadPDFView {

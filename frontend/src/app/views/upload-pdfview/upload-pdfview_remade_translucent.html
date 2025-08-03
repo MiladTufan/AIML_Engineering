@@ -1,0 +1,53 @@
+<img src="/assets/icons/uploadAreaTitle.svg" width="400px" class="mx-auto w-48 lg:w-80 mt-1 sm:mt-2 mb-1 sm:mb-2" />
+
+<div class="scroller overflow-y-auto max-h-[95vh] lg:max-h-[95vh]">
+    <div class="w-[95%] flex justify-center items-center relative 
+            backdrop-blur-xl bg-white/10 
+            border border-gray-300 
+            rounded-lg mx-auto mt-4 
+            aspect-square sm:aspect-auto cursor-pointer 
+            shadow-[0_8px_32px_0_rgba(31,38,135,0.2)]">
+
+        <input #folderInput type="file" accept="application/pdf" style="display: none"
+            (change)="onUploadBtnClicked($event)" />
+
+        <div class="dropAreaContainer w-full flex-col flex justify-center items-center aspect-square sm:aspect-auto
+                relative sm:border-2 border-1 border-dashed border-white rounded sm:m-4 m-2"
+            (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)"
+            (dragend)="onDragEnd($event)">
+
+            <div *ngIf="showGlassySvg" id="overlay" class="absolute top-0 left-0 right-0 bottom-0 bg-opacity-20 flex
+                       backdrop-blur-xl rounded-lg pointer-events-none justify-center items-center">
+
+                <h1 class="z-20 bg-gradient-to-r from-[#3B82F6] to-[#FF4D4D]
+                            bg-clip-text text-transparent font-extrabold text-8xl
+                            drop-shadow-[0_2px_3px_rgba(0,0,0,0.6)]
+                            leading-normal font-inter">Drag it. Drop it. Love it.</h1>
+
+            </div>
+
+
+            <img src="assets/icons/pdf_upload_img_black.svg" />
+
+            <button (click)="folderInput.click()" class="upload_btn justify-center items-center">
+                <div class="lg:w-128 w-48 h-14 md:w-64 md:h-17 sm:h-14 lg:h-22 bg-[#FF0000] flex items-center 
+                                justify-center cursor-pointer rounded-md md:rounded-xl
+                            hover:bg-[#CC0000] transition-colors duration-200
+                                sm:max-w-[24rem] md:max-w-[33rem]">
+                    <span class="text-white font-bold text-lg md:text-2xl lg:text-4xl font-inter m-4">Upload PDF
+                        File</span>
+                </div>
+            </button>
+
+            <p class="text-xs md:text-lg text-white font-inter mt-2 sm:mb-14">or drop PDF here</p>
+        </div>
+    </div>
+
+    
+    <ul class="w-full max-w-[90%] sm:max-w-full mx-auto mt-3 sm:mt-5 rounded bg-gray-100 font-standard">
+        <li>✅ <strong>No registration</strong> – Start editing instantly, no sign-up needed</li>
+        <li>✅ <strong>Completely free</strong> – For a limited time only. Don’t miss out!</li>
+        <li>✅ <strong>No hassle</strong> – Just drag, drop, and edit your PDFs with ease</li>
+
+    </ul>
+</div>
