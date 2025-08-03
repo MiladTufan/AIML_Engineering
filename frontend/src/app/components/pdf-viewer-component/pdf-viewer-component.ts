@@ -11,6 +11,7 @@ import { debounceTime, Subject } from 'rxjs';
 
 // import { TextLayerBuilder } from 'pdfjs-dist'; 
 import 'pdfjs-dist/web/pdf_viewer.css'; // <-- required for text layer positioning
+import { AlertService } from '../../services/alert-service';
 
 (pdfjsLib as any).GlobalWorkerOptions.workerSrc = "assets/pdf.worker.min.mjs";
 
@@ -57,7 +58,7 @@ export class PdfViewerComponent {
 
 	constructor(private fileService: PDFFileService,
 		private pdfViewerService: PDFViewerService,
-		private textEditService: TextEditService) {
+		private textEditService: TextEditService, private alertService: AlertService) {
 		this.renderTrigger.pipe(debounceTime(10)).subscribe((finalScale) => {
 
 			Promise.all(
@@ -255,7 +256,11 @@ export class PdfViewerComponent {
 
 		if (!renderdummy) {
 			pageContainer.className = "mt-1 sm:mt-3 md:mt-4 mx-auto relative block w-full max-w-fit sm:max-w-[70%] md:max-w-[90%]";
-			canvas.className = `page-${pageNumber} block border border-gray-300 shadow-lg mx-auto`;
+			if (this.scale == 1.0)
+				canvas.className = `page-${pageNumber} w-full block border border-gray-300 shadow-lg -mb-[305px]`;
+			else
+				canvas.className = `page-${pageNumber} block border border-gray-300 shadow-lg`;
+
 
 		}
 		else {
@@ -483,6 +488,9 @@ export class PdfViewerComponent {
 			for (const p of this.visiblePages.getValue()) {
 				this.renderQueue.add([p, newScale]);
 			}
+
+			// this.alertService.createAlert("info", "CURRENT ZOOM",
+			// 		newScale.toString(), 5000)
 			this.renderTrigger.next(newScale);
 		}
 	}
