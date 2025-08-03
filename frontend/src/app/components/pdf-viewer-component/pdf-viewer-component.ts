@@ -254,13 +254,13 @@ export class PdfViewerComponent {
 		if (scale > 1.0 && pageNumber > 1) baseMarginScale = this.getScaledMargin(scale)
 
 		if (!renderdummy) {
-			pageContainer.className = "mt-4 mx-auto relative block w-fit";
-			canvas.className = `page-${pageNumber} border border-gray-300 shadow-lg mx-auto`;
+			pageContainer.className = "mt-1 sm:mt-3 md:mt-4 mx-auto relative block w-full max-w-fit sm:max-w-[70%] md:max-w-[90%]";
+			canvas.className = `page-${pageNumber} block border border-gray-300 shadow-lg mx-auto`;
 
 		}
 		else {
-			pageContainer.className = `mt-4 mx-auto relative block w-fit h-[900px]`;
-			canvas.className = `page-${pageNumber} border border-gray-300 shadow-lg  h-[841.92px] w-[595.32px]`;
+			pageContainer.className = `mt-1 sm:mt-3 md:mt-4 mx-auto relative block w-full max-w-fit sm:max-w-[70%] md:max-w-[90%]`;
+			canvas.className = `page-${pageNumber} block border border-gray-300 shadow-lg mx-auto`;
 		}
 
 		const boxesForPage = this.textEditService.textboxes.filter(b => b.pageId == pageNumber)
@@ -314,7 +314,7 @@ export class PdfViewerComponent {
 			exists.replaceChild(canvas, CanvasOld!)
 
 			if (!renderdummy) {
-				exists.className = "mt-4 mx-auto relative block w-fit";
+				exists.className = "mt-1 sm:mt-3 md:mt-4 mx-auto relative block w-full max-w-fit sm:max-w-[70%] md:max-w-[90%]";
 			}
 
 			pageContainer = exists as HTMLDivElement
