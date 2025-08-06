@@ -1,17 +1,33 @@
-<div class="fixed h-12 flex items-center justify-left text-center top-[2%] z-10
+<div class="fixed flex items-center justify-left text-center top-[2%] z-10
             translucentStyle  left-1/2 transform -translate-x-1/2 rounded-xl"
             [@slideInOut]="this.textEditService.getCurrentTextStyleEditor().isCollapsed ? 'out' : 'in'"
             id="colorBar">
-    <span id="text">Text</span>
-    <div class="vertical_line"></div>
 
-    <div *ngFor="let color of colors"
-        class="color-container"
-        [ngClass]="{ 'color-white': color === '#FFFFFF' }"
-        [style.background-color] = "color"
-        [title] = "color"
-        (click)="onColorSelect(color)">
+    <div class="flex-col mt-2" id="TextStyleContainer">
+      <div class="flex">
+        <div *ngFor="let color of colors"
+            class="color-container"
+            [ngClass]="{ 'color-white': color === '#FFFFFF' }"
+            [style.background-color] = "color"
+            [title] = "color"
+            (click)="onColorSelect(color)">
+        </div>
+      </div>
+
+      <div class="font">
+        <textarea 
+            contenteditable="true"
+            > font
+        </textarea>
+
+        <textarea 
+            contenteditable="true"
+            > Something else
+        </textarea>
+      </div>
     </div>
+
+    
 
   <!-- <div class="color-container" style="background-color: #000000;" title="Black" (click)="onColorSelect(Black)"></div>
   <div class="color-container" style="background-color: #8B0000;" title="Dark Red"></div>

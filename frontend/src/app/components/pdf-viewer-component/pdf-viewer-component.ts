@@ -256,8 +256,11 @@ export class PdfViewerComponent {
 
 		if (!renderdummy) {
 			pageContainer.className = "mt-1 sm:mt-3 md:mt-4 mx-auto relative block w-full max-w-fit sm:max-w-[70%] md:max-w-[90%]";
+
+				// canvas.className = `page-${pageNumber} w-full block border border-gray-300 shadow-lg -mb-[305px]`;
+
 			if (this.scale == 1.0)
-				canvas.className = `page-${pageNumber} w-full block border border-gray-300 shadow-lg -mb-[305px]`;
+				canvas.className = `page-${pageNumber} block border border-gray-300 shadow-lg -mb-[305px]`;
 			else
 				canvas.className = `page-${pageNumber} block border border-gray-300 shadow-lg`;
 

@@ -102,16 +102,22 @@ export class CustomTextEditBox {
 			const clickedInsideTextBox = this.editableDiv.nativeElement.contains(event.target);
 			const eventTarget = (event.target as HTMLElement)
 
-			const clickInsideColorPaletteArea = eventTarget.parentElement?.id === "colorBar" ? true : false;
-			const clickInsideColorPalette = eventTarget?.id === "colorBar" ? true : false;
+			let clickInsideColorPalette = false;//
+			let node = eventTarget
+			while(node.parentElement)
+			{
+				clickInsideColorPalette = node?.id === "TextStyleContainer" ? true : false;
+				if (clickInsideColorPalette) break;
+				node = node.parentElement
+			}
 
-			if ((!clickInsideColorPalette && !clickInsideColorPaletteArea)) {
+
+			if (!clickInsideColorPalette) {
 				this.currentlyEditing = clickedInsideTextBox;
 				this.textBoxEditClicked.emit(this.currentlyEditing)
 				console.log(this.currentlyEditing)
 				console.log("current box.id: ", this.box.id)
 			}
-
 		}
 		catch (error) {
 			// handle error here

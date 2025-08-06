@@ -53,7 +53,6 @@ export class TextEditService {
             this.toolbarComponent!.enableTextStyleEditor(editState);
         }
         else {
-            if (id === this.currentFocusTextBoxId) { }
             this.toolbarComponent!.enableTextStyleEditor(editState);
         }
     }

@@ -1,17 +1,19 @@
-<div class="w-[90%] max-w-[1600px] h-14 px-4 sm:px-6 flex items-center justify-start text-center
+<div class="w-[90%] max-w-[1600px] h-14 flex items-center justify-start text-center
          absolute top-[2%] left-1/2 transform -translate-x-1/2
          z-50 rounded-2xl translucentStyle">
 
     <!-- Insert TextBoxCreate Button -->
-    <button class="toolbarBtnStyle px-4 py-1" #TextButtonContainer title="Enter Text"
-        (click)="OnTextBtnClicked($event)">
+    <button class="toolbarBtnStyleCornerLeft px-4 py-1 bg-red-600 
+                   rounded-t-sm rounded-r-sm rounded-b-md rounded-l-lg" 
+                   #TextButtonContainer title="Enter Text" (click)="OnTextBtnClicked($event)">
 
-        <span id="textBtnText" class=>Text</span>
-        <div class="flex w-[20px] h-[20px] bg-black rounded-[5px] ml-[7px]"
+        <!-- <span id="textBtnText" class=>Text</span> -->
+        <img src="assets/icons/textIcon.svg" class="w-[20px] h-[20px]"/>
+        <!-- <div class="flex w-[20px] h-[20px] bg-black rounded-[5px] ml-[7px]"
             [style.background-color]="textEditService.getCurrentTextStyleEditor().currentColor"
             [ngStyle]="{ 'background-color': textEditService.getCurrentTextStyleEditor().currentColor }"
             [ngClass]="{'borderedColorContainer': textEditService.getCurrentTextStyleEditor().currentColor === '#FFFFFF'}">
-        </div>
+        </div> -->
     </button>
 
     <!-- Vertical Line -->
@@ -32,7 +34,7 @@
     <div class="w-[2px] h-[80%] bg-[var(--btn_border_color)] mx-[5px]"></div>
 
     <!-- Insert Download Button -->
-    <button class="toolbarBtnStyle px-3 py-2 ml-auto" title="Download File" (click)="OnDownloadBtnClicked($event)">
+    <button class="toolbarBtnStyleCornerRight px-3 py-2 ml-auto" title="Download File" (click)="OnDownloadBtnClicked($event)">
         <img class="flex w-[30px] h-[30px]" src="/assets/icons/downloadIcon.svg">
     </button>
 </div>
