@@ -44,6 +44,11 @@ body {
        hover:bg-white/100 backdrop-blur-sm h-12 transition duration-200 ease-in-out cursor-pointer font-standard
 }
 
+.dropdownBtnStyle {
+   @apply flex items-center text-sm font-medium text-black bg-transparent 
+       hover:bg-red-500/100 backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer
+}
+
 .textBoxStyle {
   @apply absolute flex rounded-md text-sm text-black
 }
