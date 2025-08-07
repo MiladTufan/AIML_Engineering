@@ -1,11 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import { TextEditService } from '../../../services/text-edit-service';
 import { CommonModule } from '@angular/common';
 import { SlideInOutToolbarExtension } from '../../../animations/animations';
+import { FormsModule } from '@angular/forms';
 
 @Component({
 	selector: 'app-text-style-bar',
-	imports: [CommonModule],
+	imports: [CommonModule, FormsModule],
 	templateUrl: './text-style-bar.html',
 	styleUrl: './text-style-bar.css',
 	animations: [SlideInOutToolbarExtension]
@@ -15,6 +16,8 @@ export class TextStyleBar {
 
 	isCollapsed: Boolean = true;
 	isFontDropDownOpen: Boolean = false;
+	currentFont: string = "Inter";
+	typedFontSize: string = ""
 
 	colors: string[] = [
 		'#000000', '#8B0000', '#800000', '#8B4513', '#FF8C00',
@@ -24,11 +27,23 @@ export class TextStyleBar {
 	];
 
 	fontOptions = [
+		{ name: 'Inter', value: 'Inter, sans-serif' },
 		{ name: 'Roboto', value: 'Roboto, sans-serif' },
+		{ name: 'Open Sans', value: '"Open Sans", sans-serif' },
+		{ name: 'Lato', value: 'Lato, sans-serif' },
+		{ name: 'Poppins', value: 'Poppins, sans-serif' },
+		{ name: 'Montserrat', value: 'Montserrat, sans-serif' },
+		{ name: 'Nunito', value: 'Nunito, sans-serif' },
+		{ name: 'Ubuntu', value: 'Ubuntu, sans-serif' },
 		{ name: 'Georgia', value: 'Georgia, serif' },
 		{ name: 'Courier New', value: '"Courier New", monospace' },
 		{ name: 'Comic Sans', value: '"Comic Sans MS", cursive, sans-serif' },
-		{ name: 'Arial', value: 'Arial, sans-serif' }
+		{ name: 'Arial', value: 'Arial, sans-serif' },
+		{ name: 'Verdana', value: 'Verdana, sans-serif' },
+		{ name: 'Trebuchet MS', value: '"Trebuchet MS", sans-serif' },
+		{ name: 'Tahoma', value: 'Tahoma, sans-serif' },
+		{ name: 'Times New Roman', value: '"Times New Roman", serif' },
+		{ name: 'Lucida Console', value: '"Lucida Console", monospace' }
 	];
 
 	onColorSelect(color: string) {
@@ -44,8 +59,24 @@ export class TextStyleBar {
 	}
 
 
-	toggleDowpDown() {
+	toggleFontDropDown() {
 		this.isFontDropDownOpen = !this.isFontDropDownOpen;
+	}
+
+	toggleSizeDropDown()
+	{
+		this.isFontDropDownOpen = !this.isFontDropDownOpen;
+	}
+
+	SelectedFont(fontName: string)
+	{
+		this.currentFont = fontName;
+	}
+
+	@HostListener('document:click', ['$event'])
+	onDocumentClick(event: MouseEvent) {
+		if (this.isFontDropDownOpen)
+			this.isFontDropDownOpen = false;
 	}
 
 }

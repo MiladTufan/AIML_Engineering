@@ -45,8 +45,8 @@ body {
 }
 
 .dropdownBtnStyle {
-   @apply flex items-center text-sm font-medium text-black bg-transparent 
-       hover:bg-red-500/100 backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer
+   @apply text-sm font-medium text-black bg-white/80 
+       hover:bg-gray-100/100 backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer
 }
 
 .textBoxStyle {
