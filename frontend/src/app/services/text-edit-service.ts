@@ -85,7 +85,6 @@ export class TextEditService {
     }
 
     // Box dims = top, left, width, height
-    //
     public createTextBox(box_dims: BoxDimensions, styleState: TextStyleEditor, pageNum: number, scale: number,
         scrollTop: number, rerender: Boolean = false, id: number = this.textboxes.length + 1) {
         // this.mouseY += (pageHeight * (this.pageNum - 1))

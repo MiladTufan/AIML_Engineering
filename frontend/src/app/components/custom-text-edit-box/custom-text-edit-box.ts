@@ -95,14 +95,13 @@ export class CustomTextEditBox {
 		}
 	}
 
-
 	@HostListener('document:click', ['$event'])
 	onDocumentClick(event: MouseEvent) {
 		try {
 			const clickedInsideTextBox = this.editableDiv.nativeElement.contains(event.target);
 			const eventTarget = (event.target as HTMLElement)
 
-			let clickInsideColorPalette = false;//
+			let clickInsideColorPalette = false;
 			let node = eventTarget
 			while(node.parentElement)
 			{

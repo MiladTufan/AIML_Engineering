@@ -3,6 +3,7 @@ import { TextEditService } from '../../../services/text-edit-service';
 import { CommonModule } from '@angular/common';
 import { SlideInOutToolbarExtension } from '../../../animations/animations';
 import { FormsModule } from '@angular/forms';
+import { PDFViewerService } from '../../../services/pdfviewer-service';
 
 @Component({
 	selector: 'app-text-style-bar',
@@ -12,12 +13,14 @@ import { FormsModule } from '@angular/forms';
 	animations: [SlideInOutToolbarExtension]
 })
 export class TextStyleBar {
-	constructor(public textEditService: TextEditService) { }
+	constructor(public textEditService: TextEditService, private pdfViewService: PDFViewerService) { }
 
 	isCollapsed: Boolean = true;
 	isFontDropDownOpen: Boolean = false;
+	isFontSizeDropDownOpen: Boolean = false;
 	currentFont: string = "Inter";
-	typedFontSize: string = ""
+	currentFontTailwind: string = "font-inter"
+	currentFontSize: string = "11"
 
 	colors: string[] = [
 		'#000000', '#8B0000', '#800000', '#8B4513', '#FF8C00',
@@ -46,6 +49,9 @@ export class TextStyleBar {
 		{ name: 'Lucida Console', value: '"Lucida Console", monospace' }
 	];
 
+
+	fontSizeSteps = [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 60, 72]
+
 	onColorSelect(color: string) {
 		this.textEditService.getCurrentTextStyleEditor().currentColor = color;
 	}
@@ -63,20 +69,59 @@ export class TextStyleBar {
 		this.isFontDropDownOpen = !this.isFontDropDownOpen;
 	}
 
-	toggleSizeDropDown()
-	{
-		this.isFontDropDownOpen = !this.isFontDropDownOpen;
+	toggleSizeDropDown() {
+		this.isFontSizeDropDownOpen = !this.isFontSizeDropDownOpen;
 	}
 
-	SelectedFont(fontName: string)
-	{
+	SelectedFont(fontName: string) {
 		this.currentFont = fontName;
+		this.isFontDropDownOpen = !this.isFontDropDownOpen;
+
+		const fontFamily = this.fontOptions.find(f => f.name == fontName)?.value
+
+		this.textEditService.getCurrentTextBox().textStyleEditorState.fontFamily = fontFamily!
+		this.currentFontTailwind = "font-" + fontName.toLowerCase();
+	}
+
+	SelectedFontSize(fontSize: number) {
+		this.currentFontSize = fontSize.toString();
+		this.textEditService.getCurrentTextBox().textStyleEditorState.font_size = fontSize * this.pdfViewService.currentScale
+		this.textEditService.getCurrentTextBox().textStyleEditorState.baseFontSize = fontSize * this.pdfViewService.currentScale
+	}
+
+	_checkClick(id: string, target: HTMLElement) {
+		let clickInsideFontSelect = false;
+		let node = target
+		clickInsideFontSelect = node?.id === id ? true : false;
+		while (node.parentElement) {
+			clickInsideFontSelect = node?.id === id ? true : false;
+			if (clickInsideFontSelect) return true;
+			node = node.parentElement
+		}
+		return clickInsideFontSelect;
 	}
 
 	@HostListener('document:click', ['$event'])
 	onDocumentClick(event: MouseEvent) {
-		if (this.isFontDropDownOpen)
-			this.isFontDropDownOpen = false;
+
+		try {
+			const eventTarget = (event.target as HTMLElement)
+			let clickInsideFontSelect = false;
+			let clickInsideFontSizeSelect = false;
+
+			clickInsideFontSelect = this._checkClick("fontSelect", eventTarget)
+			clickInsideFontSizeSelect = this._checkClick("fontSizeSelect", eventTarget)
+
+			if (this.isFontDropDownOpen && !clickInsideFontSelect)
+				this.isFontDropDownOpen = false;
+
+			if (this.isFontSizeDropDownOpen && !clickInsideFontSizeSelect)
+				this.isFontSizeDropDownOpen = false;
+		}
+		catch {
+
+		}
+
 	}
 
 }

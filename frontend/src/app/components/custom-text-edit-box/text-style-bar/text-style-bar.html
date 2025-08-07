@@ -10,7 +10,7 @@
 		</div>
 
 		<div class="relative flex text-center mt-2 mb-2">
-			<div class="relative inline-block text-center mt-2 mb-2">
+			<div class="relative inline-block text-center mt-2 mb-2 " id="fontSelect">
 				<div>
 					<button (click)="toggleFontDropDown()" type="button" class="dropdownBtnStyle rounded-md ml-1 h-10 px-2 flex items-center">{{currentFont}}
 						<svg class="-mr-1 ml-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -21,25 +21,24 @@
 				</div>
 
 				@if (isFontDropDownOpen) {
-				<div class="absolute z-10">
-					<div class="py-1 translucentStyle bg-white backdrop-blur-lg rounded-xl flex-col justify-center">
+					<div class="absolute z-10 -mt-1 translucentStyle  bg-white/100 backdrop-blur-lg rounded-xl flex-col justify-center">
 
 						@for (font of fontOptions ; track $index) {
 							@if ($index == 0) {}
 							@else if ($index == 1) {
-								<button [ngStyle]="{ 'font-familiy' : font.value}" (click)="SelectedFont(font.name)"
-										class="dropdownBtnStyle block text-sm text-black w-30 h-6
-												hover:bg-gray-200 text-center rounded-t-xl mt-[-5px]">{{font.name}}
+								<button [ngClass]="font.value" (click)="SelectedFont(font.name)"
+										class="dropdownBtnStyle block text-sm text-black w-30 h-6 font-roboto
+												hover:bg-gray-200 text-center rounded-t-xl">{{font.name}}
 								</button>
 							}
 							@else if (fontOptions.length - 1 == $index) {
-								<button [ngStyle]="{ 'font-familiy' : font.value}" (click)="SelectedFont(font.name)"
+								<button [ngClass]="font.value" (click)="SelectedFont(font.name)"
 										class="dropdownBtnStyle block  text-sm text-black w-30 h-6
-												hover:bg-gray-200 text-center rounded-b-xl mb-[-5px]">{{font.name}}
+												hover:bg-gray-200 text-center rounded-b-xl">{{font.name}}
 								</button>
 							}
 							@else {
-								<button [ngStyle]="{ 'font-familiy' : font.value}" (click)="SelectedFont(font.name)"
+								<button [ngClass]="font.value" (click)="SelectedFont(font.name)"
 										class="dropdownBtnStyle block  text-sm text-black w-30 h-6
 												hover:bg-gray-200 text-center">{{font.name}}
 								</button>
@@ -47,21 +46,47 @@
 
 						}
 					</div>
-				</div>
 				}
 
 			</div>
 
 			<div class="flex px-2 text-center rounded-md text-sm font-medium
-						ml-2 mt-2 mb-2 items-center justify-center cursor-pointer">
-				<div class="flex items-center justify-center border-1 border-gray-300/100 rounded-md hover:bg-gray-50/100">
-					<textarea (click)="toggleSizeDropDown()" type="button" 
-								class="w-20 h-6 resize-none cursor-text" [(ngModel)]="typedFontSize">
-					</textarea>
-					<svg class="mr-1 ml-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-						stroke="currentColor" stroke-width="2">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-					</svg>
+						ml-1 mt-2 mb-2 items-center justify-center cursor-pointer">
+						
+				<div class="relative inline-block items-center justify-center border-1 border-gray-300/100 rounded-md hover:bg-gray-50/100">
+					<div class="flex items-center justify-center" id="fontSizeSelect">
+						<input type="text" class="ml-1 w-5 h-6 resize-none cursor-text outline-none  overflow-hidden leading-normal" 
+								[(ngModel)]="currentFontSize" (ngModelChange)="SelectedFontSize($event)">
+						<svg (click)="toggleSizeDropDown()" class="mr-1 ml-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+							stroke="currentColor" stroke-width="2">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+						</svg>
+					</div>
+				
+
+					@if (isFontSizeDropDownOpen) {
+					<div class="mt-1 translucentStyle absolute z-10 flex-col justify-center bg-white/100 backdrop-blur-lg rounded-xl">
+						@for (i of fontSizeSteps; track $index) {
+							@if ($index == 0) {
+								<button  (click)="SelectedFontSize(i)"
+										class="dropdownBtnStyle block text-sm text-black w-15 h-6
+												hover:bg-gray-200 text-center rounded-t-xl">{{i}}
+								</button>
+							}
+							@else if (fontSizeSteps.length - 1 == $index) {
+								<button  (click)="SelectedFontSize(i)"
+										class="dropdownBtnStyle block  text-sm text-black  w-15 h-6
+												hover:bg-gray-200 text-center rounded-b-xl">{{i}}
+								</button>
+							}
+							@else {
+								<button (click)="SelectedFontSize(i)" class="dropdownBtnStyle block  text-sm text-black  w-15 h-6
+												hover:bg-gray-200 text-center">{{i}}
+								</button>
+							}
+						}
+					</div>
+					}
 				</div>
 			</div>
 		</div>
