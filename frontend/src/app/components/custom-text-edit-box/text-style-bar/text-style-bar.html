@@ -26,19 +26,19 @@
 						@for (font of fontOptions ; track $index) {
 							@if ($index == 0) {}
 							@else if ($index == 1) {
-								<button [ngClass]="font.value" (click)="SelectedFont(font.name)"
-										class="dropdownBtnStyle block text-sm text-black w-30 h-6 font-roboto
+								<button [ngClass]="'font-' + font.name.toLowerCase()" (click)="SelectedFont(font.name)"
+										class="dropdownBtnStyle block text-sm text-black w-30 h-6 
 												hover:bg-gray-200 text-center rounded-t-xl">{{font.name}}
 								</button>
 							}
 							@else if (fontOptions.length - 1 == $index) {
-								<button [ngClass]="font.value" (click)="SelectedFont(font.name)"
+								<button [ngClass]="'font-' + font.name.toLowerCase()" (click)="SelectedFont(font.name)"
 										class="dropdownBtnStyle block  text-sm text-black w-30 h-6
 												hover:bg-gray-200 text-center rounded-b-xl">{{font.name}}
 								</button>
 							}
 							@else {
-								<button [ngClass]="font.value" (click)="SelectedFont(font.name)"
+								<button [ngClass]="'font-' + font.name.toLowerCase()" (click)="SelectedFont(font.name)"
 										class="dropdownBtnStyle block  text-sm text-black w-30 h-6
 												hover:bg-gray-200 text-center">{{font.name}}
 								</button>

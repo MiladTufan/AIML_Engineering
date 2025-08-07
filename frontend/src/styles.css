@@ -1,10 +1,32 @@
 /* You can add global styles to this file, and also import other style files */
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+
 
 @theme {
-  --font-roboto: "Roboto", sans-serif; 
-  --font-standard: Inter,
+  --font-inter: 'Inter', sans-serif;
+  --font-roboto: 'Roboto', sans-serif;
+  --font-open-sans: 'Open Sans', sans-serif;
+  --font-lato: 'Lato', sans-serif;
+  --font-poppins: 'Poppins', sans-serif;
+  --font-montserrat: 'Montserrat', sans-serif;
+  --font-nunito: 'Nunito', sans-serif;
+  --font-ubuntu: 'Ubuntu', sans-serif;
+  --font-comic: 'Comic Neue', cursive, sans-serif;
+
+  /* System fonts – no import needed */
+  --font-georgia: Georgia, serif;
+  --font-courier-new: 'Courier New', monospace;
+  --font-comic-sans: 'Comic Sans MS', cursive, sans-serif;
+  --font-arial: Arial, sans-serif;
+  --font-verdana: Verdana, sans-serif;
+  --font-trebuchet: 'Trebuchet MS', sans-serif;
+  --font-tahoma: Tahoma, sans-serif;
+  --font-times: 'Times New Roman', serif;
+  --font-lucida: 'Lucida Console', monospace;
+
+  /* Default fallback */
+  --font-standard: var(--font-inter);
 }
 
 body {
@@ -13,8 +35,10 @@ body {
 }
 
 
+
+
 :root {
-  --btn_hover_color: #F3F5F7 ;
+  --btn_hover_color: #F3F5F7;
   --btn_border_color: #D9DDE1;
   --main_bg_color: #F9F9F9;
   --upload_bg_color: #151B23;
@@ -37,17 +61,15 @@ body {
 }
 
 .translucentStyle {
-  @apply bg-white/10 backdrop-blur-lg  shadow-lg border border-gray-300/40 
+  @apply bg-white/10 backdrop-blur-lg shadow-lg border border-gray-300/40
 }
 
 .toolbarBtnStyle {
-  @apply flex items-center rounded-md text-sm font-medium text-gray-800 bg-transparent 
-       hover:bg-white/100 backdrop-blur-sm h-12 transition duration-200 ease-in-out cursor-pointer font-standard
+  @apply flex items-center rounded-md text-sm font-medium text-gray-800 bg-transparent hover:bg-white/100 backdrop-blur-sm h-12 transition duration-200 ease-in-out cursor-pointer font-standard
 }
 
 .dropdownBtnStyle {
-   @apply text-sm font-medium text-black bg-white/80 
-       hover:bg-gray-100/100 backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer
+  @apply text-sm font-medium text-black bg-white/80 hover:bg-gray-100/100 backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer
 }
 
 .textBoxStyle {
@@ -60,15 +82,9 @@ body {
 
 
 .toolbarBtnStyleCornerLeft {
-  @apply flex items-center  text-sm font-medium text-gray-800 bg-transparent 
-       hover:bg-white/100 backdrop-blur-sm h-12 transition 
-       rounded-t-md rounded-r-md  rounded-l-2xl
-       duration-200 ease-in-out cursor-pointer font-standard
+  @apply flex items-center text-sm font-medium text-gray-800 bg-transparent hover:bg-white/100 backdrop-blur-sm h-12 transition rounded-t-md rounded-r-md rounded-l-2xl duration-200 ease-in-out cursor-pointer font-standard
 }
 
 .toolbarBtnStyleCornerRight {
-  @apply flex items-center  text-sm font-medium text-gray-800 bg-transparent 
-       hover:bg-white/100 backdrop-blur-sm h-12 transition 
-       rounded-r-2xl  rounded-l-md
-       duration-200 ease-in-out cursor-pointer font-standard
+  @apply flex items-center text-sm font-medium text-gray-800 bg-transparent hover:bg-white/100 backdrop-blur-sm h-12 transition rounded-r-2xl rounded-l-md duration-200 ease-in-out cursor-pointer font-standard
 }

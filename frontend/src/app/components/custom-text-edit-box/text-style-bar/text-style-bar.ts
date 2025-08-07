@@ -32,7 +32,7 @@ export class TextStyleBar {
 	fontOptions = [
 		{ name: 'Inter', value: 'Inter, sans-serif' },
 		{ name: 'Roboto', value: 'Roboto, sans-serif' },
-		{ name: 'Open Sans', value: '"Open Sans", sans-serif' },
+		{ name: 'Open-Sans', value: '"Open Sans", sans-serif' },
 		{ name: 'Lato', value: 'Lato, sans-serif' },
 		{ name: 'Poppins', value: 'Poppins, sans-serif' },
 		{ name: 'Montserrat', value: 'Montserrat, sans-serif' },
