@@ -4,10 +4,11 @@ import { CommonModule } from '@angular/common';
 import { SlideInOutToolbarExtension } from '../../../animations/animations';
 import { FormsModule } from '@angular/forms';
 import { PDFViewerService } from '../../../services/pdfviewer-service';
+import { DropDownMenuComponent } from '../drop-down-menu-component/drop-down-menu-component';
 
 @Component({
 	selector: 'app-text-style-bar',
-	imports: [CommonModule, FormsModule],
+	imports: [CommonModule, FormsModule, DropDownMenuComponent],
 	templateUrl: './text-style-bar.html',
 	styleUrl: './text-style-bar.css',
 	animations: [SlideInOutToolbarExtension]
@@ -18,8 +19,8 @@ export class TextStyleBar {
 	isCollapsed: Boolean = true;
 	isFontDropDownOpen: Boolean = false;
 	isFontSizeDropDownOpen: Boolean = false;
-	currentFont: string = "Inter";
-	currentFontTailwind: string = "font-inter"
+	currentFont: string = "Inter, sans-serif";
+	currentFontName: string = "Inter";
 	currentFontSize: string = "11"
 
 	colors: string[] = [
@@ -50,7 +51,13 @@ export class TextStyleBar {
 	];
 
 
-	fontSizeSteps = [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 60, 72]
+	//=========================================================================================================
+	// Available Font sizes and Fonts for the user to pick in a drop down menu.
+	//=========================================================================================================
+	fontSizeSteps = ["8", "10", "12", "14", "16", "18", "20", "24", "28", "32", "36", "48", "60", "72"];
+	availableFonts: string[] = ["Inter", "Roboto", "Open-Sans", "Lato", "Poppins", "Montserrat", "Nunito",
+  								"Ubuntu", "Georgia", "Courier New", "Comic Sans", "Arial", "Verdana", 
+								"Trebuchet MS", "Tahoma", "Times New Roman", "Lucida Console"];
 
 	onColorSelect(color: string) {
 		this.textEditService.getCurrentTextStyleEditor().currentColor = color;
@@ -73,20 +80,33 @@ export class TextStyleBar {
 		this.isFontSizeDropDownOpen = !this.isFontSizeDropDownOpen;
 	}
 
+
+
 	SelectedFont(fontName: string) {
-		this.currentFont = fontName;
+		this.currentFontName = fontName
 		this.isFontDropDownOpen = !this.isFontDropDownOpen;
-
 		const fontFamily = this.fontOptions.find(f => f.name == fontName)?.value
-
+		this.currentFont = fontFamily!;
 		this.textEditService.getCurrentTextBox().textStyleEditorState.fontFamily = fontFamily!
-		this.currentFontTailwind = "font-" + fontName.toLowerCase();
 	}
 
-	SelectedFontSize(fontSize: number) {
-		this.currentFontSize = fontSize.toString();
-		this.textEditService.getCurrentTextBox().textStyleEditorState.font_size = fontSize * this.pdfViewService.currentScale
-		this.textEditService.getCurrentTextBox().textStyleEditorState.baseFontSize = fontSize * this.pdfViewService.currentScale
+	//=========================================================================================================
+	// When A user selects/types a fontsize in the dropdown menu of the TextStyleBar then this is handled here.
+	// @param fontSize: string => the selected or typed fontsize.
+	//=========================================================================================================
+	SelectedFontSize(fontSize: string) {
+		try {
+			const fontSizeNumeric = Number(fontSize)
+			this.currentFontSize = fontSize;
+			this.textEditService.getCurrentTextBox().textStyleEditorState.font_size = 
+													fontSizeNumeric * this.pdfViewService.currentScale
+
+			this.textEditService.getCurrentTextBox().textStyleEditorState.baseFontSize = 
+													fontSizeNumeric * this.pdfViewService.currentScale
+		}
+		catch {
+			console.log("Invalid Fontsize");
+		}
 	}
 
 	_checkClick(id: string, target: HTMLElement) {

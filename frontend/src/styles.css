@@ -72,6 +72,10 @@ body {
   @apply text-sm font-medium text-black bg-white/80 hover:bg-gray-100/100 backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer
 }
 
+.dropdownBtnStyleLowOp {
+  @apply text-sm font-medium text-black  hover:bg-gray-100/100 backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer
+}
+
 .textBoxStyle {
   @apply absolute flex rounded-md text-sm text-black
 }

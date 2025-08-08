@@ -1,0 +1,21 @@
+@if (isDropDownOpen) {
+<div class="flex mt-1 translucentStyle absolute z-10 flex-col items-center justify-center bg-white/100 backdrop-blur-lg rounded-xl">
+    @for (item of dropDownItems; track $index) {
+        @if ($index == 0) {
+            <button  [style.font-family]="fontClass(item)" [style.width.px]="width" [style.height.px]="height" (click)="ItemClicked(item)"  
+                     class="dropdownBtnStyle block text-sm text-black  hover:bg-gray-200 text-center rounded-t-xl">{{item}}
+            </button>
+        }
+        @else if (dropDownItems.length - 1 == $index) {
+            <button [style.font-family]="fontClass(item)" [style.width.px]="width" [style.height.px]="height" (click)="ItemClicked(item)"  
+                    class="dropdownBtnStyle block  text-sm text-black  hover:bg-gray-200 text-center rounded-b-xl">{{item}}
+            </button>
+        }
+        @else {
+            <button  [style.font-family]="fontClass(item)" [style.width.px]="width" [style.height.px]="height" (click)="ItemClicked(item)"  
+                      class="dropdownBtnStyle block  text-sm text-black  hover:bg-gray-200 text-center">{{item}}
+            </button>
+        }
+    }
+</div>
+}
