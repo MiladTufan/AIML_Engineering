@@ -1,6 +1,6 @@
 
-<app-toolbar-component (textBoxClicked)="startDraggingTextBox()"></app-toolbar-component>
-<app-pdf-viewer-component #pdfViewer (click)="onMouseClick($event)"
+<app-toolbar-component (textBoxClicked)="canCreateTextBox()"></app-toolbar-component>
+<app-pdf-viewer-component #pdfViewer (click)="createTextBox()"
     class="w-screen flex flex-col items-center justify-center border-red-500 mt-16 px-4"
 ></app-pdf-viewer-component>
 

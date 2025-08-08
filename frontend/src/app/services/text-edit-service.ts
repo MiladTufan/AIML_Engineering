@@ -6,6 +6,11 @@ import { PDFViewerService } from './pdfviewer-service';
 import { Constants } from '../models/constants';
 import { ToolbarComponent } from '../components/toolbar-component/toolbar-component';
 
+
+//=======================================================================================================================
+// Injectible Service that helps with editing textboxes. Implements a lot of helper functions with regards to
+// creating and maintaining textboxes.
+//=======================================================================================================================
 @Injectable({
     providedIn: 'root'
 })
@@ -19,6 +24,10 @@ export class TextEditService {
 
     constructor() { }
 
+    //=======================================================================================================================
+    // Helper function to get the index of the current focus textbox. The focus textbox is the textbox that has been
+    // clicked inside the most recently.
+    //=======================================================================================================================
     public getIndexOfCurrentFocusBox(id: number = -99) {
         const idSearch = id >= 0 ? id : this.currentFocusTextBoxId;
         const textBox = this.textboxes.find(b => b.id == idSearch)
@@ -28,13 +37,25 @@ export class TextEditService {
         return ret;
     }
 
+    //=======================================================================================================================
+    // Setter for the ToolbarComponent
+    //=======================================================================================================================
     setToolbar(toolbar: ToolbarComponent) {
         this.toolbarComponent = toolbar;
     }
+
+    //=======================================================================================================================
+    // helper Function to get the current textbox. The current textbox is the textbox which is in focus 
+    // e.g. which has been clicked inside.
+    //=======================================================================================================================
     public getCurrentTextBox() {
         return this.textboxes[this.getIndexOfCurrentFocusBox()]
     }
 
+    //=======================================================================================================================
+    // helper Function to get the current textbox style. The current textbox is the textbox which is in focus 
+    // e.g. which has been clicked inside. Each textbox has a different style editor.
+    //=======================================================================================================================
     public getCurrentTextStyleEditor() {
         if (this.textboxes.length > 0)
             return this.textboxes[this.getIndexOfCurrentFocusBox()].textStyleEditorState;
@@ -42,22 +63,33 @@ export class TextEditService {
         return new TextStyleEditor();
     }
 
+
+    //=======================================================================================================================
+    // Helper Function to get the Current Textstyle editor by id of textbox.
+    //=======================================================================================================================
     public getCurrentTextStyleEditorById(id: number) {
         return this.textboxes[this.getIndexOfCurrentFocusBox(id)].textStyleEditorState;
     }
 
+    //=======================================================================================================================
+    // Click function that is called when someone clicks inside a textbox. This functions is called when the
+    // textBoxClicked event is emitted from the CustomTextEditBox. 
+    //=======================================================================================================================
     onTextBoxEditClick(id: number, editState: Boolean) {
+        console.log("Edit called for box with id: ", id)
         if (editState) {
-
             this.currentFocusTextBoxId = id;
             this.toolbarComponent!.enableTextStyleEditor(editState);
         }
         else {
-            this.toolbarComponent!.enableTextStyleEditor(editState);
+            if (id === this.currentFocusTextBoxId)
+                this.toolbarComponent!.enableTextStyleEditor(editState);
         }
     }
 
-
+    //=======================================================================================================================
+    // This function is responsible for updating the textbox position, when the textbox is being dragged around.
+    //=======================================================================================================================
     public updateTextBoxPos(id: number, pos: { top: number, left: number }, pageNum: number, scale: number, scrollTop: number) {
         const savedBox = this.textboxes.find(b => b.id === id);
         const page = this.pdfViewerService.getPageWithNumber(pageNum)
@@ -75,16 +107,27 @@ export class TextEditService {
         }
     }
 
-    public createTextBoxContainer(editTextBoxComp: ComponentRef<CustomTextEditBox>, textBox: TextBox, pageNum: number, scale: number, scrollTop: number) {
+
+    //=======================================================================================================================
+    // Helper function to create the container where the textbox is being placed. This also registers all
+    // events for the textbox like editing, and moving.
+    //=======================================================================================================================
+    public createTextBoxContainer(editTextBoxComp: ComponentRef<CustomTextEditBox>, textBox: TextBox, 
+                                  pageNum: number, scale: number, scrollTop: number) {
+
         editTextBoxComp.instance.box = textBox;
         editTextBoxComp.instance.textBoxEditClicked.subscribe((event: any) => this.onTextBoxEditClick(textBox.id, event))
-        editTextBoxComp.instance.positionChanged.subscribe((event: any) => this.updateTextBoxPos(textBox.id, event, pageNum, scale, scrollTop))
+        editTextBoxComp.instance.positionChanged.subscribe((event: any) => 
+                                                 this.updateTextBoxPos(textBox.id, event, pageNum, scale, scrollTop))
         // editTextBoxComp.instance.textBoxEditClicked.subscribe((event: any) => this.removeTextBox(newTextBox.id, event))
 
         return editTextBoxComp
     }
 
-    // Box dims = top, left, width, height
+    //=======================================================================================================================
+    // Helper function to create the actual textbox.
+    // @param => Box dims = top, left, width, height
+    //=======================================================================================================================
     public createTextBox(box_dims: BoxDimensions, styleState: TextStyleEditor, pageNum: number, scale: number,
         scrollTop: number, rerender: Boolean = false, id: number = this.textboxes.length + 1) {
         // this.mouseY += (pageHeight * (this.pageNum - 1))

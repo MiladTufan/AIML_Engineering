@@ -10,6 +10,8 @@ import { CommonModule } from '@angular/common';
   styleUrl: './alert.css'
 })
 export class AlertComponent implements OnInit {
+  //=================================================== variables =================================================
+
   message = '';
   alertTitle = '';
   type: 'success' | 'error' | 'warning' | 'info' = 'info';
@@ -18,6 +20,10 @@ export class AlertComponent implements OnInit {
 
   constructor(private alertService: AlertService) {}
 
+  //=======================================================================================================================
+  // This is function is called onInit of this component. It subscribes to alert$ callable from the AlertService.
+  // Whenever an Alert is fired this object is instantiated using the current alert messages.
+	//=======================================================================================================================
   ngOnInit(): void {
     this.alertService.alert$.subscribe((alert: Alert) => {
       this.message = alert.message;

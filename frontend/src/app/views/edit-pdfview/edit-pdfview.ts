@@ -22,8 +22,7 @@ export class EditPDFView {
 	//=================================================== Private variables =================================================
 	private mouseX: number = 0;
 	private mouseY: number = 0;
-	private isDragging: Boolean = false;
-	private allTextBoxCompRef: any[] = []
+	private canCreateTextbox: Boolean = false;
 
 	//=================================================== Public variables ==================================================
 	public pdfSrc = signal(new Uint8Array)
@@ -38,15 +37,16 @@ export class EditPDFView {
 	@ViewChild(ToolbarComponent) toolbar!: ToolbarComponent;
 
 	//=================================================== Constructor =======================================================
-	// constructor(private fileService: PDFFileService, private textEditService: TextEditService, private renderer: Renderer2,
-	// 	private pdfService: NgxExtendedPdfViewerService
-	// ) { }
-
 	constructor(private fileService: PDFFileService, private renderer: Renderer2, private pdfViewService: PDFViewerService,
 		private textEditService: TextEditService, private viewContainerRef: ViewContainerRef
 	) { }
 
 	// ================================================== Listener functions ================================================
+
+	//=======================================================================================================================
+	// Listen on Mouseclick over the entire Window. Used for determining the coordinates of any object placed inside
+	// the document.
+	//=======================================================================================================================
 	@HostListener("document:mousemove", ["$event"])
 	trackmouse(event: MouseEvent) {
 		const rect = (this.pdfViewerRef.nativeElement as HTMLElement).getBoundingClientRect();
@@ -54,6 +54,9 @@ export class EditPDFView {
 		this.mouseY = event.clientY
 	}
 
+	//=======================================================================================================================
+	// Is run when the View is initialized. Initializes the dynamic Container used to add dynamic elements likes textboxes.
+	//=======================================================================================================================
 	async ngOnInit() {
 		if (this.dynamicContainer) this.textEditService.dynamicContainer = this.viewContainerRef
 
@@ -62,54 +65,60 @@ export class EditPDFView {
 		});
 	}
 
-	ngAfterViewInit()
-	{
+	//=======================================================================================================================
+	// Is run after the View is initialized. 
+	//=======================================================================================================================
+	ngAfterViewInit() {
 		if (this.pdfViewerRef) this.textEditService.pdfViewerContainer = this.pdfViewerRef
 		if (this.toolbar) this.textEditService.setToolbar(this.toolbar);
 	}
 
-	public onMouseClick(event: Event) {
-		if (this.isDragging) {
-			this.createTextBox();
-			this.isDragging = false;
-		}
+	//=======================================================================================================================
+	// When the user clicks on the textbox create button on the toolbar this function is fired.
+	//=======================================================================================================================
+	canCreateTextBox() {
+		this.canCreateTextbox = true;
 	}
 
-	startDraggingTextBox() {
-		this.isDragging = true;
-	}
-
-	//------------------------------------------------------------------------------------
+	//=======================================================================================================================
+	// This function is responsible for placing the Textbox inside the PDF canvas.
+	//=======================================================================================================================
 	public createTextBox() {
-		const page = this.pdfViewService.getPageWithNumber(this.currentPageNumber)
-		const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
+		if (this.canCreateTextbox) {
+			this.canCreateTextbox = false;
+			const page = this.pdfViewService.getPageWithNumber(this.currentPageNumber)
+			const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
 
-		const rect = (text_layer as HTMLElement).getBoundingClientRect();
-		// const rect = (this.pdfViewerRef.nativeElement as HTMLElement).getBoundingClientRect();
-		const top = (this.mouseY) - rect.top
-		const left = (this.mouseX ) - rect.left
-		const width = 110
-		const height = 30
+			const rect = (text_layer as HTMLElement).getBoundingClientRect();
+			// const rect = (this.pdfViewerRef.nativeElement as HTMLElement).getBoundingClientRect();
+			const top = (this.mouseY) - rect.top
+			const left = (this.mouseX) - rect.left
+			const width = 110
+			const height = 30
 
-		const box_dims = {  top: top, 
-							left: left, 
-							width: width * this.pdfViewService.currentScale, 
-							height: height * this.pdfViewService.currentScale, 
-							resizedHeight: height * this.pdfViewService.currentScale, 
-							resizedWidth: width * this.pdfViewService.currentScale, 
-							currentScale: this.pdfViewService.currentScale,
-							creationScale: this.pdfViewService.currentScale }
-	
+			const box_dims = {
+				top: top,
+				left: left,
+				width: width * this.pdfViewService.currentScale,
+				height: height * this.pdfViewService.currentScale,
+				resizedHeight: height * this.pdfViewService.currentScale,
+				resizedWidth: width * this.pdfViewService.currentScale,
+				currentScale: this.pdfViewService.currentScale,
+				creationScale: this.pdfViewService.currentScale
+			}
+
 
 			// top: (box.BoxDims.top - baseMarginScale+16) * this.scale, 
 			// 						  left: box.BoxDims.left  * this.scale, 
 			// 						  width: box.BoxDims.width * this.scale, 
 			// 						  height:  box.BoxDims.height * this.scale,
 
-		const styleState = new TextStyleEditor()
-		styleState.font_size = styleState.baseFontSize * this.pdfViewService.currentScale
+			const styleState = new TextStyleEditor()
+			styleState.font_size = styleState.baseFontSize * this.pdfViewService.currentScale
 
-		// this.mouseY += (this.pdfViewService.pageHeight * (this.currentPageNumber - 1))
-		this.textEditService.createTextBox(box_dims, styleState, this.currentPageNumber, this.pdfViewService.currentScale, this.pdfViewService.currentScrollTop)
+			// this.mouseY += (this.pdfViewService.pageHeight * (this.currentPageNumber - 1))
+			this.textEditService.createTextBox(box_dims, styleState, this.currentPageNumber, 
+								this.pdfViewService.currentScale, this.pdfViewService.currentScrollTop)
+		}
 	}
 }	

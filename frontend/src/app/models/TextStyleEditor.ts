@@ -7,4 +7,5 @@ export class TextStyleEditor {
     public baseFontSize: number = 11;
     public font_size: number = 11;
     public fontFamily: string = "Inter";
+    public fontname: string = "Inter";
 }

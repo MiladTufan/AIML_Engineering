@@ -64,6 +64,11 @@ export class TextStyleBar {
 	}
 
 	expandColorPallet() {
+		const currentTextStyle = this.textEditService.getCurrentTextStyleEditor()
+		this.currentFontSize = currentTextStyle.baseFontSize.toString()
+
+		this.currentFont 	 =  currentTextStyle.fontFamily
+		this.currentFontName =  currentTextStyle.fontname
 		this.textEditService.getCurrentTextStyleEditor().isCollapsed = false;
 	}
 
@@ -88,6 +93,7 @@ export class TextStyleBar {
 		const fontFamily = this.fontOptions.find(f => f.name == fontName)?.value
 		this.currentFont = fontFamily!;
 		this.textEditService.getCurrentTextBox().textStyleEditorState.fontFamily = fontFamily!
+		this.textEditService.getCurrentTextBox().textStyleEditorState.fontname = fontName
 	}
 
 	//=========================================================================================================
@@ -101,8 +107,7 @@ export class TextStyleBar {
 			this.textEditService.getCurrentTextBox().textStyleEditorState.font_size = 
 													fontSizeNumeric * this.pdfViewService.currentScale
 
-			this.textEditService.getCurrentTextBox().textStyleEditorState.baseFontSize = 
-													fontSizeNumeric * this.pdfViewService.currentScale
+			this.textEditService.getCurrentTextBox().textStyleEditorState.baseFontSize = fontSizeNumeric
 		}
 		catch {
 			console.log("Invalid Fontsize");

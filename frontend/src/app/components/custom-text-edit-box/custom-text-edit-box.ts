@@ -119,7 +119,7 @@ export class CustomTextEditBox {
 			}
 		}
 		catch (error) {
-			// handle error here
+			console.log(error)
 		}
 
 	}
