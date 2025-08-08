@@ -83,10 +83,13 @@ export class EditPDFView {
 	//=======================================================================================================================
 	// This function is responsible for placing the Textbox inside the PDF canvas.
 	//=======================================================================================================================
-	public createTextBox() {
+	public createTextBox(event: Event) {
 		if (this.canCreateTextbox) {
 			this.canCreateTextbox = false;
-			const page = this.pdfViewService.getPageWithNumber(this.currentPageNumber)
+			const containerElement = event.target as HTMLElement;
+			const pageNumber = parseInt(containerElement.id?.split('-')[1]);
+
+			const page = this.pdfViewService.getPageWithNumber(pageNumber)
 			const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
 
 			const rect = (text_layer as HTMLElement).getBoundingClientRect();
@@ -117,7 +120,7 @@ export class EditPDFView {
 			styleState.font_size = styleState.baseFontSize * this.pdfViewService.currentScale
 
 			// this.mouseY += (this.pdfViewService.pageHeight * (this.currentPageNumber - 1))
-			this.textEditService.createTextBox(box_dims, styleState, this.currentPageNumber, 
+			this.textEditService.createTextBox(box_dims, styleState, pageNumber, 
 								this.pdfViewService.currentScale, this.pdfViewService.currentScrollTop)
 		}
 	}

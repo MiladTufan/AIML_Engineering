@@ -116,19 +116,27 @@ export class PDFViewerService {
 		// this.PDFScrollContainer!.nativeElement.scroll({top: targetScrolltop, bevahior: 'smooth'})
 	}
 
-
+	//=======================================================================================================================
+	// This function is used to add a page to the currently visible pages.
+	//======================================================================================================================
 	addVisiblePages(pageNumber: number) {
 		const current = this.visiblePages.getValue();
 		current.add(pageNumber); // Add your number
 		this.visiblePages.next(new Set(current));
 	}
 
+	//=======================================================================================================================
+	// This function is used to remove a page from the currently visible pages.
+	//======================================================================================================================
 	removeVisiblePages(pageNumber: number) {
 		const current = this.visiblePages.getValue();
 		current.delete(pageNumber); // Remove the number
 		this.visiblePages.next(new Set(current)); // Emit a new Set
-	}
+	}	
 
+	//=======================================================================================================================
+	// This function prevents the user to use browser zoom on ctrl. We need this because we implement our custom zoom.
+	//======================================================================================================================
 	preventWindowZoomIn()
 	{
 		window.addEventListener('wheel', (event) => {
@@ -136,5 +144,18 @@ export class PDFViewerService {
 				event.preventDefault();
 			}
 		}, { passive: false });
+	}
+	
+	//=======================================================================================================================
+	// This function calculates the margin between two pages on zoom. This is necessary since on zoom margin behaves
+	// differently.
+	//=======================================================================================================================
+	getScaledMargin(scale: number) {
+		if (scale === 1.0) return 16;
+		const fract = scale - Math.floor(scale)
+		const fractFull = (Math.floor(scale) - 1) + fract
+		const multiplier = 10
+		const marginOffset = fractFull * multiplier;
+		return 16 * (marginOffset);
 	}
 }
