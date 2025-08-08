@@ -12,9 +12,12 @@ import { debounceTime, Subject } from 'rxjs';
 // import { TextLayerBuilder } from 'pdfjs-dist'; 
 import 'pdfjs-dist/web/pdf_viewer.css'; // <-- required for text layer positioning
 import { AlertService } from '../../services/alert-service';
-
 (pdfjsLib as any).GlobalWorkerOptions.workerSrc = "assets/pdf.worker.min.mjs";
 
+
+//=======================================================================================================================
+// Main Component handling the PDF logic.
+//=======================================================================================================================
 @Component({
 	selector: 'app-pdf-viewer-component',
 	imports: [],
@@ -33,15 +36,10 @@ export class PdfViewerComponent {
 	private visiblePages = new BehaviorSubject<Set<number>>(new Set<number>());;
 	private alreadyRanObserver = false;
 	private renderQueue = new Set<number[]>();
-
 	private currentScale = 1.0;
-
 	private minScale = 0.6
 	private maxScale = 3.0
-
 	private observer: any;
-
-
 	private renderTrigger = new Subject<number>();
 
 	//=================================================== Public variables ==================================================
@@ -128,6 +126,9 @@ export class PdfViewerComponent {
 	ngAfterViewInit() {
 		if (this.dynamicContainer) this.pdfViewerService.setDynamicContainerRef(this.dynamicContainer)
 	}
+
+
+	
 
 	getCanvasForPage(pageNumber: number) {
 		const container = this.pdfContainer.nativeElement.querySelector(`#pageContainer-${pageNumber}`);
