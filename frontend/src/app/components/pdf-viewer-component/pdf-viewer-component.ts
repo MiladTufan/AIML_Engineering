@@ -33,7 +33,6 @@ export class PdfViewerComponent {
 	private devicePixelRatio = window.devicePixelRatio || 1;
 	private scale = 1.0 * this.devicePixelRatio;
 	private pageNumberSub!: Subscription;
-	private visiblePages = new BehaviorSubject<Set<number>>(new Set<number>());;
 	private alreadyRanObserver = false;
 	private renderQueue = new Set<number[]>();
 	private currentScale = 1.0;
@@ -54,6 +53,7 @@ export class PdfViewerComponent {
 	@ViewChild('dynamicContainer', { read: ViewContainerRef }) dynamicContainer!: ViewContainerRef;
 
 
+	//==================================================== Constructor ======================================================
 	constructor(private fileService: PDFFileService,
 		private pdfViewerService: PDFViewerService,
 		private textEditService: TextEditService, private alertService: AlertService) {
@@ -68,32 +68,15 @@ export class PdfViewerComponent {
 				this.transformOrigin = '0px 0px';
 				// this.cssScale = `scale(1)`;
 			})
-
-
 		});
 	}
 
-	//==================================================== Inputs ===========================================================
 
-	addVisiblePages(pageNumber: number) {
-		const current = this.visiblePages.getValue();
-		current.add(pageNumber); // Add your number
-		this.visiblePages.next(new Set(current));
-	}
-
-	removeVisiblePages(pageNumber: number) {
-		const current = this.visiblePages.getValue();
-		current.delete(pageNumber); // Remove the number
-		this.visiblePages.next(new Set(current)); // Emit a new Set
-	}
-	//==================================================== NG ===============================================================
-	async ngOnInit() {
-		window.addEventListener('wheel', (event) => {
-			if (event.ctrlKey) {
-				event.preventDefault();
-			}
-		}, { passive: false });
-		this.loadPDF();
+	//=======================================================================================================================
+	// Injectible Service that helps with editing textboxes. Implements a lot of helper functions with regards to
+	// creating and maintaining textboxes.
+	//=======================================================================================================================
+	handleScroll() {
 		if (this.pdfContainer) {
 			this.pdfViewerService.setPDFScrollContainer(this.pdfContainer);
 			this.pdfViewerService.dynamicContainer = this.dynamicContainer;
@@ -102,15 +85,16 @@ export class PdfViewerComponent {
 				this.pdfViewerService.currentScrollTop = this.pdfContainer.nativeElement.scrollTop;
 				this.currentPageNumber = this.pdfViewerService.getPageNumberFromScrolltop()
 				this.pdfViewerService.setCurrentPage(this.currentPageNumber);
+
+				// TODO change this => This creates an observe to watch visibile pages ... this needs to be available ASAP and not on scroll!!
 				if (!this.alreadyRanObserver) this.createObserver();
+
 			})
 		}
+	}
 
-		this.pageNumberSub = this.pdfViewerService.currentPage$.subscribe(val => {
-			this.currentPageNumber = val;
-		});
-
-		this.visiblePages.subscribe(set => {
+	subscribeToVisiblePages() {
+		this.pdfViewerService.visiblePages.subscribe(set => {
 
 			for (const pageNum of set) {
 				const page = this.pdfViewerService.allRenderedPages.find(p => p.pageNum === pageNum)
@@ -120,40 +104,55 @@ export class PdfViewerComponent {
 				}
 			}
 		});
-
+	}
+	//==================================================== NG ===============================================================
+	async ngOnInit() {
+		this.pdfViewerService.preventWindowZoomIn()
+		this.loadPDF();
+		this.handleScroll();
+		this.subscribeToVisiblePages();
+		this.pageNumberSub = this.pdfViewerService.currentPage$.subscribe(val => {
+			this.currentPageNumber = val;
+		});
 
 	}
+
 	ngAfterViewInit() {
 		if (this.dynamicContainer) this.pdfViewerService.setDynamicContainerRef(this.dynamicContainer)
 	}
 
 
-	
 
-	getCanvasForPage(pageNumber: number) {
-		const container = this.pdfContainer.nativeElement.querySelector(`#pageContainer-${pageNumber}`);
-		return container
+	ngOnDestroy() {
+		this.pageNumberSub.unsubscribe();
+		this.observer.disconnect();
+	}
+
+
+
+	//==================================================== Methods ==========================================================
+	checkEntry(entries: any) {
+		for (const entry of entries) {
+			const id = entry.target.id;
+			const pageNumber = parseInt(id?.split('-')[1]);
+
+			if (entry.isIntersecting) {
+				this.pdfViewerService.addVisiblePages(pageNumber)
+				if (!this.pdfViewerService.allRenderedPages.find(p => p.pageNum === pageNumber))
+					this.renderPage(pageNumber, false, this.scale)
+
+			}
+			else {
+				this.pdfViewerService.removeVisiblePages(pageNumber)
+			}
+		}
 	}
 
 	async createObserver() {
-
 		this.alreadyRanObserver = true;
 		this.observer = new IntersectionObserver(
 			async entries => {
-				for (const entry of entries) {
-					const id = entry.target.id;
-					const pageNumber = parseInt(id?.split('-')[1]);
-
-					if (entry.isIntersecting) {
-						this.addVisiblePages(pageNumber)
-						if (!this.pdfViewerService.allRenderedPages.find(p => p.pageNum === pageNumber))
-							this.renderPage(pageNumber, false, this.scale)
-
-					}
-					else {
-						this.removeVisiblePages(pageNumber)
-					}
-				}
+				this.checkEntry(entries)
 			},
 			{
 				root: this.pdfContainer.nativeElement,
@@ -164,18 +163,13 @@ export class PdfViewerComponent {
 
 		requestAnimationFrame(() => {
 			for (let i = 1; i <= this.totalPages; i++) {
-				const pageContainer = this.getCanvasForPage(i);
+				const pageContainer = this.pdfViewerService.getCanvasForPage(i);
 				if (pageContainer) this.observer.observe(pageContainer);
 			}
 		});
 	}
 
-	ngOnDestroy() {
-		this.pageNumberSub.unsubscribe();
-		this.observer.disconnect();
-	}
 
-	//==================================================== Methods ==========================================================
 	async loadPDF() {
 		try {
 			const pdfjs = pdfjsLib as any;
@@ -224,8 +218,6 @@ export class PdfViewerComponent {
 
 	// Render a specific page of the PDF.
 	async renderPage(pageNumber: number, renderdummy: Boolean = true, scale: number) {
-
-
 		let page: any;
 		let viewport: any;
 		if (pageNumber === 1)
@@ -258,7 +250,7 @@ export class PdfViewerComponent {
 		if (!renderdummy) {
 			pageContainer.className = "mt-1 sm:mt-3 md:mt-4 mx-auto relative block w-full max-w-fit sm:max-w-[70%] md:max-w-[90%]";
 
-				// canvas.className = `page-${pageNumber} w-full block border border-gray-300 shadow-lg -mb-[305px]`;
+			// canvas.className = `page-${pageNumber} w-full block border border-gray-300 shadow-lg -mb-[305px]`;
 
 			if (this.scale == 1.0)
 				canvas.className = `page-${pageNumber} block border border-gray-300 shadow-lg -mb-[305px]`;
@@ -437,7 +429,7 @@ export class PdfViewerComponent {
 	// 		event.preventDefault();
 	// 		if (event.deltaY < 0 && this.scale < this.maxScale) {
 	// 			this.scale += 0.1;
-	// 			for (const p of this.visiblePages.getValue())
+	// 			for (const p of this.pdfViewerService.visiblePages.getValue())
 	// 			{
 	// 				console.log("rendering page:", p, "for scale: ", this.scale);
 	// 				await this.renderPage(p, false)
@@ -446,7 +438,7 @@ export class PdfViewerComponent {
 	// 		}
 	// 		else if (this.scale > this.minScale && event.deltaY > 0) {
 	// 			this.scale -= 0.1;
-	// 			for (const p of this.visiblePages.getValue())
+	// 			for (const p of this.pdfViewerService.visiblePages.getValue())
 	// 			{
 	// 				console.log("rendering page:", p, "for scale: ", this.scale);
 	// 				await this.renderPage(p, false)
@@ -489,7 +481,7 @@ export class PdfViewerComponent {
 			// this.cssScale = `scale(${this.scale})`;
 
 
-			for (const p of this.visiblePages.getValue()) {
+			for (const p of this.pdfViewerService.visiblePages.getValue()) {
 				this.renderQueue.add([p, newScale]);
 			}
 
