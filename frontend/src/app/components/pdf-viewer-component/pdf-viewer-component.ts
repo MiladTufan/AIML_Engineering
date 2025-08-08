@@ -221,12 +221,28 @@ export class PdfViewerComponent {
 	// for the actual page and any layers on top of the page e.g. textBoxLayer (where all textboxes reside).
 	//=======================================================================================================================
 	createPageContainers(pageNumber: number, renderdummy: Boolean, scale: number) {
+		const imgWidth = 50*scale;
+		const imgHeight = 100*scale;
+
 		const canvas = document.createElement("canvas");
 		const textBoxLayer = document.createElement("div");
 		let textLayer = document.createElement("div");
 		let pageContainer = document.createElement("div");
 
+		const canvasContainer = document.createElement("div");
+		const img = document.createElement("img");
+		img.src = "assets/icons/trashcan.svg"
+		img.alt = "Delete Page Icon"
+
+		img.style.width = imgWidth.toString()+"px";
+		img.style.height = imgHeight.toString()+"px";
+
 		canvas.id = `page-${pageNumber}`;
+		canvasContainer.id = `canvasContainer-${pageNumber}`;
+
+		canvasContainer.style.display = "flex";
+		canvasContainer.style.gap = "8px";
+
 		pageContainer.id = `pageContainer-${pageNumber}`;
 		textBoxLayer.className = "text-box-layer"
 
@@ -247,9 +263,12 @@ export class PdfViewerComponent {
 			canvas.className = `page-${pageNumber} block border border-gray-300 shadow-lg mx-auto`;
 		}
 
+		canvasContainer.appendChild(canvas)
+		canvasContainer.appendChild(img)
+
 		pageContainer.appendChild(textBoxLayer)
-		pageContainer.appendChild(canvas)
-		return { canvas: canvas, textBoxLayer: textBoxLayer, textLayer: textLayer, pageContainer: pageContainer }
+		pageContainer.appendChild(canvasContainer)
+		return { canvas: canvas, textBoxLayer: textBoxLayer, textLayer: textLayer, pageContainer: pageContainer, canvasContainer: canvasContainer }
 	}
 
 	//=======================================================================================================================
@@ -329,7 +348,7 @@ export class PdfViewerComponent {
 		}
 
 		const container = this.pdfContainer.nativeElement;
-		let { canvas, textBoxLayer, textLayer, pageContainer } = this.createPageContainers(pageNumber, renderdummy, scale)
+		let { canvas, textBoxLayer, textLayer, pageContainer, canvasContainer } = this.createPageContainers(pageNumber, renderdummy, scale)
 
 		// scale margin top
 		let baseMarginScale = 16
@@ -340,13 +359,13 @@ export class PdfViewerComponent {
 		const existingPageContainer = container.querySelector("#" + pageContainer.id)
 		if (existingPageContainer != null) {
 			const textOld = existingPageContainer.querySelector(Constants.OVERLAY_TEXT)
-			const CanvasOld = existingPageContainer.querySelector("#" + canvas.id)
+			const CanvasOld = existingPageContainer.querySelector("#" + canvasContainer.id)
 
 			// recreate all objects on the page
 			this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, textBoxLayer)
 
 			existingPageContainer.replaceChild(textBoxLayer, textOld!)
-			existingPageContainer.replaceChild(canvas, CanvasOld!)
+			existingPageContainer.replaceChild(canvasContainer, CanvasOld!)
 
 			if (!renderdummy) {
 				existingPageContainer.className = "mt-1 sm:mt-3 md:mt-4 mx-auto relative block w-full max-w-fit sm:max-w-[70%] md:max-w-[90%]";
