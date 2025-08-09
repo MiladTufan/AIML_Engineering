@@ -87,16 +87,21 @@ export class TextEditService {
         }
     }
 
-    checkPageBounds(pos: { top: number, left: number }) {
-        let currTop = pos.top + this.pdfViewerService.currentScrollTop
-        const scaledPageHeight = this.pdfViewerService.pageHeight
-        if (currTop > scaledPageHeight &&
-            currTop < scaledPageHeight + this.pdfViewerService.currentBaseMarginScale) {
-            
-            pos.top += (scaledPageHeight - this.pdfViewerService.currentScrollTop)
-        }
 
-        return pos
+    checkXBounds(box: TextBox, container: DOMRect)
+    {
+        if (box.BoxDims.left < 0) box.BoxDims.left = 0;
+        if (box.BoxDims.left > container.width) box.BoxDims.left = (container.width - box.BoxDims.width);
+        
+        return box.BoxDims.left
+    }
+
+    checkYBounds(box: TextBox, container: DOMRect)
+    {
+        if (box.BoxDims.top < 0) box.BoxDims.top = 0;
+        if (box.BoxDims.top > container.height) box.BoxDims.left = (container.height - box.BoxDims.height);
+        
+        return box.BoxDims.top
     }
 
 
@@ -106,8 +111,6 @@ export class TextEditService {
     public updateTextBoxPos(textBox: TextBox, pos: { top: number, left: number }, pageNum: number) {
         const savedBox = this.textboxes.find(b => b.id === textBox.id);
         if (savedBox) {
-            pos = this.checkPageBounds(pos);
-
             const page = this.pdfViewerService.getPageWithNumber(pageNum)
             const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
             // const canvas_layer = page?.htmlContainer?.querySelector(`page-${pageNum}`)
@@ -118,12 +121,8 @@ export class TextEditService {
 
             savedBox.BoxDims.top = (pos.top - rect.top);
             savedBox.BoxDims.left = pos.left - rect.left;
-
-            if (savedBox.BoxDims.top < 0) savedBox.BoxDims.top = 0;
-            if (savedBox.BoxDims.top > rect2.height) savedBox.BoxDims.top = (rect2.height - textBox.BoxDims.height)
-
-            if (savedBox.BoxDims.left < 0) savedBox.BoxDims.left = 0
-            if (savedBox.BoxDims.left > rect2.width) savedBox.BoxDims.left = (rect2.width - textBox.BoxDims.width)
+            savedBox.BoxDims.left = this.checkXBounds(savedBox, rect2)
+            savedBox.BoxDims.top = this.checkYBounds(savedBox, rect2)
 
             savedBox.baseLeft = savedBox.BoxDims.left;
             savedBox.baseTop = savedBox.BoxDims.top ;

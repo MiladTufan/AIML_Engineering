@@ -50,10 +50,18 @@ export class CustomTextEditBox {
 				const box = this.textEditService.textboxes.find(b => b.id === this.box.id);
 
 				if (box) {
+					const page = this.pdfViewerService.getPageWithNumber(box.pageId)
+					const rect2 = (page!.htmlContainer! as HTMLElement).getBoundingClientRect();
 					box.BoxDims.resizedWidth = width
 					box.BoxDims.resizedHeight = height
+					const diff = Math.abs(box.BoxDims.left - rect2.width)
+
+					if (width > diff) 
+					{
+						box.BoxDims.resizedWidth = diff
+						box.BoxDims.width = diff
+					}
 					box.BoxDims.sizeCreationScale = this.pdfViewerService.currentScale;
-					console.log("resized Textbox to w: ", width, " and h: ", height)
 				}
 			}
 		});
