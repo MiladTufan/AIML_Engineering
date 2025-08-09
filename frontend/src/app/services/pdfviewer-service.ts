@@ -18,6 +18,7 @@ export class PDFViewerService {
 	public currentBaseMarginScale: number = 1.0;
 	public allPageContainers: any
 	public allRenderedPages: Page[] = []
+	public ignoreResizeTimeout: any = null;
 
 
 	public currentPage$ = this._currentPage.asObservable();

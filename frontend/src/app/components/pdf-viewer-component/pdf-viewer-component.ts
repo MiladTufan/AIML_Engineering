@@ -9,8 +9,6 @@ import { Page } from '../../models/Page';
 import { Constants } from '../../models/constants';
 import { debounceTime, Subject } from 'rxjs';
 
-// import { TextLayerBuilder } from 'pdfjs-dist'; 
-import 'pdfjs-dist/web/pdf_viewer.css'; // <-- required for text layer positioning
 import { AlertService } from '../../services/alert-service';
 import { TextBox } from '../../models/TextBox';
 (pdfjsLib as any).GlobalWorkerOptions.workerSrc = "assets/pdf.worker.min.mjs";
@@ -221,8 +219,8 @@ export class PdfViewerComponent {
 	// for the actual page and any layers on top of the page e.g. textBoxLayer (where all textboxes reside).
 	//=======================================================================================================================
 	createPageContainers(pageNumber: number, renderdummy: Boolean, scale: number) {
-		const imgWidth = 50*scale;
-		const imgHeight = 100*scale;
+		const imgWidth = 50 * scale;
+		const imgHeight = 100 * scale;
 
 		const canvas = document.createElement("canvas");
 		const textBoxLayer = document.createElement("div");
@@ -234,8 +232,8 @@ export class PdfViewerComponent {
 		img.src = "assets/icons/trashcan.svg"
 		img.alt = "Delete Page Icon"
 
-		img.style.width = imgWidth.toString()+"px";
-		img.style.height = imgHeight.toString()+"px";
+		img.style.width = imgWidth.toString() + "px";
+		img.style.height = imgHeight.toString() + "px";
 
 		canvas.id = `page-${pageNumber}`;
 		canvasContainer.id = `canvasContainer-${pageNumber}`;
@@ -282,15 +280,10 @@ export class PdfViewerComponent {
 
 				let newBaseWidth = box.baseWidth;
 				let newBaseHeight = box.baseHeight;
-				const diff = Math.floor(box.BoxDims.width) - Math.floor(box.BoxDims.resizedWidth)
-				const condition = (diff != 0)
-				if (condition) {
-					newBaseWidth = box.BoxDims.resizedWidth;
-					newBaseHeight = box.BoxDims.resizedHeight;
-				}
+			
 
-				const finalWidth = condition ? newBaseWidth : newBaseWidth * scale
-				const finalHeight = condition ? newBaseHeight : newBaseHeight * scale
+				const finalWidth = newBaseWidth * scale
+				const finalHeight = newBaseHeight * scale
 
 				const box_dims = {
 					top: box.baseTop * (scale / box.BoxDims.creationScale),
@@ -305,11 +298,11 @@ export class PdfViewerComponent {
 
 				box.textStyleEditorState.font_size = box.textStyleEditorState.baseFontSize * scale;
 				//const [left, top] = box.left, box.top //viewport.convertToViewportPoint(box.left, box.top);
+
 				const ret = this.textEditService.createTextBox(box_dims, box.textStyleEditorState, pageNumber,
 					scale, this.pdfViewerService.currentScrollTop, true, box.id)
 
-				ret.box.baseHeight = newBaseHeight
-				ret.box.baseWidth = newBaseWidth
+			
 				textBoxLayer.appendChild(ret.comp.location.nativeElement)
 			}
 		})
@@ -322,7 +315,6 @@ export class PdfViewerComponent {
 		const renderedPage = this.pdfViewerService.allRenderedPages.find(p => p.pageNum === newPage.pageNum)
 		if (renderedPage) {
 			const idx = this.pdfViewerService.allRenderedPages.indexOf(renderedPage);
-
 			this.pdfViewerService.allRenderedPages.splice(idx, 1, newPage);
 		}
 		else

@@ -103,6 +103,7 @@ export class TextEditService {
 
             savedBox.baseLeft = pos.left - rect.left;
             savedBox.baseTop = pos.top - rect.top;
+            savedBox.BoxDims.creationScale = this.pdfViewerService.currentScale;
             savedBox.pageId = pageNum;
         }
     }

@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, ViewChild, ElementRef, HostList
 import { TextEditService } from '../../services/text-edit-service';
 import { CommonModule } from '@angular/common';
 import { TextBox } from '../../models/TextBox';
+import { PDFViewerService } from '../../services/pdfviewer-service';
 
 @Component({
 	selector: 'app-custom-text-edit-box',
@@ -38,11 +39,12 @@ export class CustomTextEditBox {
 	@ViewChild('editableDiv') editableDiv!: ElementRef;
 
 
-	constructor(public textEditService: TextEditService) { }
+	constructor(public textEditService: TextEditService, private pdfViewerService: PDFViewerService) { }
 	ngOnInit() {
 		console.log("init TextBoxComponent")
 		this.resizeObserver = new ResizeObserver(entries => {
 			for (const entry of entries) {
+
 				const { width, height } = entry.target.getBoundingClientRect();
 				const box = this.textEditService.textboxes.find(b => b.id === this.box.id);
 
