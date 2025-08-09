@@ -66,7 +66,6 @@ export class TextStyleBar {
 	expandColorPallet() {
 		const currentTextStyle = this.textEditService.getCurrentTextStyleEditor()
 		this.currentFontSize = currentTextStyle.baseFontSize.toString()
-
 		this.currentFont 	 =  currentTextStyle.fontFamily
 		this.currentFontName =  currentTextStyle.fontname
 		this.textEditService.getCurrentTextStyleEditor().isCollapsed = false;
