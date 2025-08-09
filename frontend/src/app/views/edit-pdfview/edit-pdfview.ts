@@ -107,7 +107,8 @@ export class EditPDFView {
 				resizedHeight: 0,
 				resizedWidth: 0,
 				currentScale: this.pdfViewService.currentScale,
-				creationScale: this.pdfViewService.currentScale
+				posCreationScale: this.pdfViewService.currentScale,
+				sizeCreationScale: this.pdfViewService.currentScale
 			}
 
 
@@ -120,6 +121,7 @@ export class EditPDFView {
 			styleState.font_size = styleState.baseFontSize * this.pdfViewService.currentScale
 
 			// this.mouseY += (this.pdfViewService.pageHeight * (this.currentPageNumber - 1))
+			this.pdfViewService.setCodeResizeTimeout()
 			this.textEditService.createTextBox(box_dims, styleState, pageNumber, 
 								this.pdfViewService.currentScale, this.pdfViewService.currentScrollTop)
 		}

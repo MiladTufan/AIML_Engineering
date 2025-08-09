@@ -44,6 +44,7 @@ export class CustomTextEditBox {
 		console.log("init TextBoxComponent")
 		this.resizeObserver = new ResizeObserver(entries => {
 			for (const entry of entries) {
+				if (this.pdfViewerService.ignoreResizeTimeout) return;
 
 				const { width, height } = entry.target.getBoundingClientRect();
 				const box = this.textEditService.textboxes.find(b => b.id === this.box.id);
@@ -51,6 +52,8 @@ export class CustomTextEditBox {
 				if (box) {
 					box.BoxDims.resizedWidth = width
 					box.BoxDims.resizedHeight = height
+					box.BoxDims.sizeCreationScale = this.pdfViewerService.currentScale;
+					console.log("resized Textbox to w: ", width, " and h: ", height)
 				}
 			}
 		});

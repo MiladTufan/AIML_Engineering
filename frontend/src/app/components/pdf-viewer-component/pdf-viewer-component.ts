@@ -280,29 +280,40 @@ export class PdfViewerComponent {
 
 				let newBaseWidth = box.baseWidth;
 				let newBaseHeight = box.baseHeight;
-			
 
-				const finalWidth = newBaseWidth * scale
-				const finalHeight = newBaseHeight * scale
+				const condition = (box.BoxDims.resizedHeight != 0 || box.BoxDims.resizedWidth != 0)
+				if (condition)
+				{
+					newBaseWidth = box.BoxDims.resizedWidth;
+					newBaseHeight = box.BoxDims.resizedHeight;
+				}
+
+				
+				const finalWidth = newBaseWidth * (scale / box.BoxDims.sizeCreationScale)
+				const finalHeight = newBaseHeight * (scale / box.BoxDims.sizeCreationScale)
 
 				const box_dims = {
-					top: box.baseTop * (scale / box.BoxDims.creationScale),
-					left: box.baseLeft * (scale / box.BoxDims.creationScale),
+					top: box.baseTop * (scale / box.BoxDims.posCreationScale),
+					left: box.baseLeft * (scale / box.BoxDims.posCreationScale),
 					width: finalWidth,
 					height: finalHeight,
-					resizedHeight: newBaseHeight,
-					resizedWidth: newBaseWidth,
+					resizedHeight: 0,
+					resizedWidth: 0,
 					currentScale: scale,
-					creationScale: box.BoxDims.creationScale,
+					posCreationScale: box.BoxDims.posCreationScale,
+					sizeCreationScale: box.BoxDims.sizeCreationScale
 				}
 
 				box.textStyleEditorState.font_size = box.textStyleEditorState.baseFontSize * scale;
 				//const [left, top] = box.left, box.top //viewport.convertToViewportPoint(box.left, box.top);
 
+				this.pdfViewerService.setCodeResizeTimeout()
+
 				const ret = this.textEditService.createTextBox(box_dims, box.textStyleEditorState, pageNumber,
 					scale, this.pdfViewerService.currentScrollTop, true, box.id)
 
-			
+				ret.box.baseHeight = newBaseHeight
+				ret.box.baseWidth = newBaseWidth
 				textBoxLayer.appendChild(ret.comp.location.nativeElement)
 			}
 		})

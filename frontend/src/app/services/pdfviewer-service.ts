@@ -133,20 +133,19 @@ export class PDFViewerService {
 		const current = this.visiblePages.getValue();
 		current.delete(pageNumber); // Remove the number
 		this.visiblePages.next(new Set(current)); // Emit a new Set
-	}	
+	}
 
 	//=======================================================================================================================
 	// This function prevents the user to use browser zoom on ctrl. We need this because we implement our custom zoom.
 	//======================================================================================================================
-	preventWindowZoomIn()
-	{
+	preventWindowZoomIn() {
 		window.addEventListener('wheel', (event) => {
 			if (event.ctrlKey) {
 				event.preventDefault();
 			}
 		}, { passive: false });
 	}
-	
+
 	//=======================================================================================================================
 	// This function calculates the margin between two pages on zoom. This is necessary since on zoom margin behaves
 	// differently.
@@ -158,5 +157,17 @@ export class PDFViewerService {
 		const multiplier = 10
 		const marginOffset = fractFull * multiplier;
 		return 16 * (marginOffset);
+	}
+
+	//=======================================================================================================================
+	// This function sets a timeout on code resizing. During that time ResizeObserver does not register textbox resizing.
+	//=======================================================================================================================
+	setCodeResizeTimeout() {
+		if (this.ignoreResizeTimeout) {
+			clearTimeout(this.ignoreResizeTimeout);
+		}
+		this.ignoreResizeTimeout = setTimeout(() => {
+			this.ignoreResizeTimeout = null;
+		}, 400);
 	}
 }

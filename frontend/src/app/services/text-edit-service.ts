@@ -103,7 +103,7 @@ export class TextEditService {
 
             savedBox.baseLeft = pos.left - rect.left;
             savedBox.baseTop = pos.top - rect.top;
-            savedBox.BoxDims.creationScale = this.pdfViewerService.currentScale;
+            savedBox.BoxDims.posCreationScale = this.pdfViewerService.currentScale;
             savedBox.pageId = pageNum;
         }
     }
@@ -151,8 +151,8 @@ export class TextEditService {
             this.textboxes.push(newTextBox);
             newTextBox.baseTop = box_dims.top;
             newTextBox.baseLeft = box_dims.left;
-            newTextBox.baseHeight = box_dims.height / this.pdfViewerService.currentScale;
-            newTextBox.baseWidth = box_dims.width / this.pdfViewerService.currentScale;
+            newTextBox.baseHeight = box_dims.height;
+            newTextBox.baseWidth = box_dims.width;
             page?.appendTextBox(newTextBox)
         }
 
