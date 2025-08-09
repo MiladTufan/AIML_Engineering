@@ -87,22 +87,46 @@ export class TextEditService {
         }
     }
 
+    checkPageBounds(pos: { top: number, left: number }) {
+        let currTop = pos.top + this.pdfViewerService.currentScrollTop
+        const scaledPageHeight = this.pdfViewerService.pageHeight
+        if (currTop > scaledPageHeight &&
+            currTop < scaledPageHeight + this.pdfViewerService.currentBaseMarginScale) {
+            
+            pos.top += (scaledPageHeight - this.pdfViewerService.currentScrollTop)
+        }
+
+        return pos
+    }
+
+
     //=======================================================================================================================
     // This function is responsible for updating the textbox position, when the textbox is being dragged around.
     //=======================================================================================================================
-    public updateTextBoxPos(id: number, pos: { top: number, left: number }, pageNum: number, scale: number, scrollTop: number) {
-        const savedBox = this.textboxes.find(b => b.id === id);
-        const page = this.pdfViewerService.getPageWithNumber(pageNum)
-        const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
-
-        const rect = (text_layer as HTMLElement).getBoundingClientRect();
-
+    public updateTextBoxPos(textBox: TextBox, pos: { top: number, left: number }, pageNum: number) {
+        const savedBox = this.textboxes.find(b => b.id === textBox.id);
         if (savedBox) {
+            pos = this.checkPageBounds(pos);
+
+            const page = this.pdfViewerService.getPageWithNumber(pageNum)
+            const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
+            // const canvas_layer = page?.htmlContainer?.querySelector(`page-${pageNum}`)
+
+            const rect = (text_layer as HTMLElement).getBoundingClientRect();
+            const rect2 = (page!.htmlContainer! as HTMLElement).getBoundingClientRect();
+
+
             savedBox.BoxDims.top = (pos.top - rect.top);
             savedBox.BoxDims.left = pos.left - rect.left;
 
-            savedBox.baseLeft = pos.left - rect.left;
-            savedBox.baseTop = pos.top - rect.top;
+            if (savedBox.BoxDims.top < 0) savedBox.BoxDims.top = 0;
+            if (savedBox.BoxDims.top > rect2.height) savedBox.BoxDims.top = (rect2.height - textBox.BoxDims.height)
+
+            if (savedBox.BoxDims.left < 0) savedBox.BoxDims.left = 0
+            if (savedBox.BoxDims.left > rect2.width) savedBox.BoxDims.left = (rect2.width - textBox.BoxDims.width)
+
+            savedBox.baseLeft = savedBox.BoxDims.left;
+            savedBox.baseTop = savedBox.BoxDims.top ;
             savedBox.BoxDims.posCreationScale = this.pdfViewerService.currentScale;
             savedBox.pageId = pageNum;
         }
@@ -113,13 +137,13 @@ export class TextEditService {
     // Helper function to create the container where the textbox is being placed. This also registers all
     // events for the textbox like editing, and moving.
     //=======================================================================================================================
-    public createTextBoxContainer(editTextBoxComp: ComponentRef<CustomTextEditBox>, textBox: TextBox, 
-                                  pageNum: number, scale: number, scrollTop: number) {
+    public createTextBoxContainer(editTextBoxComp: ComponentRef<CustomTextEditBox>, textBox: TextBox,
+        pageNum: number, scale: number, scrollTop: number) {
 
         editTextBoxComp.instance.box = textBox;
         editTextBoxComp.instance.textBoxEditClicked.subscribe((event: any) => this.onTextBoxEditClick(textBox.id, event))
-        editTextBoxComp.instance.positionChanged.subscribe((event: any) => 
-                                                 this.updateTextBoxPos(textBox.id, event, pageNum, scale, scrollTop))
+        editTextBoxComp.instance.positionChanged.subscribe((event: any) =>
+            this.updateTextBoxPos(textBox, event, pageNum))
         // editTextBoxComp.instance.textBoxEditClicked.subscribe((event: any) => this.removeTextBox(newTextBox.id, event))
 
         return editTextBoxComp
@@ -153,7 +177,7 @@ export class TextEditService {
             newTextBox.baseLeft = box_dims.left;
             newTextBox.baseHeight = box_dims.height;
             newTextBox.baseWidth = box_dims.width;
-            
+
             page?.appendTextBox(newTextBox)
         }
 

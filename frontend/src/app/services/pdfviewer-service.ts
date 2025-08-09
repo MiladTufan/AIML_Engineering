@@ -9,6 +9,7 @@ export class PDFViewerService {
 	private _currentPage = new BehaviorSubject<number>(1);
 
 	public visiblePages = new BehaviorSubject<Set<number>>(new Set<number>());
+	public standardMarginTop = 64;
 	public totalPages: number = 0;
 	public currentScrollTop: number = 0;
 	public pageHeight: number = 0;

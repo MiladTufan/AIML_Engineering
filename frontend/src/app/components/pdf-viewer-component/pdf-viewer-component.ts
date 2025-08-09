@@ -219,8 +219,8 @@ export class PdfViewerComponent {
 	// for the actual page and any layers on top of the page e.g. textBoxLayer (where all textboxes reside).
 	//=======================================================================================================================
 	createPageContainers(pageNumber: number, renderdummy: Boolean, scale: number) {
-		const imgWidth = 50 * scale;
-		const imgHeight = 100 * scale;
+		const imgWidth = 25 * scale;
+		const imgHeight = 50 * scale;
 
 		const canvas = document.createElement("canvas");
 		const textBoxLayer = document.createElement("div");

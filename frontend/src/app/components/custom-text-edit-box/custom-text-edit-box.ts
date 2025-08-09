@@ -77,7 +77,6 @@ export class CustomTextEditBox {
 		this.mouseX = event.clientX - this.dragOffsetX
 		this.mouseY = event.clientY - this.dragOffsetY
 		this.isDragging = false;
-
 		this.positionChanged.emit({ top: this.mouseY, left: this.mouseX })
 
 	}
