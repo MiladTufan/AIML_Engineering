@@ -16,6 +16,7 @@ import { ToolbarComponent } from '../components/toolbar-component/toolbar-compon
 })
 export class TextEditService {
     public textboxes: TextBox[] = [];
+    public textCompMap = new Map<number, ComponentRef<CustomTextEditBox>>();
     public currentFocusTextBoxId: number = 0;
     public pdfViewerContainer: ElementRef | null = null;
     public dynamicContainer: ViewContainerRef | null = null;
@@ -88,19 +89,17 @@ export class TextEditService {
     }
 
 
-    checkXBounds(box: TextBox, container: DOMRect)
-    {
+    checkXBounds(box: TextBox, container: DOMRect) {
         if (box.BoxDims.left < 0) box.BoxDims.left = 0;
-        if ((box.BoxDims.left+box.BoxDims.width) > container.width) box.BoxDims.left = (container.width - box.BoxDims.width);
-        
+        if ((box.BoxDims.left + box.BoxDims.width) > container.width) box.BoxDims.left = (container.width - box.BoxDims.width);
+
         return box.BoxDims.left
     }
 
-    checkYBounds(box: TextBox, container: DOMRect)
-    {
+    checkYBounds(box: TextBox, container: DOMRect) {
         if (box.BoxDims.top < 0) box.BoxDims.top = 0;
-        if ((box.BoxDims.top+box.BoxDims.height) > container.height) box.BoxDims.top = (container.height - box.BoxDims.height);
-        
+        if ((box.BoxDims.top + box.BoxDims.height) > container.height) box.BoxDims.top = (container.height - box.BoxDims.height);
+
         return box.BoxDims.top
     }
 
@@ -111,7 +110,15 @@ export class TextEditService {
     public updateTextBoxPos(textBox: TextBox, pos: { top: number, left: number }, pageNum: number) {
         const savedBox = this.textboxes.find(b => b.id === textBox.id);
         if (savedBox) {
-            const page = this.pdfViewerService.getPageWithNumber(pageNum)
+            let adjustedPageNum = pageNum
+            let tempTop = pos.top + this.pdfViewerService.currentScrollTop
+            while (tempTop > (this.pdfViewerService.pageHeight * pageNum)) {
+                tempTop -= this.pdfViewerService.pageHeight;
+                adjustedPageNum++;
+            }
+
+
+            const page = this.pdfViewerService.getPageWithNumber(adjustedPageNum)
             const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
             // const canvas_layer = page?.htmlContainer?.querySelector(`page-${pageNum}`)
 
@@ -125,9 +132,28 @@ export class TextEditService {
             savedBox.BoxDims.top = this.checkYBounds(savedBox, rect2)
 
             savedBox.baseLeft = savedBox.BoxDims.left;
-            savedBox.baseTop = savedBox.BoxDims.top ;
+            savedBox.baseTop = savedBox.BoxDims.top;
             savedBox.BoxDims.posCreationScale = this.pdfViewerService.currentScale;
-            savedBox.pageId = pageNum;
+
+            if (adjustedPageNum != pageNum) {
+
+                const compref = this.textCompMap.get(savedBox.id)
+                const index = this.pdfViewerService.dynamicContainer!.indexOf(compref!.hostView);
+                if (index !== -1) {
+                    this.pdfViewerService.dynamicContainer!.remove(index); // this also destroys the component
+                }
+
+                const oldBox: any = this.textboxes.find(b => b.id === savedBox.id)
+                const idx = this.textboxes.indexOf(oldBox);
+                this.textboxes.splice(idx, 1);
+
+                const ret = this.createTextBox(savedBox.BoxDims, savedBox.textStyleEditorState,
+                    adjustedPageNum, savedBox.BoxDims.currentScale,
+                    this.pdfViewerService.currentScrollTop)
+
+                text_layer.appendChild(ret.comp.location.nativeElement)
+            }
+            savedBox.pageId = adjustedPageNum;
         }
     }
 
@@ -182,6 +208,7 @@ export class TextEditService {
 
         let editTextBoxComp = this.pdfViewerService.dynamicContainer!.createComponent(CustomTextEditBox)
         editTextBoxComp = this.createTextBoxContainer(editTextBoxComp, newTextBox, pageNum, scale, scrollTop);
+        this.setComprefSafely(newTextBox.id, editTextBoxComp)
 
         if (!rerender) {
             const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
@@ -190,6 +217,15 @@ export class TextEditService {
 
 
         return { comp: editTextBoxComp, box: newTextBox }
+    }
+
+
+    setComprefSafely(id: number, editTextBoxComp: ComponentRef<CustomTextEditBox>) {
+        if (this.textCompMap.has(id)) {
+            const oldRef = this.textCompMap.get(id);
+            oldRef?.destroy(); // cleanup Angular component instance
+        }
+        this.textCompMap.set(id, editTextBoxComp)
     }
 
 
