@@ -153,6 +153,7 @@ export class TextEditService {
             newTextBox.baseLeft = box_dims.left;
             newTextBox.baseHeight = box_dims.height;
             newTextBox.baseWidth = box_dims.width;
+            
             page?.appendTextBox(newTextBox)
         }
 
