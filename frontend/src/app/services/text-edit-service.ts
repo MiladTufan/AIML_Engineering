@@ -91,7 +91,7 @@ export class TextEditService {
     checkXBounds(box: TextBox, container: DOMRect)
     {
         if (box.BoxDims.left < 0) box.BoxDims.left = 0;
-        if (box.BoxDims.left > container.width) box.BoxDims.left = (container.width - box.BoxDims.width);
+        if ((box.BoxDims.left+box.BoxDims.width) > container.width) box.BoxDims.left = (container.width - box.BoxDims.width);
         
         return box.BoxDims.left
     }
@@ -99,7 +99,7 @@ export class TextEditService {
     checkYBounds(box: TextBox, container: DOMRect)
     {
         if (box.BoxDims.top < 0) box.BoxDims.top = 0;
-        if (box.BoxDims.top > container.height) box.BoxDims.left = (container.height - box.BoxDims.height);
+        if ((box.BoxDims.top+box.BoxDims.height) > container.height) box.BoxDims.top = (container.height - box.BoxDims.height);
         
         return box.BoxDims.top
     }
