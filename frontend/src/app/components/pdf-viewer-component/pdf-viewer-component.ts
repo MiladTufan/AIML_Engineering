@@ -11,6 +11,7 @@ import { debounceTime, Subject } from 'rxjs';
 
 import { AlertService } from '../../services/alert-service';
 import { TextBox } from '../../models/TextBox';
+import { PageInfoComponent } from '../page-info-component/page-info-component';
 (pdfjsLib as any).GlobalWorkerOptions.workerSrc = "assets/pdf.worker.min.mjs";
 
 
@@ -219,8 +220,8 @@ export class PdfViewerComponent {
 	// for the actual page and any layers on top of the page e.g. textBoxLayer (where all textboxes reside).
 	//=======================================================================================================================
 	createPageContainers(pageNumber: number, renderdummy: Boolean, scale: number) {
-		const imgWidth = 25 * scale;
-		const imgHeight = 50 * scale;
+		const imgWidth = 100 * scale;
+		const imgHeight = 200 * scale;
 
 		const canvas = document.createElement("canvas");
 		const textBoxLayer = document.createElement("div");
@@ -228,12 +229,12 @@ export class PdfViewerComponent {
 		let pageContainer = document.createElement("div");
 
 		const canvasContainer = document.createElement("div");
-		const img = document.createElement("img");
-		img.src = "assets/icons/trashcan.svg"
-		img.alt = "Delete Page Icon"
 
-		img.style.width = imgWidth.toString() + "px";
-		img.style.height = imgHeight.toString() + "px";
+		const pageInfo = this.pdfViewerService.dynamicContainer?.createComponent(PageInfoComponent);
+		pageInfo!.instance.pageNumber = pageNumber;
+
+		pageInfo!.location.nativeElement.style.width = imgWidth.toString() + "px";
+		pageInfo!.location.nativeElement.style.height = imgHeight.toString() + "px";
 
 		canvas.id = `page-${pageNumber}`;
 		canvasContainer.id = `canvasContainer-${pageNumber}`;
@@ -262,7 +263,7 @@ export class PdfViewerComponent {
 		}
 
 		canvasContainer.appendChild(canvas)
-		canvasContainer.appendChild(img)
+		canvasContainer.appendChild(pageInfo!.location.nativeElement)
 
 		pageContainer.appendChild(textBoxLayer)
 		pageContainer.appendChild(canvasContainer)
