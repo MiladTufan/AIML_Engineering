@@ -111,11 +111,25 @@ export class TextEditService {
         const savedBox = this.textboxes.find(b => b.id === textBox.id);
         if (savedBox) {
             let adjustedPageNum = pageNum
-            let tempTop = pos.top + this.pdfViewerService.currentScrollTop
-            while (tempTop > (this.pdfViewerService.pageHeight * pageNum)) {
-                tempTop -= this.pdfViewerService.pageHeight;
-                adjustedPageNum++;
-            }
+
+            adjustedPageNum = this.pdfViewerService.getPageNumberFromScrolltop(pos.top + this.pdfViewerService.currentScrollTop - (this.pdfViewerService.standardMarginTop))
+
+
+            // let tempTop = pos.top + this.pdfViewerService.currentScrollTop
+            // let increased = false;
+            // while (tempTop > (this.pdfViewerService.pageHeight * pageNum)) {
+            //     tempTop -= this.pdfViewerService.pageHeight;
+            //     adjustedPageNum++;
+            //     increased = true;
+            // }
+
+            // if (!increased) {
+            //     while (tempTop < (this.pdfViewerService.pageHeight * pageNum)) {
+            //         tempTop += this.pdfViewerService.pageHeight;
+            //         adjustedPageNum--;
+            //     }
+            // }
+
 
 
             const page = this.pdfViewerService.getPageWithNumber(adjustedPageNum)
