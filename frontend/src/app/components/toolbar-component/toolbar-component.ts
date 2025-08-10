@@ -1,11 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, Output, EventEmitter, ViewChild, Input } from '@angular/core';
-import { Constants } from '../../models/constants';
+import { Constants } from '../../models/constants/constants';
 import { TextEditService } from '../../services/text-edit-service';
 import { TextStyleBar } from '../custom-text-edit-box/text-style-bar/text-style-bar';
 import { PDFViewerService } from '../../services/pdfviewer-service';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, MinLengthValidator } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import { DownloadService } from '../../services/communication/download-service';
+import { GlobalEdit, MiniPage } from '../../models/globalEdit';
 
 @Component({
 	selector: 'app-toolbar-component',
@@ -25,7 +27,7 @@ export class ToolbarComponent {
 	@ViewChild(TextStyleBar) textStyleBarComponent!: TextStyleBar
 
 	//=============================================== Constructor =========================================
-	constructor(public textEditService: TextEditService, public pdfViewerService: PDFViewerService) {
+	constructor(public textEditService: TextEditService, public pdfViewerService: PDFViewerService, private downloadService: DownloadService) {
 	}
 
 	ngOnInit() {
@@ -47,8 +49,29 @@ export class ToolbarComponent {
 		console.log("image paste clicked!")
 	}
 
+
+	// use download Service for this
 	public OnDownloadBtnClicked(event: Event) {
-		window.open(Constants.BACKEND_DOWNLOAD_URL, '_blank');
+
+		const edits = new GlobalEdit([], [1,2,3])
+		for(let i = 1; i <= this.pdfViewerService.allRenderedPages.length; i++)
+		{
+			const pageOld = this.pdfViewerService.getPageWithNumber(i)
+			const miniPage:  MiniPage = new MiniPage(i, pageOld!.textboxes)
+			edits.pageEdits.push(miniPage)
+
+		}
+
+		console.log(edits)
+		this.downloadService.completePDF(edits).subscribe({
+			next: (response) => {
+				console.log('Response:', response);
+				this.downloadService.downloadPDF()
+			},
+			error: (error) => {
+				console.error('Error:', error);
+			}
+		})
 	}
 
 	//=============================================== Methods ==============================================

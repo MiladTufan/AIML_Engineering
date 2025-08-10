@@ -74,4 +74,42 @@ class PDFEditor(object):
         with open("merged_output.pdf", "wb") as f:
             output.write(f)
 
+    @staticmethod
+    def create_text_overlay(packet, x, y, font_size, font, text):
+        can = canvas.Canvas(packet, pagesize=A4)
 
+        can.setFont("Helvetica", font_size)  # Font name, size in points
+        can.drawString(x, y, text)
+        can.save()
+
+        packet.seek(0)
+        return packet
+    
+    @staticmethod
+    def paste_text_into_page(complete_pdf_writer, packet, pdf_file, pagenumber):
+        packet.seek(0)
+        overlay_pdf = PdfReader(packet)
+        existing_pdf = PdfReader(BytesIO(pdf_file.getvalue()))
+
+        page1 = existing_pdf.pages[0]
+
+        media_box = page1.mediabox
+        width = float(media_box.width)
+        height = float(media_box.height)
+        print(f"Width: {width} pt, Height: {height} pt")
+        
+        pagenumber = pagenumber - 1
+        for i, page in enumerate(existing_pdf.pages):
+            if i == pagenumber:
+                page.merge_page(overlay_pdf.pages[0])
+            complete_pdf_writer.add_page(page)
+
+        return complete_pdf_writer
+    
+    @staticmethod
+    def create_stream(complete_pdf_writer):
+        out_stream = io.BytesIO()
+        complete_pdf_writer.write(out_stream)
+        out_stream.seek(0)
+
+        return out_stream

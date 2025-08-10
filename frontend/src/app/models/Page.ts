@@ -58,8 +58,15 @@ export class Page {
     appendTextBox(textBox: TextBox) {
         this.textboxes.push(textBox)
     }
-    replaceTextBox(nexTextBox: TextBox, idx: number) 
-    {
+
+    replaceTextBox(nexTextBox: TextBox, idx: number) {
         this.textboxes.splice(idx, 1, nexTextBox);
+    }
+
+    removeTextBox(textBoxToRemove: TextBox) {
+        const index = this.textboxes.indexOf(textBoxToRemove);
+        if (index > -1) {
+            this.textboxes.splice(index, 1);
+        }
     }
 }

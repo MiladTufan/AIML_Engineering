@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { Constants } from '../../models/constants';
+import { Constants } from '../../models/constants/constants';
 import { PDFFileService } from '../../services/pdffile-service';
 import { AlertService } from '../../services/alert-service';
 import { AlertComponent } from '../../shared/alert/alert';
+import { UploadService } from '../../services/communication/upload-service';
 
 @Component({
 	selector: 'app-upload-pdfview',
@@ -15,7 +16,7 @@ import { AlertComponent } from '../../shared/alert/alert';
 export class UploadPDFView {
 	public showGlassySvg = false;
 	constructor(private router: Router, private fileService: PDFFileService,
-		private alertService: AlertService) { }
+		private alertService: AlertService, private uploadService: UploadService) { }
 
 
 	//========================================== Clicks =====================================================
@@ -26,6 +27,7 @@ export class UploadPDFView {
 			const file = input.files[0];
 			if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
 				this.fileService.setFile(file)
+				this._uploadPDF(file)
 				this.router.navigate([Constants.EDIT_PDF_VIEW]);
 			} else {
 				// Not a PDF
@@ -35,6 +37,14 @@ export class UploadPDFView {
 			}
 
 		}
+	}
+
+	private _uploadPDF(file: File)
+	{
+		this.uploadService.uploadPDF(file).subscribe({
+			next: (res) => console.log("Upload success: ", res),
+			error: (err) => console.log("Upload failed: ", err)
+		})
 	}
 
 	//========================================== Drags =====================================================
@@ -67,6 +77,7 @@ export class UploadPDFView {
 		const file = event.dataTransfer?.files[0] as File;
 		if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
 			this.fileService.setFile(file);
+			this._uploadPDF(file)
 			this.router.navigate([Constants.EDIT_PDF_VIEW]);
 		}
 		else {

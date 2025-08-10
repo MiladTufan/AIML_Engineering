@@ -4,7 +4,7 @@ import { BoxDimensions, TextBox } from '../models/TextBox';
 import { TextStyleEditor } from '../models/TextStyleEditor';
 import { CustomTextEditBox } from '../components/custom-text-edit-box/custom-text-edit-box';
 import { PDFViewerService } from './pdfviewer-service';
-import { Constants } from '../models/constants';
+import { Constants } from '../models/constants/constants';
 import { ToolbarComponent } from '../components/toolbar-component/toolbar-component';
 
 
@@ -125,6 +125,10 @@ export class TextEditService implements OnDestroy {
     //=======================================================================================================================
     removeBoxFromPage(id: number) {
         const compref = this.textCompMap.get(id)
+        const box = this.textboxes.find(b => b.id === id)
+        const pageOld = this.pdfViewerService.getPageWithNumber(box!.pageId)
+        pageOld?.removeTextBox(box!)
+
         const index = this.pdfViewerService.dynamicContainer!.indexOf(compref!.hostView);
         if (index !== -1) {
             this.pdfViewerService.dynamicContainer!.remove(index); // this also destroys the component
@@ -174,7 +178,10 @@ export class TextEditService implements OnDestroy {
                 const ret = this.createTextBox(savedBox.BoxDims, savedBox.textStyleEditorState,
                     adjustedPageNum, savedBox.BoxDims.currentScale,
                     this.pdfViewerService.currentScrollTop)
-
+                
+                const pageOld = this.pdfViewerService.getPageWithNumber(pageNum)
+                pageOld?.removeTextBox(savedBox)
+                page?.appendTextBox(savedBox)
                 text_layer.appendChild(ret.comp.location.nativeElement)
             }
             savedBox.pageId = adjustedPageNum;

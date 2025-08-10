@@ -8,15 +8,17 @@ import { PDFViewerService } from '../../services/pdfviewer-service';
 import { TextEditService } from '../../services/text-edit-service';
 import { TextStyleEditor } from '../../models/TextStyleEditor';
 import { Subscription } from 'rxjs';
-import { Constants } from '../../models/constants';
+import { Constants } from '../../models/constants/constants';
+import { provideHttpClient } from '@angular/common/http';
 
 
 
 @Component({
 	selector: 'app-edit-pdfview',
+	standalone: true,
 	imports: [PdfViewerComponent, ToolbarComponent],
 	templateUrl: './edit-pdfview.html',
-	styleUrl: './edit-pdfview.css'
+	styleUrl: './edit-pdfview.css',
 })
 export class EditPDFView {
 	//=================================================== Private variables =================================================

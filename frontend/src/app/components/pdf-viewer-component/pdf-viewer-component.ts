@@ -6,7 +6,7 @@ import { PDFViewerService } from '../../services/pdfviewer-service';
 import { BehaviorSubject, Subscription } from 'rxjs';
 import { TextEditService } from '../../services/text-edit-service';
 import { Page } from '../../models/Page';
-import { Constants } from '../../models/constants';
+import { Constants } from '../../models/constants/constants';
 import { debounceTime, Subject } from 'rxjs';
 
 import { AlertService } from '../../services/alert-service';

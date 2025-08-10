@@ -26,3 +26,28 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Ignore environment variables files
+.env
+*.env
+
+# Ignore virtual environment folders
+venv/
+env/
+ENV/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
