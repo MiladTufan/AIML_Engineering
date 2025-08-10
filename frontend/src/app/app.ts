@@ -6,7 +6,7 @@ import { PageInfoComponent } from './components/page-info-component/page-info-co
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, AlertComponent, PageInfoComponent],
+  imports: [RouterOutlet, AlertComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

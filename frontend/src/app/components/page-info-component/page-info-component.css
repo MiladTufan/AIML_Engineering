@@ -1,0 +1,6 @@
+button:hover img:first-child {
+    opacity: 0;
+  }
+  button:hover img:last-child {
+    opacity: 1;
+  }

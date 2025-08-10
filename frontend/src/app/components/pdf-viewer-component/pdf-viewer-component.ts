@@ -220,9 +220,6 @@ export class PdfViewerComponent {
 	// for the actual page and any layers on top of the page e.g. textBoxLayer (where all textboxes reside).
 	//=======================================================================================================================
 	createPageContainers(pageNumber: number, renderdummy: Boolean, scale: number) {
-		const imgWidth = 100 * scale;
-		const imgHeight = 200 * scale;
-
 		const canvas = document.createElement("canvas");
 		const textBoxLayer = document.createElement("div");
 		let textLayer = document.createElement("div");
@@ -232,9 +229,9 @@ export class PdfViewerComponent {
 
 		const pageInfo = this.pdfViewerService.dynamicContainer?.createComponent(PageInfoComponent);
 		pageInfo!.instance.pageNumber = pageNumber;
-
-		pageInfo!.location.nativeElement.style.width = imgWidth.toString() + "px";
-		pageInfo!.location.nativeElement.style.height = imgHeight.toString() + "px";
+		pageInfo!.instance.width = 60 * scale;
+		pageInfo!.instance.fontSize = 32 * scale;
+		pageInfo!.instance.borderRadius = 9 * scale;
 
 		canvas.id = `page-${pageNumber}`;
 		canvasContainer.id = `canvasContainer-${pageNumber}`;

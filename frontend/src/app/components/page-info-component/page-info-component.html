@@ -1,7 +1,17 @@
-<div class="translucentStyle rounded-xl ml-2 flex flex-col items-center text-center mt-2">
-    <span class="mt-2 text-2xl">#{{pageNumber}}</span>
-    <img src="/assets/icons/trashcan.svg" alt="Delete Page Icon" class="w-[90%] dropdownBtnStyle rounded-md">
-    <img src="/assets/icons/infoIcon.svg" class="w-[90%] mt-1 dropdownBtnStyle rounded-md">
+<div class="translucentStyle flex flex-col items-center text-center mt-2" [style.border-radius.px]="borderRadius">
+
+    <span class="mt-1" [style.font-size.px]="fontSize">#{{pageNumber}}</span>
+
+    <button  class="hover:bg-red-500/100 pageInfoStyle flex items-center text-center justify-center"
+            [style.width.px]="width" [style.height.px]="width" (click)="DeletePage($event)">
+         <img src="/assets/icons/trashcan.svg" alt="Delete Page Icon" class="w-[65%] block h-full hover:opacity-0">
+         <img src="/assets/icons/trashcanWhite.svg" alt="Delete Page Icon" class="w-[65%] absolute h-full opacity-0 hover:opacity-100 hover:scale-120  transform transition-transform duration-500">
+    </button>
+    
+    <button [style.width.px]="width" [style.height.px]="width" class="hover:bg-blue-500/100 pageInfoStyle flex items-center text-center justify-center" 
+            [style.border-bottom-left-radius.px]="borderRadius" [style.border-bottom-right-radius.px]="borderRadius"
+            (click)="ShowInfo($event)">
+         <img src="/assets/icons/infoIcon.svg" alt="Delete Page Icon" class="w-[55%] block h-full hover:opacity-0">
+         <img src="/assets/icons/infoIconWhite.svg" alt="Delete Page Icon" class="w-[55%] absolute h-full opacity-0 hover:opacity-100 hover:scale-110  transform transition-transform duration-500">
+    </button>
 </div>
-
-
