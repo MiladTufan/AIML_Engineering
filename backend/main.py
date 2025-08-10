@@ -8,6 +8,8 @@ from io import BytesIO
 from PyPDF2 import PdfReader, PdfWriter
 import logging
 import io
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
 
 app = FastAPI()
 
@@ -53,20 +55,37 @@ async def complete_pdf(global_edits: GlobalEdit):
     global temp_pdf
     complete_pdf  = PdfWriter()
 
-    packet = BytesIO()
 
     logger.info("FAST API COMPLETE PDF")
     logger.info(global_edits)
     logger.info(f"Received PDF file: ({temp_pdf.getbuffer().nbytes} bytes)")
 
+    existing_pdf = PdfReader(BytesIO(temp_pdf.getvalue()))
+
+    page1 = existing_pdf.pages[0]
+
+    media_box = page1.mediabox
+    width = float(media_box.width)
+    height = float(media_box.height)
+    print(f"Width: {width} pt, Height: {height} pt")
+
     for edit in global_edits.pageEdits:
         logger.info(f"handling page: {edit.id}")
-        for box in edit.textboxes:
-            packet = PDFEditor.create_text_overlay(packet, box.BoxDims.left, box.BoxDims.top, 
-                                                box.textStyleEditorState.font_size, box.textStyleEditorState.fontname, 
-                                                box.text)
-            logger.info(f"handling box: {box.id}, text: {box.text} coordinates: {box.BoxDims.left} / {box.BoxDims.top}")
         
+        packet = BytesIO()
+        can = canvas.Canvas(packet, pagesize=A4)
+        
+        for box in edit.textboxes:
+            # packet = PDFEditor.create_text_overlay(height, packet, box.baseLeft, box.baseTop, 
+            #                                     box.textStyleEditorState.font_size, box.textStyleEditorState.fontname, 
+            #                                     box.text)
+            
+
+            can.setFont("Helvetica", box.textStyleEditorState.font_size)  # Font name, size in points
+            can.drawString(box.baseLeft, height - box.baseTop, box.text)
+            logger.info(f"handling box: {box.id}, text: {box.text} coordinates: {box.baseLeft} / {box.baseTop}")
+
+        can.save()
         PDFEditor.paste_text_into_page(complete_pdf, packet, temp_pdf, edit.id)
 
     new_pdf = PDFEditor.create_stream(complete_pdf)

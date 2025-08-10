@@ -75,14 +75,13 @@ class PDFEditor(object):
             output.write(f)
 
     @staticmethod
-    def create_text_overlay(packet, x, y, font_size, font, text):
+    def create_text_overlay(pdf_height, packet, x, y, font_size, font, text):
         can = canvas.Canvas(packet, pagesize=A4)
 
         can.setFont("Helvetica", font_size)  # Font name, size in points
-        can.drawString(x, y, text)
+        can.drawString(x, pdf_height - y, text)
         can.save()
 
-        packet.seek(0)
         return packet
     
     @staticmethod
@@ -90,13 +89,9 @@ class PDFEditor(object):
         packet.seek(0)
         overlay_pdf = PdfReader(packet)
         existing_pdf = PdfReader(BytesIO(pdf_file.getvalue()))
-
-        page1 = existing_pdf.pages[0]
-
-        media_box = page1.mediabox
-        width = float(media_box.width)
-        height = float(media_box.height)
-        print(f"Width: {width} pt, Height: {height} pt")
+        print(overlay_pdf.pages)
+        if (len(overlay_pdf.pages) <= 0):
+            return
         
         pagenumber = pagenumber - 1
         for i, page in enumerate(existing_pdf.pages):
