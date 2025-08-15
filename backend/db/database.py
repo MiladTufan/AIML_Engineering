@@ -10,8 +10,18 @@ import secrets
 import threading
 import time
 import logging
+from io import BytesIO
+from dataclasses import dataclass
 
 SESSION_COOKIE = "session_id"
+
+@dataclass
+class Data:
+    sid: str
+    signed_id: str
+    data: BytesIO
+    last_access: datetime
+
 
 class Database:
 
@@ -49,7 +59,8 @@ class Database:
         self.cur.execute("""
         CREATE TABLE IF NOT EXISTS sessions (
             id TEXT PRIMARY KEY,
-            data TEXT,
+            signed_id TEXT,
+            data BLOB,
             last_access TIMESTAMP
         )
         """)
@@ -71,6 +82,20 @@ class Database:
         self.logger.info(f"Session cleanup interval set to {cleanup_interval} seconds")
 
         threading.Thread(target=self._auto_cleanup, daemon=True).start()
+
+    # --------------------------------------------------------
+    # database operations
+    # --------------------------------------------------------
+
+
+    # --------------------------------------------------------
+    # Add row to the database.
+    # --------------------------------------------------------
+    def add_row(self, data: Data):
+        self.cur.execute("INSERT INTO sessions VALUES (?, ?, ?, ?)",
+                         (data.sid, data.signed_id, data.data, data.last_access))
+
+        self.conn.commit()
 
     # --------------------------------------------------------
     # Cookie signing methods
@@ -119,44 +144,44 @@ class Database:
             self.logger.warning(f"Invalid session ID format: {signed_sid}")
             return None
     
-    def create_session(self):
-        sid = str(uuid.uuid4())
-        self.cur.execute("INSERT INTO sessions VALUES (?, ?, ?)",
-                         (sid, json.dumps({}), datetime.now(timezone.utc).isoformat()))
+    # def create_session(self):
+    #     sid = str(uuid.uuid4())
+    #     self.cur.execute("INSERT INTO sessions VALUES (?, ?, ?)",
+    #                      (sid, BytesIO(), datetime.now(timezone.utc).isoformat()))
 
-        self.conn.commit()
-        self.logger.info(f"Created new session: {sid}")
-        return sid
+    #     self.conn.commit()
+    #     self.logger.info(f"Created new session: {sid}")
+    #     return sid
 
-    def get_session(self, sid):
-        self.cur.execute("SELECT data, last_access FROM sessions WHERE id = ?", (sid,))
+    # def get_session(self, sid):
+    #     self.cur.execute("SELECT data, last_access FROM sessions WHERE id = ?", (sid,))
 
-        row = self.cur.fetchone()
+    #     row = self.cur.fetchone()
 
-        if not row:
-            self.logger.info(f"Session {sid} not found")
-            return None
+    #     if not row:
+    #         self.logger.info(f"Session {sid} not found")
+    #         return None
         
-        data, last_access = row
-        last_access_dt = datetime.fromisoformat(last_access)
-        if last_access_dt.tzinfo is None:
-            last_access_dt = last_access_dt.replace(tzinfo=timezone.utc)  # make aware
+    #     data, last_access = row
+    #     last_access_dt = datetime.fromisoformat(last_access)
+    #     if last_access_dt.tzinfo is None:
+    #         last_access_dt = last_access_dt.replace(tzinfo=timezone.utc)  # make aware
 
-        if datetime.now(timezone.utc) - last_access_dt > self.timeout:
-            self.logger.info(f"Session {sid} expired, deleting")
-            self.delete_session(sid)
-            return None
+    #     if datetime.now(timezone.utc) - last_access_dt > self.timeout:
+    #         self.logger.info(f"Session {sid} expired, deleting")
+    #         self.delete_session(sid)
+    #         return None
         
-        self.cur.execute("UPDATE sessions SET last_access = ? WHERE id = ?",
-                          (datetime.now(timezone.utc).isoformat(), sid))
+    #     self.cur.execute("UPDATE sessions SET last_access = ? WHERE id = ?",
+    #                       (datetime.now(timezone.utc).isoformat(), sid))
         
-        self.conn.commit()
-        self.logger.debug(f"Session {sid} accessed and last_access updated")
-        return json.loads(data)
+    #     self.conn.commit()
+    #     self.logger.debug(f"Session {sid} accessed and last_access updated")
+    #     return data
     
-    def save_session(self, sid, data):
+    def save_session(self, sid, data: BytesIO):
         self.cur.execute("UPDATE sessions SET data = ?, last_access = ? WHERE id = ?",
-                         (json.dumps(data), datetime.utcnow().isoformat(), sid))
+                         (data, datetime.utcnow().isoformat(), sid))
         
         self.conn.commit()
         self.logger.debug(f"Session {sid} data saved")
