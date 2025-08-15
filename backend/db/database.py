@@ -113,7 +113,7 @@ class Database:
 
         if not row:
             self.logger.info(f"Session {sid} not found")
-            return {"exists" : False}
+            return None
         return {"exists" : row}
     
     def update_last_access(self, sid: str, last_access: datetime):

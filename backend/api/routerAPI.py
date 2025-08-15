@@ -6,6 +6,7 @@ import logging
 from utils.errors import *
 from io import BytesIO
 from api.sessionAPI import SessionAPI
+from fastapi import Response
 
 class RouterAPI:
     def __init__(self):
@@ -51,10 +52,25 @@ class RouterAPI:
         return BadRequestError()
     
     async def get_pdf(self, signed_sid: str):
-        sid, sig = self.session_api.verify_id(signed_sid)
-        if sid is not None:
-            pdf = self.session_api.db.get_data(sid)
-            return {"pdf" : pdf["exists"]}
+        """
+        Retrieves a PDF file from the server DB.
 
+        Args:
+            signed_sid (str): the signed session ID from the browser Cookies.
+
+        Returns:
+            bytes/application/octet-stream: The raw content of the PDF file.
+
+        Raises:
+            FileNotFoundError: If the requested PDF file does not exist.
+            IOError: If there is an error reading the file.
+        """
+        ret = self.session_api.verify_id(signed_sid)
+        if ret is not None and ret["sid"] is not None:
+            pdf = self.session_api.db.get_data(ret["sid"])
+            if pdf:
+                return Response(content=pdf["exists"][0], media_type="application/octet-stream")
+            else:
+                return NotFoundError("PDF")
 
 

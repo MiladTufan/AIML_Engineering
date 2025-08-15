@@ -36,7 +36,7 @@ export class SessionService {
   {
     const params = new HttpParams().set('signed_sid', signed_sid)
     return this.httpClient.get(Environment.API_BASE_URL + 
-                               Environment.BACKEND_GET_PDF_ENDPOINT, { params })
+                               Environment.BACKEND_GET_PDF_ENDPOINT, { responseType: 'arraybuffer', params })
   }
 
 

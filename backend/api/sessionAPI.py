@@ -82,7 +82,7 @@ class SessionAPI:
             expected_sig = self.sign_id(sid).split(".")[1]
             
             if hmac.compare_digest(sig, expected_sig):
-                self.logger.debug(f"Verified session ID {sid} successfully")
+                self.logger.warning(f"Verified session ID {sid} successfully")
                 return {"sid": sid, "sig": expected_sig}
             else:
                 self.logger.warning(f"Session ID signature mismatch: {signed_sid}")

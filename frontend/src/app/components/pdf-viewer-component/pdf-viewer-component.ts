@@ -192,7 +192,7 @@ export class PdfViewerComponent {
 			if (signed_sid) {
 				this.sessionService.getPDF(signed_sid).subscribe(file => {
 					const reader = new FileReader()
-					reader.readAsArrayBuffer(file)
+					reader.readAsArrayBuffer(new Blob([file]))
 
 					reader.onload = async () => {
 						const arrayBuffer = new Uint8Array(reader.result as ArrayBuffer);
