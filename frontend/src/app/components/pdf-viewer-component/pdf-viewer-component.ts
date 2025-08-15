@@ -180,43 +180,50 @@ export class PdfViewerComponent {
 	}
 
 
+	loadingHelper(file: ArrayBuffer | File) {
+		const pdfjs = pdfjsLib as any;
+		const reader = new FileReader()
+		reader.readAsArrayBuffer(new Blob([file]))
+
+		reader.onload = async () => {
+			const arrayBuffer = new Uint8Array(reader.result as ArrayBuffer);
+			this.pdfSrc = arrayBuffer;
+
+			const loadingTask = pdfjs.getDocument({ data: this.pdfSrc });
+			this.pdfDocument = await loadingTask.promise;
+			this.totalPages = this.pdfDocument.numPages;
+			const container = this.pdfContainer.nativeElement;
+			container.innerHTML = ""; // Clear previous content
+			this.pdfViewerService.setTotalPages(this.totalPages);
+			this.pdfViewerService.setCurrentPage(1);
+
+			if (this.renderMode == 0) {
+				for (let pageNum = 1; pageNum <= this.totalPages; pageNum++) {
+					this.renderPage(pageNum, true, this.scale);
+				}
+			}
+		}
+	}
+
 	//=======================================================================================================================
 	// This function loads the user PDF. Depending on rendermode it loads all pages or only Page by Page.
 	// rendermode == 0 => all pages, rendermode == 1 => only 1 page
 	//=======================================================================================================================
 	async loadPDF() {
 		try {
-			const pdfjs = pdfjsLib as any;
-
-			const signed_sid = this.sessionService.getSessionIdFromBrowser("session_id")
-			if (signed_sid) {
-				this.sessionService.getPDF(signed_sid).subscribe(file => {
-					const reader = new FileReader()
-					reader.readAsArrayBuffer(new Blob([file]))
-
-					reader.onload = async () => {
-						const arrayBuffer = new Uint8Array(reader.result as ArrayBuffer);
-						this.pdfSrc = arrayBuffer;
-
-						const loadingTask = pdfjs.getDocument({ data: this.pdfSrc });
-						this.pdfDocument = await loadingTask.promise;
-						this.totalPages = this.pdfDocument.numPages;
-						const container = this.pdfContainer.nativeElement;
-						container.innerHTML = ""; // Clear previous content
-						this.pdfViewerService.setTotalPages(this.totalPages);
-						this.pdfViewerService.setCurrentPage(1);
-
-						if (this.renderMode == 0) {
-							for (let pageNum = 1; pageNum <= this.totalPages; pageNum++) {
-								this.renderPage(pageNum, true, this.scale);
-							}
-						}
-					}
-				})
-			}
-			else
-			{
-				console.error("PDF_VIEWER: No signed session id!")
+			const file = this.fileService.getFile()
+			if (file)
+				this.loadingHelper(file)
+			else {
+				const signed_sid = this.sessionService.getSessionIdFromBrowser("session_id")
+				if (signed_sid) {
+					this.sessionService.getPDF(signed_sid).subscribe(file => {
+						this.loadingHelper(file)
+					})
+				}
+				else {
+					console.error("PDF_VIEWER: No signed session id!")
+				}
 			}
 		} catch (error) {
 			console.error("Error loading PDF:", error);
