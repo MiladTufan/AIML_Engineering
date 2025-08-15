@@ -40,3 +40,7 @@ class MiniPage(BaseModel):
 class GlobalEdit(BaseModel):
     pageEdits: List[MiniPage] =  Field(default_factory=List)  # safest approach
     deletedPages: List[int] = Field(default_factory=List)  # safest approach
+
+class Payload(BaseModel):
+    edits: GlobalEdit
+    signed_id: str

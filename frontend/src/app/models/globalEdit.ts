@@ -13,3 +13,8 @@ export class GlobalEdit {
         public deletedPages: number[]
     ) { }
 }
+
+export interface Payload {
+  edits: GlobalEdit;
+  signed_id: string;
+}

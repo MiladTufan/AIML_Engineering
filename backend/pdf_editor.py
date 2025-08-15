@@ -30,7 +30,15 @@ class PDFEditor(object):
         headers = {"Content-Disposition": 'attachment; filename="modified.pdf"'}
         
         return out_stream, headers
-        
+    
+    @staticmethod
+    def get_pdf_dims(pdf):
+        page1 = pdf.pages[0]
+        media_box = page1.mediabox
+        width = float(media_box.width)
+        height = float(media_box.height)
+        print(f"Width: {width} pt, Height: {height} pt")
+        return width, height
     
     @staticmethod
     def _remove_bg_from_image(img_path) -> ImageReader:
@@ -88,7 +96,7 @@ class PDFEditor(object):
     def paste_text_into_page(complete_pdf_writer, packet, pdf_file, pagenumber):
         packet.seek(0)
         overlay_pdf = PdfReader(packet)
-        existing_pdf = PdfReader(BytesIO(pdf_file.getvalue()))
+        existing_pdf = PdfReader(BytesIO(pdf_file))
         print(overlay_pdf.pages)
         if (len(overlay_pdf.pages) <= 0):
             return

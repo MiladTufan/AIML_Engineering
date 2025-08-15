@@ -5,6 +5,11 @@ from io import BytesIO
 from api.sessionAPI import SessionAPI
 from fastapi import Response
 from fastapi.responses import StreamingResponse
+from models.global_edits import Payload
+from PyPDF2 import PdfReader, PdfWriter
+from pdf_editor import PDFEditor
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
 
 class RouterAPI:
     def __init__(self):
@@ -91,10 +96,34 @@ class RouterAPI:
         ret = self.session_api.verify_id(signed_sid)
         if ret is not None and ret["sid"] is not None:
             pdf = self.session_api.db.get_data(ret["sid"])
-            print(pdf["exists"][0])
             if pdf:
                 return StreamingResponse(BytesIO(pdf["exists"][0]), media_type="application/pdf", 
                                         headers=self.headers)
 
-    async def embed_objs_into_pdf(self, signed_sid: str = Form(...)):
-        return signed_sid
+    async def embed_objs_into_pdf(self, payload: Payload):
+        print(payload.edits)
+        print(payload.signed_id)
+        ret = self.session_api.verify_id(payload.signed_id)
+        if ret is not None and ret["sid"] is not None:
+            pdf = self.session_api.db.get_data(ret["sid"])
+
+        if not pdf:
+            return BadRequestError()  
+        
+        pdf = pdf["exists"][0]
+        writer  = PdfWriter()
+        existing_pdf = PdfReader(BytesIO(pdf))
+        width, height = PDFEditor.get_pdf_dims(existing_pdf)
+
+        for edit in payload.edits.pageEdits:
+            packet = BytesIO()
+            can = canvas.Canvas(packet, pagesize=A4)
+            for box in edit.textboxes:
+                can.setFont("Helvetica", box.textStyleEditorState.font_size)  # Font name, size in points
+                can.drawString(box.baseLeft, height - box.baseTop, box.text)
+        
+            can.save()
+            PDFEditor.paste_text_into_page(writer, packet, pdf, edit.id)
+        new_pdf = PDFEditor.create_stream(writer)
+
+        self.session_api.db.update_session_data(ret["sid"], new_pdf.getvalue())

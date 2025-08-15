@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Environment } from '../../models/constants/environment';
-import { GlobalEdit } from '../../models/globalEdit';
+import { GlobalEdit, Payload } from '../../models/globalEdit';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
 @Injectable({
@@ -15,9 +15,11 @@ export class DownloadService {
     }
 
     completePDF(edits: GlobalEdit, signed_sid: string) {
-        const formData = new FormData()
-        formData.append("signed_sid", signed_sid)
+        const payload: Payload = {
+            edits: edits,
+            signed_id: signed_sid
+        }
         return this.httpClient.post<any>(Environment.API_BASE_URL + 
-            Environment.BACKEND_EMBED_PDF_ENDPOINT, formData)
+            Environment.BACKEND_EMBED_PDF_ENDPOINT, payload)
     }
 }
