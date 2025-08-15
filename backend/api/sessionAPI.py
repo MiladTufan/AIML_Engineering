@@ -14,6 +14,7 @@ from io import BytesIO
 from dotenv import load_dotenv
 
 from db.database import Database, Data
+from models.global_edits import Payload, GlobalEdit
 
 class SessionAPI:
     def __init__(self):
@@ -100,7 +101,11 @@ class SessionAPI:
     ############################################################################################
     def create_session(self):
         sid, sig = self.sign_id(str(uuid.uuid4())).split(".")
-        data = Data(sid, sig, b'', datetime.now(timezone.utc).isoformat())
+        
+        payload = Payload(edits=GlobalEdit(), signed_id=sig)
+        
+        
+        data = Data(sid, sig, b'', datetime.now(timezone.utc).isoformat(), payload)
         self.db.add_row(data)
    
         self.logger.info(f"Created new session: {sid, sig}")
@@ -115,11 +120,10 @@ class SessionAPI:
     # Returns: dict containing session data or None if not found/invalid
     ############################################################################################
     def get_session(self, sid):
-        row = self.db.get_data_last_access(sid)
-        if row["exists"] is False:
-            return row
+        data, last_access = self.db.get_data_last_access(sid)
+        if data is None or last_access is None:
+            return False
         
-        data, last_access = row
         last_access_dt = datetime.fromisoformat(last_access)
         if last_access_dt.tzinfo is None:
             last_access_dt = last_access_dt.replace(tzinfo=timezone.utc)  # make aware

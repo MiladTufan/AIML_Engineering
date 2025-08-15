@@ -1,17 +1,17 @@
 from fastapi import FastAPI, Request, Response, Cookie
 from datetime import datetime, timedelta, timezone
 import sqlite3
-import uuid
-import os 
-import json
-import hmac
-import hashlib
-import secrets
 import threading
 import time
 import logging
 from io import BytesIO
 from dataclasses import dataclass
+from dotenv import load_dotenv
+import os
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from models.db_models import Base, Session, Edits
+from models.global_edits import Payload
 
 SESSION_COOKIE = "session_id"
 
@@ -21,6 +21,7 @@ class Data:
     signed_id: str
     data: BytesIO
     last_access: datetime
+    edits: Payload
 
 
 class Database:
@@ -40,7 +41,7 @@ class Database:
     - Session data is stored as JSON in the database for safety and portability.
     """
 
-    def __init__(self, db_path="db/sessions.db", secret_key=None, timeout_minutes=30, cleanup_interval=300):
+    def __init__(self, db_path="db/sessions.db",  timeout_minutes=30, cleanup_interval=300):
         """
         Initialize the session storage.
 
@@ -50,30 +51,22 @@ class Database:
             timeout_minutes (int): Session expiration time in minutes.
             cleanup_interval (int): How often to run cleanup (in seconds).
         """
-
-        # Connect to SQLite database (thread-safe for FastAPI when check_same_thread=False)
-        self.conn = sqlite3.connect(db_path, check_same_thread=False)
-        self.cur = self.conn.cursor()
-
-        # Create table if it doesn't exist
-        self.cur.execute("""
-        CREATE TABLE IF NOT EXISTS sessions (
-            id TEXT PRIMARY KEY,
-            signed_id TEXT,
-            data BLOB,
-            last_access TIMESTAMP
-        )
-        """)
-        self.conn.commit()
-
+        load_dotenv(dotenv_path=os.path.join("db", "db.env"))
         
-        # self.secret_key = secret_key or os.environ.get("SESSION_SECRET_KEY")
-        # Use provided secret key or generate one
-        self.secret_key = secret_key or secrets.token_hex(32)
+        DB_USER = os.getenv("DB_USER")
+        DB_PASS = os.getenv("DB_PASS")
+        DB_NAME = os.getenv("DB_NAME")
+        DB_HOST = os.getenv("DB_HOST", "localhost")
+        DB_PORT = os.getenv("DB_PORT", 5432)
 
-        if not self.secret_key:
-            raise RuntimeError("No secret key provided! Set SESSION_SECRET_KEY env variable.")
-
+        DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+        engine = create_engine(DATABASE_URL, echo=True)  # echo=True prints SQL queries
+        SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        
+        Base.metadata.create_all(engine)
+        
+        self.db = SessionLocal()
+        
         self.timeout = timedelta(minutes=timeout_minutes)
         self.cleanup_interval = cleanup_interval
 
@@ -87,25 +80,26 @@ class Database:
     # database operations
     # --------------------------------------------------------
 
-
     # --------------------------------------------------------
     # Add row to the database.
     # --------------------------------------------------------
     def add_row(self, data: Data):
-        self.cur.execute("INSERT INTO sessions VALUES (?, ?, ?, ?)",
-                         (data.sid, data.signed_id, data.data, data.last_access))
+        session = Session(sid=data.sid, signed_sid=data.signed_id, data=data.data, last_access=data.last_access)
+        json_data = data.payload.model_dump_json()
+        edits = Edits(session_sid=data.sid, edits=json_data)
         
-
-        self.conn.commit()
+        self.db.add(session)
+        self.db.commit()
+        self.db.add(edits)
+        self.db.commit()
 
     def get_data_last_access(self, sid: str):
-        self.cur.execute("SELECT data, last_access FROM sessions WHERE id = ?", (sid,))
-        row = self.cur.fetchone()
-
-        if not row:
-            self.logger.info(f"Session {sid} not found")
-            return {"exits" : False}
-        return {"exits" : row}
+        res = self.db.query(Session.data, Session.last_access).filter(Session.sid == sid).first()
+        if res:
+            data, last_access = res
+            return data, last_access
+        return None, None
+   
     
     def get_data(self, sid: str):
         self.cur.execute("SELECT data FROM sessions WHERE id = ?", (sid,))
