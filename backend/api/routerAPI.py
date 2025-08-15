@@ -5,15 +5,23 @@ from io import BytesIO
 from api.sessionAPI import SessionAPI
 from fastapi import Response
 from fastapi.responses import StreamingResponse
-from models.global_edits import Payload
+from models.global_edits import Payload, init_payload
 from PyPDF2 import PdfReader, PdfWriter
 from pdf_editor import PDFEditor
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
+logging.basicConfig(
+    level=logging.INFO,  # Minimum log level
+    format="[%(levelname)s] %(message)s",
+)
+
+logger = logging.getLogger(__name__)
+
+
 class RouterAPI:
     def __init__(self):
-        self.logger = logging.getLogger("uvicorn")
+        self.logger = logger
         self.headers = {"Content-Disposition": 'attachment; filename="modified.pdf"'}
         self.origins = ["http://localhost:4200", ]
         self.session_api = SessionAPI()
@@ -40,6 +48,13 @@ class RouterAPI:
         content = await image.read()
         return {"filename" : image.filename, "content_size" : len(content)}
 
+    def _get_data(self, signed_sid: str):
+        ret = self.session_api.verify_id(signed_sid)
+        if ret is not None and ret["sid"] is not None:
+            pdf = self.session_api.db.get_data(ret["sid"])
+            return pdf
+        return None
+    
     async def upload_pdf(self, signed_sid: str = Form(...), pdf: UploadFile = File(...)):
         """
         Uploads a PDF file to the server or storage system.
@@ -57,11 +72,12 @@ class RouterAPI:
         if pdf.content_type != "application/pdf":
             return BadRequestError("Only PDF files allowed")
         
-        # TODO Find out if this check is needed!
+        # TODO Find out if this check is needed!   
         ret = self.session_api.verify_id(signed_sid)
         if ret is not None and ret["sid"] is not None:
             pdf_bytes = await pdf.read()
             self.session_api.db.update_session_data(ret["sid"], pdf_bytes)
+            print(f"LEN OF PDF IS: {len(self._get_data(signed_sid))}")
 
             # TODO Sanitize filename and FILE ITSELF
             self.logger.debug(f"Received PDF file: {pdf.filename} ({len(pdf_bytes)} bytes)")
@@ -83,32 +99,30 @@ class RouterAPI:
             FileNotFoundError: If the requested PDF file does not exist.
             IOError: If there is an error reading the file.
         """
-        ret = self.session_api.verify_id(signed_sid)
-        if ret is not None and ret["sid"] is not None:
-            pdf = self.session_api.db.get_data(ret["sid"])
-            if pdf:
-                return Response(content=pdf["exists"][0], media_type="application/octet-stream")
-            else:
-                return NotFoundError("PDF")
+        
+        data = self._get_data(signed_sid)
+        if data is None:
+            return NotFoundError("PDF")
+        if data:
+            return Response(content=data, media_type="application/octet-stream")
 
     async def download_pdf(self, signed_sid: str):
+        data = self._get_data(signed_sid)
+        if data is None:
+            return BadRequestError()
         
-        ret = self.session_api.verify_id(signed_sid)
-        if ret is not None and ret["sid"] is not None:
-            pdf = self.session_api.db.get_data(ret["sid"])
-            if pdf:
-                return StreamingResponse(BytesIO(pdf["exists"][0]), media_type="application/pdf", 
-                                        headers=self.headers)
+        if data:
+            return StreamingResponse(BytesIO(data), media_type="application/pdf", 
+                                    headers=self.headers)
 
     async def embed_objs_into_pdf(self, payload: Payload):
         ret = self.session_api.verify_id(payload.signed_id)
+        
         if ret is not None and ret["sid"] is not None:
             pdf = self.session_api.db.get_data(ret["sid"])
-
         if not pdf:
             return BadRequestError()  
         
-        pdf = pdf["exists"][0]
         writer  = PdfWriter()
         existing_pdf = PdfReader(BytesIO(pdf))
         width, height = PDFEditor.get_pdf_dims(existing_pdf)

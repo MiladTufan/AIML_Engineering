@@ -44,3 +44,19 @@ class GlobalEdit(BaseModel):
 class Payload(BaseModel):
     edits: GlobalEdit
     signed_id: str
+
+
+
+dims = BoxDimensions(top=0, left=0, width=0, height=0, resizedHeight=0, 
+                     resizedWidth=0, currentScale=0, posCreationScale=0, sizeCreationScale=0)
+
+style = TextStyleEditor(isCollapsed=False, currentColor="black", baseFontSize=12.0, 
+                        font_size=12.0, fontFamily="Helvetica", fontname="Helvetica")
+
+t = TextBox(id=0, pageId=0, BoxDims=dims, text="INIT", textStyleEditorState=style, 
+            baseTop=0, baseLeft=0, baseWidth=0, baseHeight=0)
+
+mini = MiniPage(id=0, textboxes=[t])
+edit = GlobalEdit(pageEdits=[mini], deletedPages=[1, 2, 3])
+
+init_payload = Payload(edits=edit, signed_id="INIT")

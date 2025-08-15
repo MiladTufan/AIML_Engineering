@@ -14,7 +14,7 @@ from io import BytesIO
 from dotenv import load_dotenv
 
 from db.database import Database, Data
-from models.global_edits import Payload, GlobalEdit
+from models.global_edits import Payload, init_payload
 
 class SessionAPI:
     def __init__(self):
@@ -83,13 +83,13 @@ class SessionAPI:
             expected_sig = self.sign_id(sid).split(".")[1]
             
             if hmac.compare_digest(sig, expected_sig):
-                self.logger.warning(f"Verified session ID {sid} successfully")
+                self.logger.info(f"Verified session ID {sid} successfully")
                 return {"sid": sid, "sig": expected_sig}
             else:
-                self.logger.warning(f"Session ID signature mismatch: {signed_sid}")
+                self.logger.info(f"Session ID signature mismatch: {signed_sid}")
                 return None
         except:
-            self.logger.warning(f"Invalid session ID format: {signed_sid}")
+            self.logger.info(f"Invalid session ID format: {signed_sid}")
             return None
     
     ############################################################################################
@@ -102,10 +102,8 @@ class SessionAPI:
     def create_session(self):
         sid, sig = self.sign_id(str(uuid.uuid4())).split(".")
         
-        payload = Payload(edits=GlobalEdit(), signed_id=sig)
-        
-        
-        data = Data(sid, sig, b'', datetime.now(timezone.utc).isoformat(), payload)
+        init_payload.signed_id = sig
+        data = Data(sid, sig, b'', datetime.now(timezone.utc).isoformat(), init_payload)
         self.db.add_row(data)
    
         self.logger.info(f"Created new session: {sid, sig}")

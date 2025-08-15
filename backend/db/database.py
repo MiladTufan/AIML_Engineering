@@ -21,7 +21,7 @@ class Data:
     signed_id: str
     data: BytesIO
     last_access: datetime
-    edits: Payload
+    payload: Payload
 
 
 class Database:
@@ -90,9 +90,14 @@ class Database:
         
         self.db.add(session)
         self.db.commit()
+        self.db.refresh(session)
+        
+        
         self.db.add(edits)
         self.db.commit()
-
+        self.db.refresh(edits)
+        
+        
     def get_data_last_access(self, sid: str):
         res = self.db.query(Session.data, Session.last_access).filter(Session.sid == sid).first()
         if res:
@@ -102,18 +107,17 @@ class Database:
    
     
     def get_data(self, sid: str):
-        self.cur.execute("SELECT data FROM sessions WHERE id = ?", (sid,))
-        row = self.cur.fetchone()
-
-        if not row:
-            self.logger.info(f"Session {sid} not found")
-            return None
-        return {"exists" : row}
+        res = self.db.query(Session.data).filter(Session.sid == sid).first()
+        print(f"SESSION OBJ =================================== {res[0]}")
+        return res[0]
     
     def update_last_access(self, sid: str, last_access: datetime):
-        self.cur.execute("UPDATE sessions SET last_access = ? WHERE id = ?",
-                            (last_access, sid))
-
+        session_obj = self.db.query(Session).filter(Session.sid == sid).first()
+        if session_obj:
+            session_obj.last_access = last_access
+            self.db.commit()
+        
+        
     ############################################################################################
     # Updates data in the current session.
     # Looks up the signed session ID from the request, verifies it, 
@@ -122,27 +126,33 @@ class Database:
     # Returns: bool indicating success
     ############################################################################################
     def update_session_data(self, sid, data: bytes):
-        self.cur.execute("UPDATE sessions SET data = ?, last_access = ? WHERE id = ?",
-                         (data, datetime.utcnow().isoformat(), sid))
-        
-        self.conn.commit()
-        self.logger.debug(f"Session {sid} data saved")
-        return None
+        session_obj = self.db.query(Session).filter(Session.sid == sid).first()
+        print(f"SESSION OBJ =================================== {sid}")
+        if session_obj:
+            print("UPDATING SESSION OBJ")
+            session_obj.data = data
+            session_obj.last_access = datetime.now(timezone.utc).isoformat()
+            self.db.commit()
+            self.db.refresh(session_obj)
+            self.logger.debug(f"Session {sid} data saved")
     
     
     def delete_session(self, sid):
-        self.cur.execute("DELETE FROM sessions WHERE id = ?", (sid,))
-        self.conn.commit()
-        self.logger.info(f"Deleted session {sid}")
-        return None
+        session_obj = self.db.query(Session).filter(Session.id == sid).first()
+        if session_obj:
+            self.db.delete(session_obj)
+            self.db.commit()
+            self.logger.info(f"Deleted session {sid}")
     
     def cleanup(self):
         cutoff = datetime.now(timezone.utc) - self.timeout
-
-        self.cur.execute("DELETE FROM sessions WHERE last_access < ?", (cutoff.isoformat(), ))
-        deleted_count = self.cur.rowcount
-        self.conn.commit()
-        self.logger.info(f"Cleaned up {deleted_count} expired sessions")
+        
+        old_sessions = self.db.query(Session.last_access).filter(Session.last_access < cutoff.isoformat()).all()
+        for session in old_sessions:
+            self.db.delete(session)
+            self.db.commit()
+     
+        self.logger.info(f"Cleaned up {len(old_sessions)} expired sessions")
     
     def _auto_cleanup(self):
         self.logger.info("Started background cleanup thread")
