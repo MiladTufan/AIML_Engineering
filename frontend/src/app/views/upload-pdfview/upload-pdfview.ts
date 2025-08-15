@@ -5,7 +5,7 @@ import { Constants } from '../../models/constants/constants';
 import { PDFFileService } from '../../services/pdffile-service';
 import { AlertService } from '../../services/alert-service';
 import { AlertComponent } from '../../shared/alert/alert';
-import { UploadService } from '../../services/communication/upload-service';
+import { SessionService } from '../../services/communication/session-service';
 
 @Component({
 	selector: 'app-upload-pdfview',
@@ -16,7 +16,7 @@ import { UploadService } from '../../services/communication/upload-service';
 export class UploadPDFView {
 	public showGlassySvg = false;
 	constructor(private router: Router, private fileService: PDFFileService,
-		private alertService: AlertService, private uploadService: UploadService) { }
+		private alertService: AlertService, private sessionService: SessionService) { }
 
 
 	//========================================== Clicks =====================================================
@@ -41,7 +41,7 @@ export class UploadPDFView {
 
 	private _uploadPDF(file: File)
 	{
-		this.uploadService.uploadPDF(file).subscribe({
+		this.sessionService.uploadPDF(file).subscribe({
 			next: (res) => console.log("Upload success: ", res),
 			error: (err) => console.log("Upload failed: ", err)
 		})
