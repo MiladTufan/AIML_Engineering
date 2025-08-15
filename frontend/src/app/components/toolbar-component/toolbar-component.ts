@@ -8,6 +8,7 @@ import { FormsModule, MinLengthValidator } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { DownloadService } from '../../services/communication/download-service';
 import { GlobalEdit, MiniPage } from '../../models/globalEdit';
+import { SessionService } from '../../services/communication/session-service';
 
 @Component({
 	selector: 'app-toolbar-component',
@@ -27,7 +28,8 @@ export class ToolbarComponent {
 	@ViewChild(TextStyleBar) textStyleBarComponent!: TextStyleBar
 
 	//=============================================== Constructor =========================================
-	constructor(public textEditService: TextEditService, public pdfViewerService: PDFViewerService, private downloadService: DownloadService) {
+	constructor(public textEditService: TextEditService, private sessionService: SessionService,
+		public pdfViewerService: PDFViewerService, private downloadService: DownloadService) {
 	}
 
 	ngOnInit() {
@@ -53,25 +55,26 @@ export class ToolbarComponent {
 	// use download Service for this
 	public OnDownloadBtnClicked(event: Event) {
 
-		const edits = new GlobalEdit([], [1,2,3])
-		for(let i = 1; i <= this.pdfViewerService.allRenderedPages.length; i++)
-		{
+		const edits = new GlobalEdit([], [1, 2, 3])
+		for (let i = 1; i <= this.pdfViewerService.allRenderedPages.length; i++) {
 			const pageOld = this.pdfViewerService.getPageWithNumber(i)
-			const miniPage:  MiniPage = new MiniPage(i, pageOld!.textboxes)
+			const miniPage: MiniPage = new MiniPage(i, pageOld!.textboxes)
 			edits.pageEdits.push(miniPage)
 
 		}
 
-		console.log(edits)
-		this.downloadService.completePDF(edits).subscribe({
-			next: (response) => {
-				console.log('Response:', response);
-				this.downloadService.downloadPDF()
-			},
-			error: (error) => {
-				console.error('Error:', error);
-			}
-		})
+		const signed_sid = this.sessionService.getSessionIdFromBrowser("session_id")
+		if (signed_sid) {
+			this.downloadService.completePDF(edits, signed_sid).subscribe({
+				next: (response) => {
+					console.log('Response:', response);
+					this.downloadService.downloadPDF(signed_sid)
+				},
+				error: (error) => {
+					console.error('Error:', error);
+				}
+			})
+		}
 	}
 
 	//=============================================== Methods ==============================================

@@ -51,3 +51,6 @@ dist/
 .vscode/
 .idea/
 *.swp
+
+# resources
+test_pdfs/

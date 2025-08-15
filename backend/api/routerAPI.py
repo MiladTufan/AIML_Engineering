@@ -1,12 +1,10 @@
-from fastapi import FastAPI, File, UploadFile, APIRouter, Form
-from fastapi.middleware.cors import CORSMiddleware
-from db.database import Data
-from datetime import datetime, timedelta, timezone
+from fastapi import File, UploadFile, APIRouter, Form
 import logging
 from utils.errors import *
 from io import BytesIO
 from api.sessionAPI import SessionAPI
 from fastapi import Response
+from fastapi.responses import StreamingResponse
 
 class RouterAPI:
     def __init__(self):
@@ -14,17 +12,19 @@ class RouterAPI:
         self.headers = {"Content-Disposition": 'attachment; filename="modified.pdf"'}
         self.origins = ["http://localhost:4200", ]
         self.session_api = SessionAPI()
-
+        self.headers = {"Content-Disposition": 'attachment; filename="modified.pdf"'}
         
 
         self.router = APIRouter()
         self.router.post("/upload-image")(self.upload_image)
         self.router.post("/upload-pdf")(self.upload_pdf)
         self.router.post("/create-session")(self.session_api.create_session)
+        self.router.post("/embed-pdf")(self.embed_objs_into_pdf)
 
 
         self.router.get("/get-session")(self.session_api.get_session)
         self.router.get("/get-pdf")(self.get_pdf)
+        self.router.get("/download-pdf/{signed_sid}")(self.download_pdf)
 
         self.router.patch("/update-session")(self.session_api.db.update_session_data)
 
@@ -36,6 +36,19 @@ class RouterAPI:
         return {"filename" : image.filename, "content_size" : len(content)}
 
     async def upload_pdf(self, signed_sid: str = Form(...), pdf: UploadFile = File(...)):
+        """
+        Uploads a PDF file to the server or storage system.
+
+        Args:
+            signed_sid (str): the signed browser session id from cookies.
+            pdf (UploadFile): The PDF file to save.
+
+        Returns:
+            dict{filename, size}:
+
+        Raises:
+            BadRequestError: If the file is not a valid PDF.
+        """
         if pdf.content_type != "application/pdf":
             return BadRequestError("Only PDF files allowed")
         
@@ -73,4 +86,15 @@ class RouterAPI:
             else:
                 return NotFoundError("PDF")
 
+    async def download_pdf(self, signed_sid: str):
+        
+        ret = self.session_api.verify_id(signed_sid)
+        if ret is not None and ret["sid"] is not None:
+            pdf = self.session_api.db.get_data(ret["sid"])
+            print(pdf["exists"][0])
+            if pdf:
+                return StreamingResponse(BytesIO(pdf["exists"][0]), media_type="application/pdf", 
+                                        headers=self.headers)
 
+    async def embed_objs_into_pdf(self, signed_sid: str = Form(...)):
+        return signed_sid

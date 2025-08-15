@@ -24,7 +24,6 @@ origins = [
     # add other origins if needed
 ]
 
-headers = {"Content-Disposition": 'attachment; filename="modified.pdf"'}
 
 app.add_middleware(
     CORSMiddleware,

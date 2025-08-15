@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Environment } from '../../models/constants/environment';
 import { GlobalEdit } from '../../models/globalEdit';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 
 @Injectable({
     providedIn: 'root'
@@ -10,11 +10,14 @@ export class DownloadService {
 
     constructor(private httpClient: HttpClient) { }
 
-    downloadPDF() {
-        window.open(Environment.API_BASE_URL + Environment.BACKEND_DOWNLOAD_ENDPOINT, '_blank');
+    downloadPDF(signed_sid: string) {
+        window.open(Environment.API_BASE_URL + Environment.BACKEND_DOWNLOAD_ENDPOINT+"/"+signed_sid, '_blank');
     }
 
-    completePDF(edits: GlobalEdit) {
-        return this.httpClient.post<any>(Environment.API_BASE_URL + Environment.BACKEND_COMPLETE_PDF_ENDPOINT, edits)
+    completePDF(edits: GlobalEdit, signed_sid: string) {
+        const formData = new FormData()
+        formData.append("signed_sid", signed_sid)
+        return this.httpClient.post<any>(Environment.API_BASE_URL + 
+            Environment.BACKEND_EMBED_PDF_ENDPOINT, formData)
     }
 }
