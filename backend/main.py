@@ -17,34 +17,26 @@ from utils.errors import *
 
 logger = logging.getLogger("uvicorn")
 
+app = FastAPI()
 
+origins = [
+    "http://localhost:4200",  # Angular dev server default port
+    # add other origins if needed
+]
 
+headers = {"Content-Disposition": 'attachment; filename="modified.pdf"'}
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    # allow_credentials=True
+)
 
-
-
-
-if __name__ == "__main__":
-    app = FastAPI()
-
-    origins = [
-        "http://localhost:4200",  # Angular dev server default port
-        # add other origins if needed
-    ]
-
-    headers = {"Content-Disposition": 'attachment; filename="modified.pdf"'}
-
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=origins,
-        allow_methods=["*"],
-        allow_headers=["*"],
-        # allow_credentials=True
-    )
-
-    router_api = RouterAPI()
-    app.include_router(router_api.router, prefix="/session")
-    register_error_handlers(app)
+router_api = RouterAPI()
+app.include_router(router_api.router, prefix="/session")
+register_error_handlers(app)
 
 
 

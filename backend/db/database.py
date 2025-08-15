@@ -40,7 +40,7 @@ class Database:
     - Session data is stored as JSON in the database for safety and portability.
     """
 
-    def __init__(self, db_path="sessions.db", secret_key=None, timeout_minutes=30, cleanup_interval=300):
+    def __init__(self, db_path="db/sessions.db", secret_key=None, timeout_minutes=30, cleanup_interval=300):
         """
         Initialize the session storage.
 
@@ -94,102 +94,44 @@ class Database:
     def add_row(self, data: Data):
         self.cur.execute("INSERT INTO sessions VALUES (?, ?, ?, ?)",
                          (data.sid, data.signed_id, data.data, data.last_access))
+        
 
         self.conn.commit()
 
-    # --------------------------------------------------------
-    # Cookie signing methods
-    # --------------------------------------------------------
-    def sign_id(self, sid: str):
-        """
-        Sign a session ID with HMAC-SHA256 for security.
+    def get_data_last_access(self, sid: str):
+        self.cur.execute("SELECT data, last_access FROM sessions WHERE id = ?", (sid,))
+        row = self.cur.fetchone()
 
-        This ensures that if a user tries to modify the cookie value,
-        the server will reject it because the signature won't match.
-
-        Args:
-            sid (str): Unsigned session ID.
-
-        Returns:
-            str: Signed session ID in the format "sid.signature".
-        """
-
-        sig = hmac.new(self.secret_key.encode(), sid.encode(), hashlib.sha256).hexdigest()
-        signed = f"{sid}.{sig}"
-        self.logger.debug(f"Signing session ID {sid} -> {signed}")
-        return signed
+        if not row:
+            self.logger.info(f"Session {sid} not found")
+            return {"exits" : False}
+        return {"exits" : row}
     
-    def verify_id(self, signed_sid):
-        """
-        Verify a signed session ID.
+    def update_last_access(self, sid: str, last_access: datetime):
+        self.cur.execute("UPDATE sessions SET last_access = ? WHERE id = ?",
+                            (last_access, sid))
 
-        Args:
-            signed_sid (str): The signed session ID from the browser cookie.
-
-        Returns:
-            str or None: The original session ID if valid, otherwise None.
-        """
-
-        try:
-            sid, sig = signed_sid.split(".")
-            expected_sig = hmac.new(self.secret_key.encode(), sid.encode(), hashlib.sha256).hexdigest()
-
-            if hmac.compare_digest(sig, expected_sig):
-                self.logger.debug(f"Verified session ID {sid} successfully")
-                return sid
-            else:
-                self.logger.warning(f"Session ID signature mismatch: {signed_sid}")
-                return None
-        except:
-            self.logger.warning(f"Invalid session ID format: {signed_sid}")
-            return None
-    
-    # def create_session(self):
-    #     sid = str(uuid.uuid4())
-    #     self.cur.execute("INSERT INTO sessions VALUES (?, ?, ?)",
-    #                      (sid, BytesIO(), datetime.now(timezone.utc).isoformat()))
-
-    #     self.conn.commit()
-    #     self.logger.info(f"Created new session: {sid}")
-    #     return sid
-
-    # def get_session(self, sid):
-    #     self.cur.execute("SELECT data, last_access FROM sessions WHERE id = ?", (sid,))
-
-    #     row = self.cur.fetchone()
-
-    #     if not row:
-    #         self.logger.info(f"Session {sid} not found")
-    #         return None
-        
-    #     data, last_access = row
-    #     last_access_dt = datetime.fromisoformat(last_access)
-    #     if last_access_dt.tzinfo is None:
-    #         last_access_dt = last_access_dt.replace(tzinfo=timezone.utc)  # make aware
-
-    #     if datetime.now(timezone.utc) - last_access_dt > self.timeout:
-    #         self.logger.info(f"Session {sid} expired, deleting")
-    #         self.delete_session(sid)
-    #         return None
-        
-    #     self.cur.execute("UPDATE sessions SET last_access = ? WHERE id = ?",
-    #                       (datetime.now(timezone.utc).isoformat(), sid))
-        
-    #     self.conn.commit()
-    #     self.logger.debug(f"Session {sid} accessed and last_access updated")
-    #     return data
-    
-    def save_session(self, sid, data: BytesIO):
+    ############################################################################################
+    # Updates data in the current session.
+    # Looks up the signed session ID from the request, verifies it, 
+    # and updates the stored session record with new data.
+    # Params: data (dict) - session fields to store
+    # Returns: bool indicating success
+    ############################################################################################
+    def update_session_data(self, sid, data: bytes):
         self.cur.execute("UPDATE sessions SET data = ?, last_access = ? WHERE id = ?",
                          (data, datetime.utcnow().isoformat(), sid))
         
         self.conn.commit()
         self.logger.debug(f"Session {sid} data saved")
-
+        return None
+    
+    
     def delete_session(self, sid):
         self.cur.execute("DELETE FROM sessions WHERE id = ?", (sid,))
         self.conn.commit()
         self.logger.info(f"Deleted session {sid}")
+        return None
     
     def cleanup(self):
         cutoff = datetime.now(timezone.utc) - self.timeout

@@ -14,10 +14,10 @@ from io import BytesIO
 
 from db.database import Database, Data
 
-
 class SessionAPI:
     def __init__(self, secret_key=None):
-
+        self.logger = logging.getLogger("SessionAPI")
+        self.logger.setLevel(logging.DEBUG)  # or INFO
         self.db = Database()
         self.secret_key = secret_key or secrets.token_hex(32)
         if not self.secret_key:
@@ -90,11 +90,11 @@ class SessionAPI:
     ############################################################################################
     def create_session(self):
         sid, sig = self.sign_id(str(uuid.uuid4())).split(".")
-        data = Data(sid, sig, BytesIO(), datetime.now(timezone.utc).isoformat())
+        data = Data(sid, sig, b'', datetime.now(timezone.utc).isoformat())
         self.db.add_row(data)
    
-        self.logger.info(f"Created new session: {sig}")
-        return {"signed_session_id": sig}
+        self.logger.info(f"Created new session: {sid, sig}")
+        return {"signed_sid": f"{sid}.{sig}"}
     
 
     ############################################################################################
@@ -105,41 +105,22 @@ class SessionAPI:
     # Returns: dict containing session data or None if not found/invalid
     ############################################################################################
     def get_session(self, sid):
-        self.cur.execute("SELECT data, last_access FROM sessions WHERE id = ?", (sid,))
-
-        row = self.cur.fetchone()
-
-        if not row:
-            self.logger.info(f"Session {sid} not found")
-            return {"exits" : False}
+        row = self.db.get_data_last_access(sid)
+        if row["exists"] is False:
+            return row
         
         data, last_access = row
         last_access_dt = datetime.fromisoformat(last_access)
         if last_access_dt.tzinfo is None:
             last_access_dt = last_access_dt.replace(tzinfo=timezone.utc)  # make aware
 
-        if datetime.now(timezone.utc) - last_access_dt > self.timeout:
+        if datetime.now(timezone.utc) - last_access_dt > self.db.timeout:
             self.logger.info(f"Session {sid} expired, deleting")
-            self.delete_session(sid)
+            self.db.delete_session(sid)
             return {"exits" : False}
         
-        self.cur.execute("UPDATE sessions SET last_access = ? WHERE id = ?",
-                            (datetime.now(timezone.utc).isoformat(), sid))
+        self.db.update_last_access(sid, datetime.now(timezone.utc).isoformat())
         
-        self.conn.commit()
         self.logger.debug(f"Session {sid} accessed and last_access updated")
         return data
     
-    ############################################################################################
-    # Saves or updates data in the current session.
-    # Looks up the signed session ID from the request, verifies it, 
-    # and updates the stored session record with new data.
-    # Params: data (dict) - session fields to store
-    # Returns: bool indicating success
-    ############################################################################################
-    def save_session(self, sid, data: BytesIO):
-        self.cur.execute("UPDATE sessions SET data = ?, last_access = ? WHERE id = ?",
-                         (data, datetime.utcnow().isoformat(), sid))
-        
-        self.conn.commit()
-        self.logger.debug(f"Session {sid} data saved")

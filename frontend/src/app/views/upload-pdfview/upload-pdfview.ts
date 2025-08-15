@@ -41,10 +41,28 @@ export class UploadPDFView {
 
 	private _uploadPDF(file: File)
 	{
-		this.sessionService.uploadPDF(file).subscribe({
-			next: (res) => console.log("Upload success: ", res),
-			error: (err) => console.log("Upload failed: ", err)
-		})
+		const signed_sid = this.sessionService.getSessionIdFromBrowser("session_id")
+
+		if (signed_sid)
+		{
+			this.sessionService.uploadPDF(file, signed_sid).subscribe({
+				next: (res) => console.log("Upload success: ", res),
+				error: (err) => console.log("Upload failed: ", err)
+			})
+		}
+		else
+		{
+			this.sessionService.createSession().subscribe(data => {
+					this.sessionService.setSessionIdInBrowser(data.signed_sid)
+					this.sessionService.uploadPDF(file, data.signed_sid).subscribe({
+					next: (res) => console.log("Upload success: ", res),
+					error: (err) => console.log("Upload failed: ", err)
+				})
+			})
+		}
+
+
+		
 	}
 
 	//========================================== Drags =====================================================

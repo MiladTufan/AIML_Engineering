@@ -4,7 +4,7 @@
 export class Environment {
 
     // API URLS
-    public static API_BASE_URL: string = "http://localhost:8000"
+    public static API_BASE_URL: string = "http://localhost:8000/session"
     
 
 
@@ -17,6 +17,7 @@ export class Environment {
     public static BACKEND_UPLOAD_ENDPOINT: string = "/upload-pdf";
     public static BACKEND_COMPLETE_PDF_ENDPOINT: string = "/complete-pdf";
     public static BACKEND_CREATE_SESSION_ENDPOINT: string = "/create-session"
+    public static BACKEND_DELETE_SESSION_ENDPOINT: string = "/delete-session"
 
 }
 
