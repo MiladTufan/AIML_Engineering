@@ -101,8 +101,6 @@ class RouterAPI:
                                         headers=self.headers)
 
     async def embed_objs_into_pdf(self, payload: Payload):
-        print(payload.edits)
-        print(payload.signed_id)
         ret = self.session_api.verify_id(payload.signed_id)
         if ret is not None and ret["sid"] is not None:
             pdf = self.session_api.db.get_data(ret["sid"])
