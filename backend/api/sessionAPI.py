@@ -11,15 +11,25 @@ import threading
 import time
 import logging
 from io import BytesIO
+from dotenv import load_dotenv
 
 from db.database import Database, Data
 
 class SessionAPI:
-    def __init__(self, secret_key=None):
+    def __init__(self):
         self.logger = logging.getLogger("SessionAPI")
         self.logger.setLevel(logging.DEBUG)  # or INFO
         self.db = Database()
-        self.secret_key = secret_key or secrets.token_hex(32)
+        self.secret_key = None
+        if load_dotenv(dotenv_path=os.path.join("db", "dev.env")):
+            self.secret_key = os.environ.get("SECRET_TOKEN")
+        else:
+            with open(os.path.join("db", "dev.env"), "w") as f:
+                f.write(f"SECRET_TOKEN={secrets.token_hex(32)}\n")
+
+            load_dotenv(dotenv_path=os.path.join("db", "dev.env"))
+            self.secret_key = os.environ.get("SECRET_TOKEN")
+
         if not self.secret_key:
             raise RuntimeError("No secret key provided! Set SESSION_SECRET_KEY env variable.")
 
@@ -73,7 +83,7 @@ class SessionAPI:
             
             if hmac.compare_digest(sig, expected_sig):
                 self.logger.debug(f"Verified session ID {sid} successfully")
-                return sid, expected_sig
+                return {"sid": sid, "sig": expected_sig}
             else:
                 self.logger.warning(f"Session ID signature mismatch: {signed_sid}")
                 return None

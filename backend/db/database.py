@@ -107,6 +107,15 @@ class Database:
             return {"exits" : False}
         return {"exits" : row}
     
+    def get_data(self, sid: str):
+        self.cur.execute("SELECT data FROM sessions WHERE id = ?", (sid,))
+        row = self.cur.fetchone()
+
+        if not row:
+            self.logger.info(f"Session {sid} not found")
+            return {"exists" : False}
+        return {"exists" : row}
+    
     def update_last_access(self, sid: str, last_access: datetime):
         self.cur.execute("UPDATE sessions SET last_access = ? WHERE id = ?",
                             (last_access, sid))

@@ -1,8 +1,7 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams  } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Environment } from '../../models/constants/environment';
 import { Observable } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -31,6 +30,13 @@ export class SessionService {
   {
      return this.httpClient.post(Environment.API_BASE_URL + 
                             Environment.BACKEND_CREATE_SESSION_ENDPOINT, {});
+  }
+
+  getPDF(signed_sid: string): Observable<any>
+  {
+    const params = new HttpParams().set('signed_sid', signed_sid)
+    return this.httpClient.get(Environment.API_BASE_URL + 
+                               Environment.BACKEND_GET_PDF_ENDPOINT, { params })
   }
 
 

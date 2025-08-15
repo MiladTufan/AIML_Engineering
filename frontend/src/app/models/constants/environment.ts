@@ -15,7 +15,10 @@ export class Environment {
 
     // upload URLS
     public static BACKEND_UPLOAD_ENDPOINT: string = "/upload-pdf";
+    public static BACKEND_GET_PDF_ENDPOINT: string = "/get-pdf"
     public static BACKEND_COMPLETE_PDF_ENDPOINT: string = "/complete-pdf";
+
+    // session URLS
     public static BACKEND_CREATE_SESSION_ENDPOINT: string = "/create-session"
     public static BACKEND_DELETE_SESSION_ENDPOINT: string = "/delete-session"
 

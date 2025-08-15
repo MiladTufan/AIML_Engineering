@@ -12,6 +12,7 @@ import { debounceTime, Subject } from 'rxjs';
 import { AlertService } from '../../services/alert-service';
 import { TextBox } from '../../models/TextBox';
 import { PageInfoComponent } from '../page-info-component/page-info-component';
+import { SessionService } from '../../services/communication/session-service';
 (pdfjsLib as any).GlobalWorkerOptions.workerSrc = "assets/pdf.worker.min.mjs";
 
 
@@ -54,7 +55,7 @@ export class PdfViewerComponent {
 
 
 	//==================================================== Constructor ======================================================
-	constructor(private fileService: PDFFileService,
+	constructor(private fileService: PDFFileService, private sessionService: SessionService,
 		private pdfViewerService: PDFViewerService,
 		private textEditService: TextEditService, private alertService: AlertService) {
 		this.renderTrigger.pipe(debounceTime(10)).subscribe((finalScale) => {
@@ -187,28 +188,35 @@ export class PdfViewerComponent {
 		try {
 			const pdfjs = pdfjsLib as any;
 
-			let file = this.fileService.getFile()!
-			const reader = new FileReader()
-			reader.readAsArrayBuffer(file)
+			const signed_sid = this.sessionService.getSessionIdFromBrowser("session_id")
+			if (signed_sid) {
+				this.sessionService.getPDF(signed_sid).subscribe(file => {
+					const reader = new FileReader()
+					reader.readAsArrayBuffer(file)
 
-			reader.onload = async () => {
-				const arrayBuffer = new Uint8Array(reader.result as ArrayBuffer);
-				this.pdfSrc = arrayBuffer;
+					reader.onload = async () => {
+						const arrayBuffer = new Uint8Array(reader.result as ArrayBuffer);
+						this.pdfSrc = arrayBuffer;
 
-				const loadingTask = pdfjs.getDocument({ data: this.pdfSrc });
-				this.pdfDocument = await loadingTask.promise;
-				this.totalPages = this.pdfDocument.numPages;
-				const container = this.pdfContainer.nativeElement;
-				container.innerHTML = ""; // Clear previous content
-				this.pdfViewerService.setTotalPages(this.totalPages);
-				this.pdfViewerService.setCurrentPage(1);
+						const loadingTask = pdfjs.getDocument({ data: this.pdfSrc });
+						this.pdfDocument = await loadingTask.promise;
+						this.totalPages = this.pdfDocument.numPages;
+						const container = this.pdfContainer.nativeElement;
+						container.innerHTML = ""; // Clear previous content
+						this.pdfViewerService.setTotalPages(this.totalPages);
+						this.pdfViewerService.setCurrentPage(1);
 
-				if (this.renderMode == 0) {
-					for (let pageNum = 1; pageNum <= this.totalPages; pageNum++) {
-						this.renderPage(pageNum, true, this.scale);
+						if (this.renderMode == 0) {
+							for (let pageNum = 1; pageNum <= this.totalPages; pageNum++) {
+								this.renderPage(pageNum, true, this.scale);
+							}
+						}
 					}
-				}
-
+				})
+			}
+			else
+			{
+				console.error("PDF_VIEWER: No signed session id!")
 			}
 		} catch (error) {
 			console.error("Error loading PDF:", error);
@@ -280,13 +288,12 @@ export class PdfViewerComponent {
 				let newBaseHeight = box.baseHeight;
 
 				const condition = (box.BoxDims.resizedHeight != 0 || box.BoxDims.resizedWidth != 0)
-				if (condition)
-				{
+				if (condition) {
 					newBaseWidth = box.BoxDims.resizedWidth;
 					newBaseHeight = box.BoxDims.resizedHeight;
 				}
 
-				
+
 				const finalWidth = newBaseWidth * (scale / box.BoxDims.sizeCreationScale)
 				const finalHeight = newBaseHeight * (scale / box.BoxDims.sizeCreationScale)
 

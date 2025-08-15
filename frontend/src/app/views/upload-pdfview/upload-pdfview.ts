@@ -28,7 +28,6 @@ export class UploadPDFView {
 			if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
 				this.fileService.setFile(file)
 				this._uploadPDF(file)
-				this.router.navigate([Constants.EDIT_PDF_VIEW]);
 			} else {
 				// Not a PDF
 				this.alertService.createAlert("error", Constants.ERROR_INVALID_FILETYPE_TITLE,
@@ -46,7 +45,10 @@ export class UploadPDFView {
 		if (signed_sid)
 		{
 			this.sessionService.uploadPDF(file, signed_sid).subscribe({
-				next: (res) => console.log("Upload success: ", res),
+				next: (res) => {
+					console.log("Upload success: ", res)
+					this.router.navigate([Constants.EDIT_PDF_VIEW]);
+				},
 				error: (err) => console.log("Upload failed: ", err)
 			})
 		}
@@ -55,7 +57,10 @@ export class UploadPDFView {
 			this.sessionService.createSession().subscribe(data => {
 					this.sessionService.setSessionIdInBrowser(data.signed_sid)
 					this.sessionService.uploadPDF(file, data.signed_sid).subscribe({
-					next: (res) => console.log("Upload success: ", res),
+					next: (res) => {
+						console.log("Upload Sucess: ", res)
+						this.router.navigate([Constants.EDIT_PDF_VIEW]);
+					},
 					error: (err) => console.log("Upload failed: ", err)
 				})
 			})

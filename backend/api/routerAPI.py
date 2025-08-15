@@ -20,8 +20,14 @@ class RouterAPI:
         self.router.post("/upload-image")(self.upload_image)
         self.router.post("/upload-pdf")(self.upload_pdf)
         self.router.post("/create-session")(self.session_api.create_session)
+
+
         self.router.get("/get-session")(self.session_api.get_session)
+        self.router.get("/get-pdf")(self.get_pdf)
+
         self.router.patch("/update-session")(self.session_api.db.update_session_data)
+
+
 
 
     async def upload_image(self, image: UploadFile = File(...)):
@@ -33,16 +39,22 @@ class RouterAPI:
             return BadRequestError("Only PDF files allowed")
         
         # TODO Find out if this check is needed!
-        sid, sig = self.session_api.verify_id(signed_sid)
-        if sid is not None:
+        ret = self.session_api.verify_id(signed_sid)
+        if ret is not None and ret["sid"] is not None:
             pdf_bytes = await pdf.read()
-            self.session_api.db.update_session_data(sid, pdf_bytes)
+            self.session_api.db.update_session_data(ret["sid"], pdf_bytes)
 
             # TODO Sanitize filename and FILE ITSELF
             self.logger.debug(f"Received PDF file: {pdf.filename} ({len(pdf_bytes)} bytes)")
             return {"filename": pdf.filename, "size": len(pdf_bytes)}
 
         return BadRequestError()
+    
+    async def get_pdf(self, signed_sid: str):
+        sid, sig = self.session_api.verify_id(signed_sid)
+        if sid is not None:
+            pdf = self.session_api.db.get_data(sid)
+            return {"pdf" : pdf["exists"]}
 
 
 
