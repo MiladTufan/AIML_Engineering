@@ -18,7 +18,7 @@
                 outline-none  overflow-hidden leading-normal"
           [style.color]="textEditService.getCurrentTextStyleEditorById(box.id)?.currentColor"
           contenteditable="true"
-          [ngStyle]="{ 'font-size': box.textStyleEditorState.font_size + 'px'}"
+          [ngStyle]="{ 'font-size': box.textStyleEditorState.font_size + 'px' , 'font-family' : box.textStyleEditorState.fontFamily}"
           (input)="onInput($event)"> {{ box.text }}
         </textarea>
       </div>

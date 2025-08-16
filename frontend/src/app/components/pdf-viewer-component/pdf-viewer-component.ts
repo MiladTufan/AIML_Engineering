@@ -39,7 +39,7 @@ export class PdfViewerComponent {
 	private renderQueue = new Set<number[]>();
 	private currentScale = 1.0;
 	private minScale = 0.6
-	private maxScale = 3.0
+	private maxScale = 6.09
 	private observer: any;
 	private renderTrigger = new Subject<number>();
 
@@ -494,11 +494,13 @@ export class PdfViewerComponent {
 			const delta = event.deltaY < 0 ? 0.1 : -0.1;
 			const oldScale = this.scale;
 			const newScale = oldScale + delta
-
+		
 			if (newScale > this.maxScale || newScale < this.minScale)
 				return;
 
 			this.scale = newScale
+			console.log(newScale)
+			console.log(this.renderQueue)
 
 
 			this.pdfViewerService.currentScale = this.scale;
@@ -506,14 +508,14 @@ export class PdfViewerComponent {
 			// const pdfRect = this.pdfContainer.nativeElement.getBoundingClientRect()
 			// const offsetX = event.clientX - pdfRect.left
 			// const offsetY = event.clientY - pdfRect.top
-
-			// // Adjust transform-origin to zoom into cursor
-			// const originX = offsetX + 'px';
-			// const originY = offsetY + 'px';
-			// this.transformOrigin = `${originX} ${originY}`;
+			// const zoomFactor = newScale / oldScale;
 
 
-			// this.cssScale = `scale(${this.scale})`;
+			// this.pdfContainer.nativeElement.scrollLeft = (offsetX + this.pdfContainer.nativeElement.scrollLeft) * zoomFactor - offsetX;
+			// this.pdfContainer.nativeElement.scrollTop = (offsetY + this.pdfContainer.nativeElement.scrollTop) * zoomFactor - offsetY;
+
+			// this.pdfContainer.nativeElement.style.transformOrigin = `${event.clientX}px ${event.clientY}px`;
+        	// this.pdfContainer.nativeElement.style.transform = `scale(${this.scale})`;
 
 
 			for (const p of this.pdfViewerService.visiblePages.getValue()) {

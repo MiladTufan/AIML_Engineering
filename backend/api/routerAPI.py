@@ -82,27 +82,26 @@ class RouterAPI:
             BadRequestError: If the file is not a valid PDF.
         """
         if pdf.content_type != "application/pdf":
-            return BadRequestError("Only PDF files allowed")
+            raise BadRequestError("Only PDF files allowed")
         
         # TODO Find out if this check is needed!   
         ret = self.session_api.verify_id(signed_sid)
         if ret is not None and ret["sid"] is not None:
             pdf_bytes = await pdf.read()
             self.session_api.db.update_session_data(ret["sid"], pdf_bytes)
-            print(f"LEN OF PDF IS: {len(self._get_data(signed_sid))}")
 
             # TODO Sanitize filename and FILE ITSELF
             self.logger.debug(f"Received PDF file: {pdf.filename} ({len(pdf_bytes)} bytes)")
             return {"filename": pdf.filename, "size": len(pdf_bytes)}
 
-        return BadRequestError()
+        raise BadRequestError()
     
     
     async def get_edits(self, signed_sid: str):
         edits = self._get_edits(signed_sid)
         
         if edits is None:
-            return NotFoundError("EDITS")
+            raise NotFoundError("EDITS")
         if edits:
             return edits
     
@@ -124,7 +123,7 @@ class RouterAPI:
         data = self._get_data(signed_sid)
         
         if data is None:
-            return NotFoundError("PDF")
+            raise NotFoundError("PDF")
         if data:
             return Response(content=data, media_type="application/octet-stream")
 
@@ -133,7 +132,7 @@ class RouterAPI:
         pdf = self._get_data(signed_sid)
         embedded_pdf = PDFEditor.embed_edits_into_pdf(pdf, edits)
         if edits is None or pdf is None:
-            return BadRequestError()
+            raise BadRequestError()
         if embedded_pdf:
             return StreamingResponse(embedded_pdf, media_type="application/pdf", 
                                     headers=self.headers)
@@ -144,6 +143,6 @@ class RouterAPI:
         if ret is not None and ret["sid"] is not None:
             pdf = self.session_api.db.get_data(ret["sid"])
         if not pdf:
-            return BadRequestError()  
+            raise BadRequestError()  
 
         self.session_api.db.update_session_edits(ret["sid"], payload)

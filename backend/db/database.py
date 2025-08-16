@@ -114,13 +114,20 @@ class Database:
     
     def get_data(self, sid: str):
         res = self.db.query(Session.data).filter(Session.sid == sid).first()
-        return res[0]
+        if res is not None:
+            return res[0]
+        else:
+            return None
     
     def get_edits(self, sid: str):
         res = self.db.query(Edits.edits).filter(Edits.session_sid == sid).first()
-        data = json.loads(res[0])
-        edits = GlobalEdit(**data)
-        return edits
+        
+        if res is not None:
+            data = json.loads(res[0])
+            edits = GlobalEdit(**data)
+            return edits
+        else:
+            return None
     
     def update_last_access(self, sid: str, last_access: datetime):
         session_obj = self.db.query(Session).filter(Session.sid == sid).first()
@@ -165,7 +172,7 @@ class Database:
     def cleanup(self):
         cutoff = datetime.now(timezone.utc) - self.timeout
         
-        old_sessions = self.db.query(Session.last_access).filter(Session.last_access < cutoff.isoformat()).all()
+        old_sessions = self.db.query(Session).filter(Session.last_access < cutoff.isoformat()).all()
         for session in old_sessions:
             self.db.delete(session)
             self.db.commit()

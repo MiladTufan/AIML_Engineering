@@ -7,6 +7,9 @@ from PIL import Image
 from reportlab.lib.utils import ImageReader
 import io
 from models.global_edits import GlobalEdit
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+pdfmetrics.registerFont(TTFont('Inter', 'fonts/Inter_18pt-Regular.ttf'))
 
 class PDFEditor(object):
     def __init__(self):
@@ -18,13 +21,27 @@ class PDFEditor(object):
         existing_pdf = PdfReader(BytesIO(pdf))
         width, height = PDFEditor.get_pdf_dims(existing_pdf)
         num_changes = 0
-
         for edit in edits.pageEdits:
             packet = BytesIO()
             can = canvas.Canvas(packet, pagesize=A4)
             for box in edit.textboxes:
-                can.setFont("Helvetica", box.textStyleEditorState.font_size)  # Font name, size in points
-                can.drawString(box.baseLeft, height - box.baseTop, box.text)
+                print(box.textStyleEditorState.font_size)
+                print(box.textStyleEditorState.baseFontSize)
+                print(box.baseTop)
+                print(box.baseLeft)
+                print(box.BoxDims.left)
+                print(box.BoxDims.top)
+                print(box.BoxDims.currentScale)
+                print(box.BoxDims.posCreationScale)
+                print(box.textStyleEditorState.fontname)
+                print("===================================================================")
+                can.setFont(box.textStyleEditorState.fontname, box.textStyleEditorState.baseFontSize)  # Font name, size in points
+                                                                                                    # 48 is margin top so 64px = 48pt
+                offset_left = 3.5 * box.BoxDims.currentScale                                                              
+                offset_top = (box.textStyleEditorState.baseFontSize ) * box.BoxDims.currentScale                                                              
+                                                                                                    
+                can.drawString(((box.BoxDims.left + offset_left) / box.BoxDims.currentScale), 
+                               height - (((box.BoxDims.top + offset_top) / box.BoxDims.currentScale)), box.text)
                 num_changes += 1
         
             can.save()
@@ -124,7 +141,6 @@ class PDFEditor(object):
         overlay_pdf = PdfReader(packet)
         existing_pdf = PdfReader(BytesIO(pdf_file))
         
-        len(f"LEN OF PDF IN PASTE_TEXT IS: {len(BytesIO(pdf_file).getvalue())}")
         if (len(overlay_pdf.pages) <= 0):
             return
         
