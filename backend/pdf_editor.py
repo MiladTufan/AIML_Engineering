@@ -6,11 +6,37 @@ from rembg import remove
 from PIL import Image
 from reportlab.lib.utils import ImageReader
 import io
-
+from models.global_edits import GlobalEdit
 
 class PDFEditor(object):
     def __init__(self):
         pass
+    
+    
+    def embed_edits_into_pdf(pdf, edits: GlobalEdit):
+        writer  = PdfWriter()
+        existing_pdf = PdfReader(BytesIO(pdf))
+        width, height = PDFEditor.get_pdf_dims(existing_pdf)
+        num_changes = 0
+
+        for edit in edits.pageEdits:
+            packet = BytesIO()
+            can = canvas.Canvas(packet, pagesize=A4)
+            for box in edit.textboxes:
+                can.setFont("Helvetica", box.textStyleEditorState.font_size)  # Font name, size in points
+                can.drawString(box.baseLeft, height - box.baseTop, box.text)
+                num_changes += 1
+        
+            can.save()
+            PDFEditor.paste_text_into_page(writer, packet, pdf, edit.id)
+        
+        if num_changes == 0:
+            for i, page in enumerate(existing_pdf.pages):
+                print(f"adding page: {i}")
+                writer.add_page(page)
+        
+        new_pdf = PDFEditor.create_stream(writer)
+        return new_pdf
     
     
     @staticmethod
@@ -97,7 +123,8 @@ class PDFEditor(object):
         packet.seek(0)
         overlay_pdf = PdfReader(packet)
         existing_pdf = PdfReader(BytesIO(pdf_file))
-        print(overlay_pdf.pages)
+        
+        len(f"LEN OF PDF IN PASTE_TEXT IS: {len(BytesIO(pdf_file).getvalue())}")
         if (len(overlay_pdf.pages) <= 0):
             return
         

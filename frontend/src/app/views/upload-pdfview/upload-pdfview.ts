@@ -41,7 +41,7 @@ export class UploadPDFView {
 	private _uploadPDF(file: File)
 	{
 		const signed_sid = this.sessionService.getSessionIdFromBrowser("session_id")
-		this.sessionService.deleteCookie(signed_sid!)
+		
 
 		if (signed_sid)
 		{

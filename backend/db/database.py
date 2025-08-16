@@ -12,6 +12,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models.db_models import Base, Session, Edits
 from models.global_edits import Payload
+import json
+from models.global_edits import GlobalEdit
 
 SESSION_COOKIE = "session_id"
 
@@ -60,8 +62,8 @@ class Database:
         DB_PORT = os.getenv("DB_PORT", 5432)
 
         DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-        engine = create_engine(DATABASE_URL, echo=True)  # echo=True prints SQL queries
-        SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        engine = create_engine(DATABASE_URL, echo=False)  # echo=True prints SQL queries
+        SessionLocal = sessionmaker(autocommit=False, autoflush=True, bind=engine, expire_on_commit=True)
         
         Base.metadata.create_all(engine)
         
@@ -85,7 +87,7 @@ class Database:
     # --------------------------------------------------------
     def add_row(self, data: Data):
         session = Session(sid=data.sid, signed_sid=data.signed_id, data=data.data, last_access=data.last_access)
-        json_data = data.payload.model_dump_json()
+        json_data = data.payload.edits.model_dump_json()
         edits = Edits(session_sid=data.sid, edits=json_data)
         
         self.db.add(session)
@@ -97,6 +99,10 @@ class Database:
         self.db.commit()
         self.db.refresh(edits)
         
+    def get_all_signed_sids(self):
+        res = self.db.query(Session.signed_sid).all()
+        signed_sids = [r[0] for r in res]
+        return signed_sids
         
     def get_data_last_access(self, sid: str):
         res = self.db.query(Session.data, Session.last_access).filter(Session.sid == sid).first()
@@ -108,8 +114,13 @@ class Database:
     
     def get_data(self, sid: str):
         res = self.db.query(Session.data).filter(Session.sid == sid).first()
-        print(f"SESSION OBJ =================================== {res[0]}")
         return res[0]
+    
+    def get_edits(self, sid: str):
+        res = self.db.query(Edits.edits).filter(Edits.session_sid == sid).first()
+        data = json.loads(res[0])
+        edits = GlobalEdit(**data)
+        return edits
     
     def update_last_access(self, sid: str, last_access: datetime):
         session_obj = self.db.query(Session).filter(Session.sid == sid).first()
@@ -127,15 +138,22 @@ class Database:
     ############################################################################################
     def update_session_data(self, sid, data: bytes):
         session_obj = self.db.query(Session).filter(Session.sid == sid).first()
-        print(f"SESSION OBJ =================================== {sid}")
         if session_obj:
-            print("UPDATING SESSION OBJ")
             session_obj.data = data
             session_obj.last_access = datetime.now(timezone.utc).isoformat()
             self.db.commit()
             self.db.refresh(session_obj)
             self.logger.debug(f"Session {sid} data saved")
     
+    def update_session_edits(self, sid, payload: Payload):
+        Edits_obj = self.db.query(Edits).filter(Edits.session_sid == sid).first()
+        if Edits_obj:
+            Edits_obj.edits = payload.edits.model_dump_json()
+            self.db.commit()
+            self.logger.debug(f"Session {sid} edits saved")
+            
+        
+        
     
     def delete_session(self, sid):
         session_obj = self.db.query(Session).filter(Session.id == sid).first()

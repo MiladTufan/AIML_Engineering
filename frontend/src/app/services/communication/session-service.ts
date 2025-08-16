@@ -2,6 +2,7 @@ import { HttpClient, HttpParams  } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Environment } from '../../models/constants/environment';
 import { Observable } from 'rxjs';
+import { GlobalEdit } from '../../models/globalEdit';
 
 @Injectable({
   providedIn: 'root'
@@ -37,6 +38,19 @@ export class SessionService {
     const params = new HttpParams().set('signed_sid', signed_sid)
     return this.httpClient.get(Environment.API_BASE_URL + 
                                Environment.BACKEND_GET_PDF_ENDPOINT, { responseType: 'arraybuffer', params })
+  }
+
+  getEdits(signed_sid: string): Observable<any>
+  {
+    const params = new HttpParams().set('signed_sid', signed_sid)
+    return this.httpClient.get<GlobalEdit>(Environment.API_BASE_URL + 
+                               Environment.BACKEND_GET_EDITS_ENDPOINT, { params })
+  }
+
+
+  getAllSignedSids(): Observable<Array<string>>
+  {
+    return this.httpClient.get<Array<string>>(Environment.API_BASE_URL + Environment.BACKEND_GET_SIGNED_SIDS_ENDPOINT)
   }
 
 

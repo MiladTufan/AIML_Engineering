@@ -32,12 +32,14 @@ class RouterAPI:
         self.router.post("/upload-image")(self.upload_image)
         self.router.post("/upload-pdf")(self.upload_pdf)
         self.router.post("/create-session")(self.session_api.create_session)
-        self.router.post("/embed-pdf")(self.embed_objs_into_pdf)
+        self.router.post("/save-pdf-edits")(self.save_pdf_edits)
 
 
         self.router.get("/get-session")(self.session_api.get_session)
         self.router.get("/get-pdf")(self.get_pdf)
+        self.router.get("/get-edits")(self.get_edits)
         self.router.get("/download-pdf/{signed_sid}")(self.download_pdf)
+        self.router.get("/get-all-signed-sids")(self.get_all_signed_sids)
 
         self.router.patch("/update-session")(self.session_api.db.update_session_data)
 
@@ -54,6 +56,16 @@ class RouterAPI:
             pdf = self.session_api.db.get_data(ret["sid"])
             return pdf
         return None
+    
+    def _get_edits(self, signed_sid: str):
+        ret = self.session_api.verify_id(signed_sid)
+        if ret is not None and ret["sid"] is not None:
+            edits = self.session_api.db.get_edits(ret["sid"])
+            return edits
+    
+    async def get_all_signed_sids(self):
+        return self.session_api.db.get_all_signed_sids()
+    
     
     async def upload_pdf(self, signed_sid: str = Form(...), pdf: UploadFile = File(...)):
         """
@@ -85,6 +97,15 @@ class RouterAPI:
 
         return BadRequestError()
     
+    
+    async def get_edits(self, signed_sid: str):
+        edits = self._get_edits(signed_sid)
+        
+        if edits is None:
+            return NotFoundError("EDITS")
+        if edits:
+            return edits
+    
     async def get_pdf(self, signed_sid: str):
         """
         Retrieves a PDF file from the server DB.
@@ -101,41 +122,28 @@ class RouterAPI:
         """
         
         data = self._get_data(signed_sid)
+        
         if data is None:
             return NotFoundError("PDF")
         if data:
             return Response(content=data, media_type="application/octet-stream")
 
     async def download_pdf(self, signed_sid: str):
-        data = self._get_data(signed_sid)
-        if data is None:
+        edits = self._get_edits(signed_sid)
+        pdf = self._get_data(signed_sid)
+        embedded_pdf = PDFEditor.embed_edits_into_pdf(pdf, edits)
+        if edits is None or pdf is None:
             return BadRequestError()
-        
-        if data:
-            return StreamingResponse(BytesIO(data), media_type="application/pdf", 
+        if embedded_pdf:
+            return StreamingResponse(embedded_pdf, media_type="application/pdf", 
                                     headers=self.headers)
 
-    async def embed_objs_into_pdf(self, payload: Payload):
+    async def save_pdf_edits(self, payload: Payload):
         ret = self.session_api.verify_id(payload.signed_id)
         
         if ret is not None and ret["sid"] is not None:
             pdf = self.session_api.db.get_data(ret["sid"])
         if not pdf:
             return BadRequestError()  
-        
-        writer  = PdfWriter()
-        existing_pdf = PdfReader(BytesIO(pdf))
-        width, height = PDFEditor.get_pdf_dims(existing_pdf)
 
-        for edit in payload.edits.pageEdits:
-            packet = BytesIO()
-            can = canvas.Canvas(packet, pagesize=A4)
-            for box in edit.textboxes:
-                can.setFont("Helvetica", box.textStyleEditorState.font_size)  # Font name, size in points
-                can.drawString(box.baseLeft, height - box.baseTop, box.text)
-        
-            can.save()
-            PDFEditor.paste_text_into_page(writer, packet, pdf, edit.id)
-        new_pdf = PDFEditor.create_stream(writer)
-
-        self.session_api.db.update_session_data(ret["sid"], new_pdf.getvalue())
+        self.session_api.db.update_session_edits(ret["sid"], payload)

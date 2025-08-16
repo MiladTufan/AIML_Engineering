@@ -13,6 +13,7 @@ import { AlertService } from '../../services/alert-service';
 import { TextBox } from '../../models/TextBox';
 import { PageInfoComponent } from '../page-info-component/page-info-component';
 import { SessionService } from '../../services/communication/session-service';
+import { MiniPage } from '../../models/globalEdit';
 (pdfjsLib as any).GlobalWorkerOptions.workerSrc = "assets/pdf.worker.min.mjs";
 
 
@@ -184,6 +185,7 @@ export class PdfViewerComponent {
 		const pdfjs = pdfjsLib as any;
 		const reader = new FileReader()
 		reader.readAsArrayBuffer(new Blob([file]))
+		console.log(this.textEditService.textboxes.length)
 
 		reader.onload = async () => {
 			const arrayBuffer = new Uint8Array(reader.result as ArrayBuffer);
@@ -218,7 +220,14 @@ export class PdfViewerComponent {
 				const signed_sid = this.sessionService.getSessionIdFromBrowser("session_id")
 				if (signed_sid) {
 					this.sessionService.getPDF(signed_sid).subscribe(file => {
-						this.loadingHelper(file)
+						this.sessionService.getEdits(signed_sid).subscribe(edits => {
+							edits.pageEdits.forEach((element: MiniPage) => {
+								element.textboxes.forEach(box => {
+									this.textEditService.textboxes.push(box)
+								})
+							});
+							this.loadingHelper(file)
+						})
 					})
 				}
 				else {
@@ -370,6 +379,7 @@ export class PdfViewerComponent {
 		if (scale > 1.0 && pageNumber > 1) baseMarginScale = this.pdfViewerService.getScaledMargin(scale)
 
 		const boxesForPage = this.textEditService.textboxes.filter(b => b.pageId == pageNumber)
+		this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, textBoxLayer)
 
 		const existingPageContainer = container.querySelector("#" + pageContainer.id)
 		if (existingPageContainer != null) {
