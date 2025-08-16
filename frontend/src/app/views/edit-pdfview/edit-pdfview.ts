@@ -51,7 +51,6 @@ export class EditPDFView {
 	//=======================================================================================================================
 	@HostListener("document:mousemove", ["$event"])
 	trackmouse(event: MouseEvent) {
-		const rect = (this.pdfViewerRef.nativeElement as HTMLElement).getBoundingClientRect();
 		this.mouseX = event.clientX;
 		this.mouseY = event.clientY
 	}

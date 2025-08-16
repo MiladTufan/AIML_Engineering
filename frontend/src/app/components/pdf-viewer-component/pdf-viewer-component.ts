@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, ViewChild, ViewContainerRef } from '@angular/core';
+import { Component, ElementRef, Input, ViewChild, ViewContainerRef, HostListener } from '@angular/core';
 
 import * as pdfjsLib from "pdfjs-dist";
 import { PDFFileService } from '../../services/pdffile-service';
@@ -43,6 +43,11 @@ export class PdfViewerComponent {
 	private observer: any;
 	private renderTrigger = new Subject<number>();
 
+	private offsetX = 0;
+	private offsetY = 0;
+	public mouseX = 1;
+	public mouseY = 1;
+
 	//=================================================== Public variables ==================================================
 	public totalPages: number = 0;
 	public pdfSrc: string | Uint8Array = ""
@@ -52,6 +57,7 @@ export class PdfViewerComponent {
 
 	//==================================================== Children =========================================================
 	@ViewChild("pdfContainer", { static: true }) pdfContainer!: ElementRef<HTMLDivElement>;
+	@ViewChild("mousePointer", { static: true }) follower!: ElementRef<HTMLDivElement>;
 	@ViewChild('dynamicContainer', { read: ViewContainerRef }) dynamicContainer!: ViewContainerRef;
 
 
@@ -59,15 +65,21 @@ export class PdfViewerComponent {
 	constructor(private fileService: PDFFileService, private sessionService: SessionService,
 		private pdfViewerService: PDFViewerService,
 		private textEditService: TextEditService, private alertService: AlertService) {
-		this.renderTrigger.pipe(debounceTime(10)).subscribe((finalScale) => {
+		this.renderTrigger.pipe(debounceTime(200)).subscribe((finalScale) => {
 
 			Promise.all(
 				Array.from(this.renderQueue).map(renderItem => {
-					this.renderPage(renderItem[0], false, renderItem[1])
+					console.log("Re rendering page on zoom: ", renderItem[0], " scale: ", renderItem[1])
+					this.renderPage(renderItem[0], false, renderItem[1]).then(() => {
+
+						const page = this.pdfViewerService.getPageWithNumber(renderItem[0]);
+						page!.htmlContainer.style.transformOrigin = `0px 0px`;
+						page!.htmlContainer.style.transform = `scale(1)`;
+					})
 				})
 			).then(() => {
 				this.renderQueue.clear()
-				this.transformOrigin = '0px 0px';
+				// this.transformOrigin = '0px 0px';
 				// this.cssScale = `scale(1)`;
 			})
 		});
@@ -486,6 +498,29 @@ export class PdfViewerComponent {
 	}
 
 	//=======================================================================================================================
+	// Listen on Mouseclick over the entire Window. Used for determining the coordinates of any object placed inside
+	// the document.
+	//=======================================================================================================================
+	@HostListener("document:mousemove", ["$event"])
+	trackmouse(event: MouseEvent) {
+		// this.mouseX = event.clientX;
+		// this.mouseY = event.clientY;
+
+		console.log(this.mouseX)
+		console.log(this.mouseY)
+		// this.follower.nativeElement.animate([
+		// 	{ left: `${this.follower.nativeElement.offsetLeft}px`, top: `${this.follower.nativeElement.offsetTop}px` },
+		// 	{ left: `${this.mouseX}px`, top: `${this.mouseY}px` }
+		// ], {
+		// 	duration: 1000,
+		// 	fill: 'forwards'
+		// })
+
+		// this.follower.nativeElement.style.left = `${this.mouseX}px`;
+		// this.follower.nativeElement.style.top = `${this.mouseY}px`;
+	}
+
+	//=======================================================================================================================
 	// This function handles the zoom on the PDF page. It adds pages that are in visibile pages to a renderqueue.
 	//=======================================================================================================================
 	async onWheel(event: WheelEvent) {
@@ -494,37 +529,52 @@ export class PdfViewerComponent {
 			const delta = event.deltaY < 0 ? 0.1 : -0.1;
 			const oldScale = this.scale;
 			const newScale = oldScale + delta
-		
+
 			if (newScale > this.maxScale || newScale < this.minScale)
 				return;
 
 			this.scale = newScale
 			console.log(newScale)
-			console.log(this.renderQueue)
+			console.log(this.pdfViewerService.visiblePages.getValue())
 
 
 			this.pdfViewerService.currentScale = this.scale;
 
-			// const pdfRect = this.pdfContainer.nativeElement.getBoundingClientRect()
-			// const offsetX = event.clientX - pdfRect.left
-			// const offsetY = event.clientY - pdfRect.top
-			// const zoomFactor = newScale / oldScale;
 
-
-			// this.pdfContainer.nativeElement.scrollLeft = (offsetX + this.pdfContainer.nativeElement.scrollLeft) * zoomFactor - offsetX;
-			// this.pdfContainer.nativeElement.scrollTop = (offsetY + this.pdfContainer.nativeElement.scrollTop) * zoomFactor - offsetY;
-
-			// this.pdfContainer.nativeElement.style.transformOrigin = `${event.clientX}px ${event.clientY}px`;
-        	// this.pdfContainer.nativeElement.style.transform = `scale(${this.scale})`;
 
 
 			for (const p of this.pdfViewerService.visiblePages.getValue()) {
 				this.renderQueue.add([p, newScale]);
+
+				const page = this.pdfViewerService.getPageWithNumber(p)
+
+				if (page) {
+					const canvas = page.htmlContainer
+					const rect = canvas.getBoundingClientRect();
+
+					this.mouseX = event.clientX// - rect.left
+					this.mouseY = event.clientY// - rect.top
+					const zoomFactor = newScale / oldScale;
+
+					console.log(this.mouseX)
+					console.log(this.mouseY)
+
+					this.offsetX = this.mouseX - ((this.mouseX - this.offsetX) * (zoomFactor - 1));
+					this.offsetY = this.mouseY - ((this.mouseY - this.offsetY) * (zoomFactor - 1));
+
+					// canvas.scrollLeft = (offsetX) * zoomFactor - 1;
+					// canvas.scrollTop = (offsetY) * zoomFactor - 1;
+
+					canvas.style.transformOrigin = `${this.offsetX}px ${this.offsetY}px`;
+					canvas.style.transform = `scale(${this.scale})`;
+				}
+				break
 			}
 
 			// this.alertService.createAlert("info", "CURRENT ZOOM",
 			// 		newScale.toString(), 5000)
-			this.renderTrigger.next(newScale);
+			// this.renderTrigger.next(newScale);
+			console.log(this.renderQueue)
 		}
 	}
 }

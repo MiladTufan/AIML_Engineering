@@ -25,16 +25,6 @@ class PDFEditor(object):
             packet = BytesIO()
             can = canvas.Canvas(packet, pagesize=A4)
             for box in edit.textboxes:
-                print(box.textStyleEditorState.font_size)
-                print(box.textStyleEditorState.baseFontSize)
-                print(box.baseTop)
-                print(box.baseLeft)
-                print(box.BoxDims.left)
-                print(box.BoxDims.top)
-                print(box.BoxDims.currentScale)
-                print(box.BoxDims.posCreationScale)
-                print(box.textStyleEditorState.fontname)
-                print("===================================================================")
                 can.setFont(box.textStyleEditorState.fontname, box.textStyleEditorState.baseFontSize)  # Font name, size in points
                                                                                                     # 48 is margin top so 64px = 48pt
                 offset_left = 3.5 * box.BoxDims.currentScale                                                              
