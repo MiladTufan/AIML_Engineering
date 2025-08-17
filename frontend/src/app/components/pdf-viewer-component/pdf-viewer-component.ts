@@ -44,6 +44,7 @@ export class PdfViewerComponent {
 	private renderTrigger = new Subject<number>();
 	private translateX = 0;
 	private translateY = 0;
+	private pagesRendered = 0;
 
 	private offsetX = 0;
 	private offsetY = 0;
@@ -127,7 +128,7 @@ handleScroll() {
 			this.pdfViewerService.setCurrentPage(this.currentPageNumber);
 
 			// TODO change this => This creates an observe to watch visibile pages ... this needs to be available ASAP and not on scroll!!
-			if (!this.alreadyRanObserver) this.createObserver();
+			
 
 		})
 	}
@@ -215,7 +216,12 @@ loadingHelper(file: ArrayBuffer | File) {
 
 		if (this.renderMode == 0) {
 			for (let pageNum = 1; pageNum <= this.totalPages; pageNum++) {
-				this.renderPage(pageNum, true, this.scale);
+				this.renderPage(pageNum, true, this.scale).then(() => {
+					if (this.pdfContainer.nativeElement.children.length === this.totalPages)
+					{	
+						if (!this.alreadyRanObserver) this.createObserver();
+					}
+				});
 			}
 		}
 	}
@@ -374,81 +380,82 @@ assignPageToRendered(newPage: Page) {
 	// This function renders an entire page and instantiates all objects on that page.
 	//=======================================================================================================================
 	async renderPage(pageNumber: number, renderdummy: Boolean = true, scale: number) {
-	let page: any;
-	let viewport: any;
-	const container = this.pdfContainer.nativeElement;
+		let page: any;
+		let viewport: any;
+		const container = this.pdfContainer.nativeElement;
 
-	if (pageNumber === 1)
-	{
-		renderdummy = false;
-	}
-
-	console.log("rendering page: ", pageNumber)
-	page = await this.pdfDocument.getPage(pageNumber);
-
-	if (!renderdummy) {
-		page = await this.pdfDocument.getPage(pageNumber);
-		viewport = page.getViewport({ scale: scale });
-		this.pdfViewerService.setPageHeight(viewport.height);
-	}
-
-	
-	let { canvas, textBoxLayer, textLayer, pageContainer, canvasContainer } = this.createPageContainers(pageNumber, renderdummy, scale)
-
-	// scale margin top
-	let baseMarginScale = 16
-	if (scale > 1.0 && pageNumber > 1) baseMarginScale = this.pdfViewerService.getScaledMargin(scale)
-
-	const boxesForPage = this.textEditService.textboxes.filter(b => b.pageId == pageNumber)
-	this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, textBoxLayer)
-
-	const existingPageContainer = container.querySelector("#" + pageContainer.id)
-	if (existingPageContainer != null) {
-		const textOld = existingPageContainer.querySelector(Constants.OVERLAY_TEXT)
-		const CanvasOld = existingPageContainer.querySelector("#" + canvasContainer.id)
-
-		// recreate all objects on the page
-		this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, textBoxLayer)
-
-		// existingPageContainer.replaceChild(textBoxLayer, textOld!)
-		existingPageContainer.replaceChild(canvasContainer, CanvasOld!)
-
-		if (!renderdummy) {
-			existingPageContainer.className = "mt-1 sm:mt-3 md:mt-4 mx-auto relative block w-full max-w-fit sm:max-w-[70%] md:max-w-[90%]";
+		if (pageNumber === 1)
+		{
+			renderdummy = false;
 		}
 
-		pageContainer = existingPageContainer as HTMLDivElement
-	}
-	else {
-		container.appendChild(pageContainer);
-	}
+		console.log("rendering page: ", pageNumber)
+		page = await this.pdfDocument.getPage(pageNumber);
 
-	if (!renderdummy) {
-		const context = canvas.getContext("2d")!;
-		canvas.height = viewport.height;
-		canvas.width = viewport.width;
+		if (!renderdummy) {
+			page = await this.pdfDocument.getPage(pageNumber);
+			viewport = page.getViewport({ scale: scale });
+			this.pdfViewerService.setPageHeight(viewport.height);
+		}
 
-		pageContainer.style.marginTop = `${baseMarginScale}px`;
-		pageContainer.style.width = `${viewport.width}px`;
-		pageContainer.style.height = `${viewport.height}px`;
+		
+		let { canvas, textBoxLayer, textLayer, pageContainer, canvasContainer } = this.createPageContainers(pageNumber, renderdummy, scale)
+
+		// scale margin top
+		let baseMarginScale = 16
+		if (scale > 1.0 && pageNumber > 1) baseMarginScale = this.pdfViewerService.getScaledMargin(scale)
+
+		const boxesForPage = this.textEditService.textboxes.filter(b => b.pageId == pageNumber)
+		this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, textBoxLayer)
+
+		const existingPageContainer = container.querySelector("#" + pageContainer.id)
+		if (existingPageContainer != null) {
+			const textOld = existingPageContainer.querySelector(Constants.OVERLAY_TEXT)
+			const CanvasOld = existingPageContainer.querySelector("#" + canvasContainer.id)
+
+			// recreate all objects on the page
+			this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, textBoxLayer)
+
+			// existingPageContainer.replaceChild(textBoxLayer, textOld!)
+			existingPageContainer.replaceChild(canvasContainer, CanvasOld!)
+
+			if (!renderdummy) {
+				existingPageContainer.className = "mt-1 sm:mt-3 md:mt-4 mx-auto relative block w-full max-w-fit sm:max-w-[70%] md:max-w-[90%]";
+			}
+
+			pageContainer = existingPageContainer as HTMLDivElement
+		}
+		else {
+			container.appendChild(pageContainer);
+		}
+
+		if (!renderdummy) {
+			const context = canvas.getContext("2d")!;
+			canvas.height = viewport.height;
+			canvas.width = viewport.width;
+
+			pageContainer.style.marginTop = `${baseMarginScale}px`;
+			pageContainer.style.width = `${viewport.width}px`;
+			pageContainer.style.height = `${viewport.height}px`;
 
 
 
-		if (pageNumber == this.pdfViewerService.totalPages)
-			pageContainer.style.marginBottom = "128px";
+			if (pageNumber == this.pdfViewerService.totalPages)
+				pageContainer.style.marginBottom = "128px";
 
-		this.pdfViewerService.currentBaseMarginScale = baseMarginScale
+			this.pdfViewerService.currentBaseMarginScale = baseMarginScale
 
-		const renderContext = {
-			canvasContext: context,
-			viewport: viewport,
-			intent: "print"
-		};
+			const renderContext = {
+				canvasContext: context,
+				viewport: viewport,
+				intent: "print"
+			};
 
-		await page.render(renderContext).promise;
-		const newPage = new Page(pageNumber, viewport, boxesForPage, viewport.height, viewport.width, 0, pageContainer, scale)
-		this.assignPageToRendered(newPage)
-	}
+			this.pagesRendered++;
+			await page.render(renderContext).promise;
+			const newPage = new Page(pageNumber, viewport, boxesForPage, viewport.height, viewport.width, 0, pageContainer, scale)
+			this.assignPageToRendered(newPage)
+		}
 }
 
 editActualPDF() {
