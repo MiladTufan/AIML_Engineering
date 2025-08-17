@@ -18,8 +18,7 @@ from models.global_edits import Payload, init_payload
 
 class SessionAPI:
     def __init__(self):
-        self.logger = logging.getLogger("SessionAPI")
-        self.logger.setLevel(logging.DEBUG)  # or INFO
+        self.logger = logging.getLogger(__name__)
         self.db = Database()
         self.secret_key = None
         if load_dotenv(dotenv_path=os.path.join("db", "dev.env")):
@@ -32,7 +31,9 @@ class SessionAPI:
             self.secret_key = os.environ.get("SECRET_TOKEN")
 
         if not self.secret_key:
-            raise RuntimeError("No secret key provided! Set SESSION_SECRET_KEY env variable.")
+            self.logger.critical("No secrect key found can not verify any keys! Terminating Program!")
+            self.logger.exception("No secret key provided! Set SESSION_SECRET_KEY env variable.")
+            raise
 
     ############################################################################################
     # Generates a signed session ID from a raw session ID.
@@ -57,7 +58,7 @@ class SessionAPI:
 
         sig = hmac.new(self.secret_key.encode(), sid.encode(), hashlib.sha256).hexdigest()
         signed = f"{sid}.{sig}"
-        self.logger.debug(f"Signing session ID {sid} -> {signed}")
+        self.logger.info(f"Signing session ID.")
         return signed
     
     ############################################################################################
@@ -83,13 +84,13 @@ class SessionAPI:
             expected_sig = self.sign_id(sid).split(".")[1]
             
             if hmac.compare_digest(sig, expected_sig):
-                self.logger.info(f"Verified session ID {sid} successfully")
+                self.logger.info(f"Verified session ID successfully")
                 return {"sid": sid, "sig": expected_sig}
             else:
-                self.logger.info(f"Session ID signature mismatch: {signed_sid}")
+                self.logger.info(f"Session ID signature mismatch")
                 return None
         except:
-            self.logger.info(f"Invalid session ID format: {signed_sid}")
+            self.logger.info(f"Invalid session ID format")
             return None
     
     ############################################################################################
@@ -106,7 +107,7 @@ class SessionAPI:
         data = Data(sid, sig, b'', datetime.now(timezone.utc).isoformat(), init_payload)
         self.db.add_row(data)
    
-        self.logger.info(f"Created new session: {sid, sig}")
+        self.logger.info(f"Created new session!")
         return {"signed_sid": f"{sid}.{sig}"}
     
 
@@ -127,12 +128,12 @@ class SessionAPI:
             last_access_dt = last_access_dt.replace(tzinfo=timezone.utc)  # make aware
 
         if datetime.now(timezone.utc) - last_access_dt > self.db.timeout:
-            self.logger.info(f"Session {sid} expired, deleting")
+            self.logger.info(f"Session expired, deleting")
             self.db.delete_session(sid)
             return {"exits" : False}
         
         self.db.update_last_access(sid, datetime.now(timezone.utc).isoformat())
         
-        self.logger.debug(f"Session {sid} accessed and last_access updated")
+        self.logger.debug(f"Session accessed and last_access updated")
         return data
     

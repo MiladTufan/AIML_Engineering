@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "formatters": {
+    "console": {
+      "()": "colorlog.ColoredFormatter",
+      "format": "%(log_color)s%(asctime)s [%(levelname)s]%(reset)s %(name)s: %(message)s",
+      "datefmt": "%Y-%m-%d %H:%M:%S%z",
+      "log_colors": {
+        "DEBUG": "cyan",
+        "INFO": "green",
+        "WARNING": "yellow",
+        "ERROR": "red",
+        "CRITICAL": "bold_red"
+      }
+    },
+    "file": {
+      "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+      "datefmt": "%Y-%m-%d %H:%M:%S%z"
+    },
+    "json": {
+      "()": "logger.logging_json_formatter.LoggingJsonFormatter"
+    }
+  },
+  "handlers": {
+    "console": {
+      "class": "logging.StreamHandler",
+      "level": "DEBUG",
+      "formatter": "console",
+      "stream": "ext://sys.stdout"
+    },
+    "file": {
+      "class": "logging.handlers.RotatingFileHandler",
+      "level": "DEBUG",
+      "formatter": "file",
+      "filename": "logger/logs/app.log",
+      "mode": "a",
+      "maxBytes": 5242880,
+      "backupCount": 3,
+      "encoding": "utf8"
+    },
+    "file_json": {
+      "class": "logging.handlers.RotatingFileHandler",
+      "level": "DEBUG",
+      "formatter": "json",
+      "filename": "logger/logs/app.log.jsonl",
+      "mode": "a",
+      "maxBytes": 5242880,
+      "backupCount": 3,
+      "encoding": "utf8"
+    }
+  },
+  "root": {
+    "level": "DEBUG",
+    "handlers": ["console", "file", "file_json"]
+  }
+}
