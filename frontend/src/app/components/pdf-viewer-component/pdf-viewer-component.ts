@@ -73,17 +73,18 @@ constructor(private fileService: PDFFileService, private sessionService: Session
 		Promise.all(
 			Array.from(this.renderQueue).map(renderItem => {
 				console.log("Re rendering page on zoom: ", renderItem[0], " scale: ", renderItem[1])
-				this.renderPage(renderItem[0], false, renderItem[1]).then(() => {
-
-					const page = this.pdfViewerService.getPageWithNumber(renderItem[0]);
-					page!.htmlContainer.style.transformOrigin = `0px 0px`;
-					page!.htmlContainer.style.transform = `scale(1)`;
-				})
+				this.renderPage(renderItem[0], false, renderItem[1])
 			})
 		).then(() => {
 			this.renderQueue.clear()
 			// this.transformOrigin = '0px 0px';
 			// this.cssScale = `scale(1)`;
+			Array.from(this.renderQueue).map(renderItem => {
+				const page = this.pdfViewerService.getPageWithNumber(renderItem[0]);
+				const canvasContainer = (page!.htmlContainer as HTMLDivElement).querySelector(`#canvasContainer-${renderItem[0]}`) as HTMLDivElement
+				page!.htmlContainer.style.transformOrigin = `0px 0px`;
+				canvasContainer.style.transform = `scale(1)`;
+			});
 		})
 	});
 }
@@ -309,7 +310,7 @@ createPageContainers(pageNumber: number, renderdummy: Boolean, scale: number) {
 	canvasContainer.appendChild(pageInfo!.location.nativeElement)
 
 	pageContainer.appendChild(canvasContainer)
-	pageContainer.addEventListener("wheel", (event: WheelEvent) => this.onWheel(event, pageNumber))
+	// pageContainer.addEventListener("wheel", (event: WheelEvent) => this.onWheel(event, pageNumber))
 
 	return { canvas: canvas, textBoxLayer: textBoxLayer, textLayer: textLayer, pageContainer: pageContainer, canvasContainer: canvasContainer }
 }
@@ -370,6 +371,8 @@ assignPageToRendered(newPage: Page) {
 	const renderedPage = this.pdfViewerService.allRenderedPages.find(p => p.pageNum === newPage.pageNum)
 	if (renderedPage) {
 		const idx = this.pdfViewerService.allRenderedPages.indexOf(renderedPage);
+		newPage.translateX = renderedPage.translateX
+		newPage.translateY = renderedPage.translateY
 		this.pdfViewerService.allRenderedPages.splice(idx, 1, newPage);
 	}
 	else
@@ -453,7 +456,7 @@ assignPageToRendered(newPage: Page) {
 
 			this.pagesRendered++;
 			await page.render(renderContext).promise;
-			const newPage = new Page(pageNumber, viewport, boxesForPage, viewport.height, viewport.width, 0, pageContainer, scale)
+			const newPage = new Page(pageNumber, viewport, boxesForPage, viewport.height, viewport.width, 0, pageContainer, 0, 0, scale)
 			this.assignPageToRendered(newPage)
 		}
 }
@@ -539,7 +542,7 @@ trackmouse(event: MouseEvent) {
 	//=======================================================================================================================
 	// This function handles the zoom on the PDF page. It adds pages that are in visibile pages to a renderqueue.
 	//=======================================================================================================================
-	async onWheel(event: WheelEvent, pageNumber: number) {
+	async onWheel(event: WheelEvent) {
 	if (event.ctrlKey) {
 		event.preventDefault();
 		const delta = event.deltaY < 0 ? 0.1 : -0.1;
@@ -564,29 +567,35 @@ trackmouse(event: MouseEvent) {
 
 		this.pdfViewerService.currentScale = this.scale;
 
-		const canvas = (event.currentTarget as HTMLDivElement).querySelector(`#canvasContainer-${pageNumber}`) as HTMLDivElement
-		if (canvas)
-		{
-			const rect = (event.currentTarget as HTMLDivElement).getBoundingClientRect();
-			
-			const pointer = {
-				x: event.clientX - rect.left,
-				y: event.clientY - rect.top
-			};
+		for (const p of this.pdfViewerService.visiblePages.getValue()) {
+			// this.renderQueue.add([p, newScale]);
 
-			const mousePointTo = {
-				x: (pointer.x - this.translateX) / oldScale,
-				y: (pointer.y - this.translateY) / oldScale
-			};
+			const canvas = (event.currentTarget as HTMLDivElement).querySelector(`#canvasContainer-${p}`) as HTMLDivElement
+			const page = this.pdfViewerService.getPageWithNumber(p)
+			if (canvas && page)
+			{
+				const rect = ((event.currentTarget as HTMLDivElement).querySelector(`#pageContainer-${p}`) as HTMLDivElement).getBoundingClientRect();
+				
+				const pointer = {
+					x: event.clientX - rect.left,
+					y: event.clientY - rect.top
+				};
 
-			this.translateX = pointer.x - mousePointTo.x * newScale;
-    		this.translateY = pointer.y - mousePointTo.y * newScale;
+				const mousePointTo = {
+					x: (pointer.x - page.translateX) / oldScale,
+					y: (pointer.y - page.translateY) / oldScale
+				};
+
+				page.translateX = pointer.x - mousePointTo.x * newScale;
+				page.translateY = pointer.y - mousePointTo.y * newScale;
 
 
-			canvas.style.transformOrigin = `0px 0px`;
-			canvas.style.transition = 'transform 0.25s ease-in-out';
-			canvas.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.scale})`;
+				canvas.style.transformOrigin = `0px 0px`;
+				canvas.style.transition = 'transform 0.25s ease-in-out';
+				canvas.style.transform = `translate(${page.translateX}px, ${page.translateY}px) scale(${this.scale})`;
+			}
 		}
+
 		
 		
 		
