@@ -298,10 +298,10 @@ createPageContainers(pageNumber: number, renderdummy: Boolean, scale: number) {
 		canvas.className = `page-${pageNumber} block border border-gray-300 shadow-lg mx-auto`;
 	}
 
+	canvasContainer.appendChild(textBoxLayer)
 	canvasContainer.appendChild(canvas)
 	canvasContainer.appendChild(pageInfo!.location.nativeElement)
 
-	pageContainer.appendChild(textBoxLayer)
 	pageContainer.appendChild(canvasContainer)
 	pageContainer.addEventListener("wheel", (event: WheelEvent) => this.onWheel(event, pageNumber))
 
@@ -376,8 +376,12 @@ assignPageToRendered(newPage: Page) {
 	async renderPage(pageNumber: number, renderdummy: Boolean = true, scale: number) {
 	let page: any;
 	let viewport: any;
+	const container = this.pdfContainer.nativeElement;
+
 	if (pageNumber === 1)
+	{
 		renderdummy = false;
+	}
 
 	console.log("rendering page: ", pageNumber)
 	page = await this.pdfDocument.getPage(pageNumber);
@@ -388,7 +392,7 @@ assignPageToRendered(newPage: Page) {
 		this.pdfViewerService.setPageHeight(viewport.height);
 	}
 
-	const container = this.pdfContainer.nativeElement;
+	
 	let { canvas, textBoxLayer, textLayer, pageContainer, canvasContainer } = this.createPageContainers(pageNumber, renderdummy, scale)
 
 	// scale margin top
@@ -406,7 +410,7 @@ assignPageToRendered(newPage: Page) {
 		// recreate all objects on the page
 		this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, textBoxLayer)
 
-		existingPageContainer.replaceChild(textBoxLayer, textOld!)
+		// existingPageContainer.replaceChild(textBoxLayer, textOld!)
 		existingPageContainer.replaceChild(canvasContainer, CanvasOld!)
 
 		if (!renderdummy) {
@@ -427,6 +431,8 @@ assignPageToRendered(newPage: Page) {
 		pageContainer.style.marginTop = `${baseMarginScale}px`;
 		pageContainer.style.width = `${viewport.width}px`;
 		pageContainer.style.height = `${viewport.height}px`;
+
+
 
 		if (pageNumber == this.pdfViewerService.totalPages)
 			pageContainer.style.marginBottom = "128px";
@@ -535,10 +541,13 @@ trackmouse(event: MouseEvent) {
 
 		const zoomIntensity = 0.1; // smaller = slower acceleration
   		const zoomFactor = Math.pow(1+delta, -event.deltaY* zoomIntensity * direction);
-		const newScale = oldScale * zoomFactor
+		let newScale = oldScale * zoomFactor
 
-		if (newScale > this.maxScale || newScale < this.minScale)
-			return;
+		if (newScale > this.maxScale) 
+			newScale = this.maxScale;
+			
+		if (newScale < this.minScale)
+			newScale = this.minScale;
 
 
 		this.scale = newScale
@@ -558,8 +567,6 @@ trackmouse(event: MouseEvent) {
 				y: event.clientY - rect.top
 			};
 
-			this.translateY += (pageNumber - 1) * this.pdfViewerService.pageHeight
-			
 			const mousePointTo = {
 				x: (pointer.x - this.translateX) / oldScale,
 				y: (pointer.y - this.translateY) / oldScale
