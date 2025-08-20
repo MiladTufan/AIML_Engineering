@@ -34,6 +34,7 @@ export class PdfViewerComponent {
 	private currentPageNumber: number = 1;
 	private devicePixelRatio = window.devicePixelRatio || 1;
 	private scale = 1.0 * this.devicePixelRatio;
+	private oldScale = this.scale
 	private pageNumberSub!: Subscription;
 	private alreadyRanObserver = false;
 	private renderQueue = new Set<number>();
@@ -409,8 +410,8 @@ export class PdfViewerComponent {
 			const rect2 = canvasContainer.getBoundingClientRect();
 			const withoutScaleTransform = CanvasOld!.style.transform.replace(/scale\([^)]*\)/, '').trim();
 			resetScaleTransform = `${withoutScaleTransform} scale(1)`
-			canvasContainer.style.transformOrigin = `0px 0px`;
-			canvasContainer.style.transform = CanvasOld!.style.transform
+			// canvasContainer.style.transformOrigin = `0px 0px`;
+
 
 			// canvasContainer.style.position = 'absolute'; // required for left/top
 			// canvasContainer.style.left = rect.left + 'px';
@@ -424,7 +425,20 @@ export class PdfViewerComponent {
 
 			// existingPageContainer.replaceChild(textBoxLayer, textOld!)
 			existingPageContainer.replaceChild(canvasContainer, CanvasOld!)
-			const rect3 = canvasContainer.getBoundingClientRect();
+			requestAnimationFrame(() => {
+				const renderedPage = this.pdfViewerService.allRenderedPages.find(p => p.pageNum === pageNumber)
+				if (renderedPage) {
+					const pointerPDF = {
+						x: (this.mouseX - renderedPage.translateX) / this.oldScale,
+						y: (this.mouseY - renderedPage.translateY) / this.oldScale
+					};
+					const rect = existingPageContainer.getBoundingClientRect();
+					renderedPage.translateX = this.mouseX - pointerPDF.x * this.scale;
+					renderedPage.translateY = this.mouseY - pointerPDF.y * this.scale;
+					canvasContainer.style.transform = `translate(${renderedPage.translateX}px, ${renderedPage.translateY}px)`;
+				}
+			});
+
 
 			if (!renderdummy) {
 				existingPageContainer.className = "mt-1 sm:mt-3 md:mt-4 mx-auto relative block w-full max-w-fit sm:max-w-[70%] md:max-w-[90%]";
@@ -531,17 +545,6 @@ export class PdfViewerComponent {
 	trackmouse(event: MouseEvent) {
 		this.mouseX = event.clientX;
 		this.mouseY = event.clientY;
-
-		// this.follower.nativeElement.animate([
-		// 	{ left: `${this.follower.nativeElement.offsetLeft}px`, top: `${this.follower.nativeElement.offsetTop}px` },
-		// 	{ left: `${this.mouseX}px`, top: `${this.mouseY}px` }
-		// ], {
-		// 	duration: 1000,
-		// 	fill: 'forwards'
-		// })
-
-		// this.follower.nativeElement.style.left = `${this.mouseX}px`;
-		// this.follower.nativeElement.style.top = `${this.mouseY}px`;
 	}
 
 	//=======================================================================================================================
@@ -553,8 +556,9 @@ export class PdfViewerComponent {
 			const delta = event.deltaY < 0 ? 0.1 : -0.1;
 			const direction = event.deltaY < 0 ? 1 : -1
 			const oldScale = this.scale;
+			this.oldScale = oldScale
 
-			const zoomIntensity = 0.01; // smaller = slower acceleration
+			const zoomIntensity = 0.1; // smaller = slower acceleration
 			const zoomFactor = Math.pow(1 + delta, -event.deltaY * zoomIntensity * direction);
 			let newScale = oldScale * zoomFactor
 
@@ -566,10 +570,6 @@ export class PdfViewerComponent {
 
 
 			this.scale = newScale
-			console.log(newScale)
-			console.log(this.pdfViewerService.visiblePages.getValue())
-
-
 			this.pdfViewerService.currentScale = this.scale;
 
 			for (const p of this.pdfViewerService.visiblePages.getValue()) {
