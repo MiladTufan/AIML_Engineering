@@ -362,12 +362,28 @@ export class PdfViewerComponent {
 		const renderedPage = this.pdfViewerService.allRenderedPages.find(p => p.pageNum === newPage.pageNum)
 		if (renderedPage) {
 			const idx = this.pdfViewerService.allRenderedPages.indexOf(renderedPage);
-			newPage.translateX = renderedPage.translateX
-			newPage.translateY = renderedPage.translateY
 			this.pdfViewerService.allRenderedPages.splice(idx, 1, newPage);
 		}
 		else
 			this.pdfViewerService.allRenderedPages.push(newPage)
+	}
+
+	calculateZoomTranslation(rect: DOMRect, translateX: number = 0, translateY: number = 0,
+		oldScale: number = this.oldScale, newScale: number = this.scale) {
+		const pointer = {
+			x: this.mouseX - rect.left,
+			y: this.mouseY - rect.top
+		};
+
+		const mousePointTo = {
+			x: (pointer.x - translateX) / oldScale,
+			y: (pointer.y - translateY) / oldScale
+		};
+
+		translateX = pointer.x - mousePointTo.x * newScale;
+		translateY = pointer.y - mousePointTo.y * newScale;
+
+		return { tX: translateX, tY: translateY }
 	}
 
 	//=======================================================================================================================
@@ -406,39 +422,11 @@ export class PdfViewerComponent {
 		if (existingPageContainer != null) {
 			const CanvasOld = existingPageContainer.querySelector("#" + canvasContainer.id) as HTMLDivElement
 
-			const rect = CanvasOld!.getBoundingClientRect();
-			const rect2 = canvasContainer.getBoundingClientRect();
-			const withoutScaleTransform = CanvasOld!.style.transform.replace(/scale\([^)]*\)/, '').trim();
-			resetScaleTransform = `${withoutScaleTransform} scale(1)`
-			// canvasContainer.style.transformOrigin = `0px 0px`;
-
-
-			// canvasContainer.style.position = 'absolute'; // required for left/top
-			// canvasContainer.style.left = rect.left + 'px';
-			// canvasContainer.style.top = rect.top + 'px';
-			// canvasContainer.style.width = rect.width + 'px';
-			// canvasContainer.style.height = rect.height + 'px';
-
-
 			// recreate all objects on the page
 			this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, textBoxLayer)
 
-			// existingPageContainer.replaceChild(textBoxLayer, textOld!)
+			// // existingPageContainer.replaceChild(textBoxLayer, textOld!)
 			existingPageContainer.replaceChild(canvasContainer, CanvasOld!)
-			requestAnimationFrame(() => {
-				const renderedPage = this.pdfViewerService.allRenderedPages.find(p => p.pageNum === pageNumber)
-				if (renderedPage) {
-					const pointerPDF = {
-						x: (this.mouseX - renderedPage.translateX) / this.oldScale,
-						y: (this.mouseY - renderedPage.translateY) / this.oldScale
-					};
-					const rect = existingPageContainer.getBoundingClientRect();
-					renderedPage.translateX = this.mouseX - pointerPDF.x * this.scale;
-					renderedPage.translateY = this.mouseY - pointerPDF.y * this.scale;
-					canvasContainer.style.transform = `translate(${renderedPage.translateX}px, ${renderedPage.translateY}px)`;
-				}
-			});
-
 
 			if (!renderdummy) {
 				existingPageContainer.className = "mt-1 sm:mt-3 md:mt-4 mx-auto relative block w-full max-w-fit sm:max-w-[70%] md:max-w-[90%]";
@@ -474,8 +462,14 @@ export class PdfViewerComponent {
 
 			this.pagesRendered++;
 			await page.render(renderContext).promise;
-			canvasContainer.style.transform = resetScaleTransform
+			const rect = canvasContainer.getBoundingClientRect();
 			const newPage = new Page(pageNumber, viewport, boxesForPage, viewport.height, viewport.width, 0, pageContainer, 0, 0, scale)
+			const ret = this.calculateZoomTranslation(rect, newPage.translateX, newPage.translateY, this.oldScale, this.scale)
+			newPage.translateX = ret.tX
+			newPage.translateY = ret.tY
+			canvasContainer.style.transition = 'transform 0.25s ease-in-out';
+			canvasContainer.style.transform = `translate(${ret.tX}px, ${ret.tY}px)`;
+
 			this.assignPageToRendered(newPage)
 		}
 	}
@@ -579,24 +573,13 @@ export class PdfViewerComponent {
 				const page = this.pdfViewerService.getPageWithNumber(p)
 				if (canvas && page) {
 					const rect = ((event.currentTarget as HTMLDivElement).querySelector(`#pageContainer-${p}`) as HTMLDivElement).getBoundingClientRect();
-
-					const pointer = {
-						x: event.clientX - rect.left,
-						y: event.clientY - rect.top
-					};
-
-					const mousePointTo = {
-						x: (pointer.x - page.translateX) / oldScale,
-						y: (pointer.y - page.translateY) / oldScale
-					};
-
-					page.translateX = pointer.x - mousePointTo.x * newScale;
-					page.translateY = pointer.y - mousePointTo.y * newScale;
-
+					const ret = this.calculateZoomTranslation(rect, page.translateX, page.translateY, oldScale, newScale)
+					page.translateX = ret.tX
+					page.translateY = ret.tY
 
 					canvas.style.transformOrigin = `0px 0px`;
 					canvas.style.transition = 'transform 0.25s ease-in-out';
-					canvas.style.transform = `translate(${page.translateX}px, ${page.translateY}px) scale(${this.scale})`;
+					canvas.style.transform = `translate(${ret.tX}px, ${ret.tY}px) scale(${this.scale})`;
 				}
 			}
 
