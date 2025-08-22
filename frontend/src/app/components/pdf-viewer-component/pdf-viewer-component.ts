@@ -14,6 +14,7 @@ import { TextBox } from '../../models/TextBox';
 import { PageInfoComponent } from '../page-info-component/page-info-component';
 import { SessionService } from '../../services/communication/session-service';
 import { MiniPage } from '../../models/globalEdit';
+import { CommonModule } from '@angular/common';
 (pdfjsLib as any).GlobalWorkerOptions.workerSrc = "assets/pdf.worker.min.mjs";
 
 
@@ -22,7 +23,7 @@ import { MiniPage } from '../../models/globalEdit';
 //=======================================================================================================================
 @Component({
 	selector: 'app-pdf-viewer-component',
-	imports: [],
+	imports: [CommonModule],
 	templateUrl: './pdf-viewer-component.html',
 	styleUrl: './pdf-viewer-component.css'
 })
@@ -45,18 +46,14 @@ export class PdfViewerComponent {
 	private renderTrigger = new Subject<number>();
 
 	private pagesRendered = 0;
-
-	private offsetX = 0;
-	private offsetY = 0;
 	public mouseX = 1;
 	public mouseY = 1;
+
 
 	//=================================================== Public variables ==================================================
 	public totalPages: number = 0;
 	public pdfSrc: string | Uint8Array = ""
 	public renderMode = 0 // 0 = render all pages, 1 = render 1 page
-	public translateX = 0;
-	public translateY = 0;
 
 	//==================================================== Children =========================================================
 	@ViewChild("pdfContainer", { static: true }) pdfContainer!: ElementRef<HTMLDivElement>;
@@ -209,7 +206,7 @@ export class PdfViewerComponent {
 			if (this.renderMode == 0) {
 				for (let pageNum = 1; pageNum <= this.totalPages; pageNum++) {
 					this.renderPage(pageNum, true, this.scale).then(() => {
-						if (this.pdfContainer.nativeElement.children.length === this.totalPages || true ) {
+						if (this.pdfContainer.nativeElement.children.length === this.totalPages || true) {
 							if (!this.alreadyRanObserver) this.createObserver();
 						}
 					});
@@ -368,11 +365,11 @@ export class PdfViewerComponent {
 			this.pdfViewerService.allRenderedPages.push(newPage)
 	}
 
-	calculateZoomTranslation(rect: DOMRect, translateX: number = 0, translateY: number = 0,
-		oldScale: number = this.oldScale, newScale: number = this.scale) {
+	calculateZoomTranslationCss(rect: DOMRect, translateX: number = 0, translateY: number = 0,
+		oldScale: number = this.oldScale, newScale: number = this.scale, p: number = 1) {
 		const pointer = {
-			x: this.mouseX - rect.left,
-			y: this.mouseY - rect.top
+			x: (this.mouseX - rect.left),
+			y: (this.mouseY - rect.top)
 		};
 
 		const mousePointTo = {
@@ -380,14 +377,40 @@ export class PdfViewerComponent {
 			y: (pointer.y - translateY) / oldScale
 		};
 
-		translateX = pointer.x - mousePointTo.x * newScale;
-		translateY = pointer.y - mousePointTo.y * newScale;
+		translateX = pointer.x - (mousePointTo.x * newScale);
+		translateY = pointer.y - (mousePointTo.y * newScale);
 
-		this.translateX = translateX
-		this.translateY = translateY
 		return { tX: translateX, tY: translateY }
 	}
 
+	calculateZoomTranslationRender(rect: DOMRect, w: number, h: number, translateX: number = 0, translateY: number = 0,
+		oldScale: number = this.oldScale, newScale: number = this.scale) {
+		const pointer = {
+			x: (this.mouseX - rect.left) * (w / rect.width),
+			y: (this.mouseY - rect.top) * (h / rect.height)
+		};
+
+		const mousePointTo = {
+			x: (pointer.x - translateX) / oldScale,
+			y: (pointer.y - translateY) / oldScale
+		};
+
+		translateX = pointer.x - (mousePointTo.x * newScale);
+		translateY = pointer.y - (mousePointTo.y * newScale);
+
+		return { tX: translateX, tY: translateY }
+	}
+
+	getScaledMargin(scale: number, pageNumber: number) {
+		let baseMarginScale = 16
+		if (scale > 1.0 && pageNumber > 1) baseMarginScale = this.pdfViewerService.getScaledMargin(scale);
+		return baseMarginScale;
+	}
+
+	recreateBoxes()
+	{
+
+	}
 	//=======================================================================================================================
 	// This function renders an entire page and instantiates all objects on that page.
 	//=======================================================================================================================
@@ -395,10 +418,7 @@ export class PdfViewerComponent {
 		let page: any;
 		let viewport: any;
 		const container = this.pdfContainer.nativeElement;
-
-		if (pageNumber === 1) {
-			renderdummy = false;
-		}
+		if (pageNumber === 1) renderdummy = false;
 
 		console.log("rendering page: ", pageNumber)
 		page = await this.pdfDocument.getPage(pageNumber);
@@ -411,26 +431,19 @@ export class PdfViewerComponent {
 
 
 		let { canvas, textBoxLayer, textLayer, pageContainer, canvasContainer } = this.createPageContainers(pageNumber, renderdummy, scale)
-
-		// scale margin top
-		let baseMarginScale = 16
-		if (scale > 1.0 && pageNumber > 1) baseMarginScale = this.pdfViewerService.getScaledMargin(scale)
+		const baseMarginScale = this.getScaledMargin(scale, pageNumber);
 
 		const boxesForPage = this.textEditService.textboxes.filter(b => b.pageId == pageNumber)
 		this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, textBoxLayer)
 
+
 		const existingPageContainer = container.querySelector("#" + pageContainer.id)
-		let resetScaleTransform = ""
+		let ret;
 		if (existingPageContainer != null) {
-			const CanvasOld = existingPageContainer.querySelector("#" + canvasContainer.id) as HTMLDivElement
-			canvasContainer.style.transform = CanvasOld!.style.transform;
-			const withoutScaleTransform = CanvasOld!.style.transform.replace(/scale\([^)]*\)/, '').trim();
-			// resetScaleTransform = `${withoutScaleTransform} scale(1)`
-			// canvasContainer.style.transform = withoutScaleTransform
-			// recreate all objects on the page
+			let CanvasOld = existingPageContainer.querySelector("#" + canvasContainer.id) as HTMLDivElement
 			this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, textBoxLayer)
 
-			// // existingPageContainer.replaceChild(textBoxLayer, textOld!)
+			
 			existingPageContainer.replaceChild(canvasContainer, CanvasOld!)
 
 			if (!renderdummy) {
@@ -452,6 +465,7 @@ export class PdfViewerComponent {
 			pageContainer.style.width = `${viewport.width}px`;
 			pageContainer.style.height = `${viewport.height}px`;
 
+			
 
 
 			if (pageNumber == this.pdfViewerService.totalPages)
@@ -465,47 +479,25 @@ export class PdfViewerComponent {
 				intent: "print"
 			};
 
+
+
 			this.pagesRendered++;
 			await page.render(renderContext).promise;
-			const rect = pageContainer.getBoundingClientRect();
 			const newPage = new Page(pageNumber, viewport, boxesForPage, viewport.height, viewport.width, 0, pageContainer, 0, 0, scale)
 			const oldPage = this.pdfViewerService.getPageWithNumber(pageNumber)
+
 			if (oldPage) {
+				const rect = pageContainer.getBoundingClientRect();
+				ret = this.calculateZoomTranslationRender(rect, oldPage.translateX, oldPage.translateY, this.oldScale, this.scale)
 
-				const ret = this.calculateZoomTranslation(rect, oldPage.translateX, oldPage.translateY, this.oldScale, this.scale)
-				// const oldHeight = oldPage.height;
-				// const oldWidth = oldPage.width;
-				// const oldTranslateX = oldPage.translateX;
-				// const oldTranslateY = oldPage.translateY;
-
-				// const translateX_norm = oldTranslateX / oldWidth
-				// const translateY_norm = oldTranslateY / oldHeight
-				// const mouseX = this.mouseX - rect.left
-				// const mouseY = this.mouseY - rect.top
-
-				// const pointer = {
-				// 	x: mouseX - translateX_norm * viewport.width,
-				// 	y: mouseY - translateY_norm * viewport.height
-				// };
-
-				newPage.translateX = ret.tX
-				newPage.translateY = ret.tY
-
-
+				canvasContainer.style.transformOrigin = `0px 0px`;
 				canvasContainer.style.transition = 'transform 0.25s ease-in-out';
-				canvasContainer.style.transform = ``;
+				canvasContainer.style.transform = `translate(${ret.tX}px, ${ret.tY}px)`;
+				this.oldScale = this.scale
 			}
 
-
-
-
-
-			// const ret = this.calculateZoomTranslation(rect, newPage.translateX, newPage.translateY, this.oldScale, this.scale)
-			// newPage.translateX = ret.tX
-			// newPage.translateY = ret.tY
-			// canvasContainer.style.transition = 'transform 0.25s ease-in-out';
-			// canvasContainer.style.transform = `translate(${ret.tX}px, ${ret.tY}px)`;
-
+			newPage.translateX = ret?.tX
+			newPage.translateY = ret?.tY
 			this.assignPageToRendered(newPage)
 		}
 	}
@@ -573,8 +565,9 @@ export class PdfViewerComponent {
 	//=======================================================================================================================
 	@HostListener("document:mousemove", ["$event"])
 	trackmouse(event: MouseEvent) {
-		this.mouseX = event.clientX;
-		this.mouseY = event.clientY;
+		this.mouseX = event.pageX
+		this.mouseY = event.pageY
+
 	}
 
 	//=======================================================================================================================
@@ -609,13 +602,14 @@ export class PdfViewerComponent {
 				const page = this.pdfViewerService.getPageWithNumber(p)
 				if (canvas && page) {
 					const rect = ((event.currentTarget as HTMLDivElement).querySelector(`#pageContainer-${p}`) as HTMLDivElement).getBoundingClientRect();
-					const ret = this.calculateZoomTranslation(rect, page.translateX, page.translateY, oldScale, newScale)
+					let ret = this.calculateZoomTranslationCss(rect, page.translateX, page.translateY, oldScale, newScale, p)
 					page.translateX = ret.tX
 					page.translateY = ret.tY
 
 					canvas.style.transformOrigin = `0px 0px`;
 					canvas.style.transition = 'transform 0.25s ease-in-out';
 					canvas.style.transform = `translate(${ret.tX}px, ${ret.tY}px) scale(${this.scale})`;
+					//this.cssScale = this.scale;
 				}
 			}
 
@@ -625,6 +619,7 @@ export class PdfViewerComponent {
 
 			// this.alertService.createAlert("info", "CURRENT ZOOM",
 			// 		newScale.toString(), 5000)
+
 			this.renderTrigger.next(newScale);
 			console.log(this.renderQueue)
 		}
