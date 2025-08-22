@@ -43,8 +43,7 @@ export class PdfViewerComponent {
 	private maxScale = 10.09
 	private observer: any;
 	private renderTrigger = new Subject<number>();
-	private translateX = 0;
-	private translateY = 0;
+
 	private pagesRendered = 0;
 
 	private offsetX = 0;
@@ -56,8 +55,8 @@ export class PdfViewerComponent {
 	public totalPages: number = 0;
 	public pdfSrc: string | Uint8Array = ""
 	public renderMode = 0 // 0 = render all pages, 1 = render 1 page
-	public transformOrigin = '0px 0px';
-	public cssScale = 'scale(1)';
+	public translateX = 0;
+	public translateY = 0;
 
 	//==================================================== Children =========================================================
 	@ViewChild("pdfContainer", { static: true }) pdfContainer!: ElementRef<HTMLDivElement>;
@@ -210,10 +209,11 @@ export class PdfViewerComponent {
 			if (this.renderMode == 0) {
 				for (let pageNum = 1; pageNum <= this.totalPages; pageNum++) {
 					this.renderPage(pageNum, true, this.scale).then(() => {
-						if (this.pdfContainer.nativeElement.children.length === this.totalPages) {
+						if (this.pdfContainer.nativeElement.children.length === this.totalPages || true ) {
 							if (!this.alreadyRanObserver) this.createObserver();
 						}
 					});
+					break;
 				}
 			}
 		}
@@ -383,6 +383,8 @@ export class PdfViewerComponent {
 		translateX = pointer.x - mousePointTo.x * newScale;
 		translateY = pointer.y - mousePointTo.y * newScale;
 
+		this.translateX = translateX
+		this.translateY = translateY
 		return { tX: translateX, tY: translateY }
 	}
 
@@ -421,7 +423,10 @@ export class PdfViewerComponent {
 		let resetScaleTransform = ""
 		if (existingPageContainer != null) {
 			const CanvasOld = existingPageContainer.querySelector("#" + canvasContainer.id) as HTMLDivElement
-
+			canvasContainer.style.transform = CanvasOld!.style.transform;
+			const withoutScaleTransform = CanvasOld!.style.transform.replace(/scale\([^)]*\)/, '').trim();
+			// resetScaleTransform = `${withoutScaleTransform} scale(1)`
+			// canvasContainer.style.transform = withoutScaleTransform
 			// recreate all objects on the page
 			this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, textBoxLayer)
 
@@ -462,13 +467,44 @@ export class PdfViewerComponent {
 
 			this.pagesRendered++;
 			await page.render(renderContext).promise;
-			const rect = canvasContainer.getBoundingClientRect();
+			const rect = pageContainer.getBoundingClientRect();
 			const newPage = new Page(pageNumber, viewport, boxesForPage, viewport.height, viewport.width, 0, pageContainer, 0, 0, scale)
-			const ret = this.calculateZoomTranslation(rect, newPage.translateX, newPage.translateY, this.oldScale, this.scale)
-			newPage.translateX = ret.tX
-			newPage.translateY = ret.tY
-			canvasContainer.style.transition = 'transform 0.25s ease-in-out';
-			canvasContainer.style.transform = `translate(${ret.tX}px, ${ret.tY}px)`;
+			const oldPage = this.pdfViewerService.getPageWithNumber(pageNumber)
+			if (oldPage) {
+
+				const ret = this.calculateZoomTranslation(rect, oldPage.translateX, oldPage.translateY, this.oldScale, this.scale)
+				// const oldHeight = oldPage.height;
+				// const oldWidth = oldPage.width;
+				// const oldTranslateX = oldPage.translateX;
+				// const oldTranslateY = oldPage.translateY;
+
+				// const translateX_norm = oldTranslateX / oldWidth
+				// const translateY_norm = oldTranslateY / oldHeight
+				// const mouseX = this.mouseX - rect.left
+				// const mouseY = this.mouseY - rect.top
+
+				// const pointer = {
+				// 	x: mouseX - translateX_norm * viewport.width,
+				// 	y: mouseY - translateY_norm * viewport.height
+				// };
+
+				newPage.translateX = ret.tX
+				newPage.translateY = ret.tY
+
+
+				canvasContainer.style.transition = 'transform 0.25s ease-in-out';
+				canvasContainer.style.transform = ``;
+			}
+
+
+
+
+
+			// const ret = this.calculateZoomTranslation(rect, newPage.translateX, newPage.translateY, this.oldScale, this.scale)
+			// newPage.translateX = ret.tX
+			// newPage.translateY = ret.tY
+			// canvasContainer.style.transition = 'transform 0.25s ease-in-out';
+			// canvasContainer.style.transform = `translate(${ret.tX}px, ${ret.tY}px)`;
 
 			this.assignPageToRendered(newPage)
 		}

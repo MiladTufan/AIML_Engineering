@@ -7,6 +7,7 @@ import { SessionService } from './services/communication/session-service';
 
 @Component({
   selector: 'app-root',
+  standalone: true,
   imports: [RouterOutlet, AlertComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
