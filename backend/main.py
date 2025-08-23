@@ -8,6 +8,7 @@ import logger.logger as logger
 
 logger.logging_setup()
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup code
