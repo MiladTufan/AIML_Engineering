@@ -40,12 +40,10 @@ export class PdfViewerComponent {
 	private pageNumberSub!: Subscription;
 	private alreadyRanObserver = false;
 	private renderQueue = new Set<number>();
-	private currentScale = 1.0;
 	private minScale = 0.6
 	private maxScale = 10.09
 	private observer: any;
 	private renderTrigger = new Subject<number>();
-	private pagesRendered = 0;
 	public mouseX = 1;
 	public mouseY = 1;
 
@@ -84,7 +82,7 @@ export class PdfViewerComponent {
 	async ngOnInit() {
 		this.pdfViewerService.preventWindowZoomIn()
 		this.loadPDF();
-		this.handleScroll();
+		this.initializeScrollEvent();
 		this.subscribeToVisiblePages();
 		this.pageNumberSub = this.pdfViewerService.currentPage$.subscribe(val => {
 			this.currentPageNumber = val;
@@ -110,9 +108,9 @@ export class PdfViewerComponent {
 	}
 
 	/**
-	 * Handle scroll of user on the PDF. This functions sets the scroll listener and also implements pagecounting logic.
+	 * Handle scroll of user on the PDF. This functions sets the scroll listener and also implements page counting logic.
 	 */
-	handleScroll() {
+	initializeScrollEvent() {
 		if (this.pdfContainer) {
 			this.pdfViewerService.setPDFScrollContainer(this.pdfContainer);
 			this.pdfViewerService.dynamicContainer = this.dynamicContainer;
@@ -131,7 +129,6 @@ export class PdfViewerComponent {
 	*/
 	subscribeToVisiblePages() {
 		this.pdfViewerService.visiblePages.subscribe(set => {
-
 			for (const pageNum of set) {
 				const page = this.pdfViewerService.allRenderedPages.find(p => p.pageNum === pageNum)
 				if (page?.currentScale != this.scale) {
@@ -196,7 +193,6 @@ export class PdfViewerComponent {
 		const pdfjs = pdfjsLib as any;
 		const reader = new FileReader()
 		reader.readAsArrayBuffer(new Blob([file]))
-		console.log(this.textEditService.textboxes.length)
 
 		reader.onload = async () => {
 			const arrayBuffer = new Uint8Array(reader.result as ArrayBuffer);
@@ -256,57 +252,7 @@ export class PdfViewerComponent {
 		}
 	}
 
-	/**
-	 * This function creates all the necessary containers to render a page. That includes the pageContainer, the canvas 
-	 * for the actual page and any layers on top of the page e.g. textBoxLayer (where all textboxes reside).
-	 * @param pageNumber => the current number of the page to create the containers for
-	 * @param renderdummy => render a full page or a dummy one?
-	 * @param scale => the current scale of the PDF.
-	 * @returns 
-	 */
-	createPageContainers(pageNumber: number, renderdummy: Boolean, scale: number) {
-		const canvas = document.createElement("canvas");
-		const textBoxLayer = document.createElement("div");
-		let textLayer = document.createElement("div");
-		let pageContainer = document.createElement("div");
-		const canvasContainer = document.createElement("div");
 
-		const pageInfo = this.pdfViewerService.dynamicContainer?.createComponent(PageInfoComponent);
-		pageInfo!.instance.pageNumber = pageNumber;
-		pageInfo!.instance.width = 60 * scale;
-		pageInfo!.instance.fontSize = 32 * scale;
-		pageInfo!.instance.borderRadius = 9 * scale;
-
-		canvas.id = `page-${pageNumber}`;
-		canvasContainer.id = `canvasContainer-${pageNumber}`;
-
-		canvasContainer.style.display = "flex";
-		canvasContainer.style.gap = "8px";
-
-		pageContainer.id = `pageContainer-${pageNumber}`;
-		textBoxLayer.className = "text-box-layer"
-
-		if (!renderdummy) {
-			pageContainer.className = "mt-1 sm:mt-3 md:mt-4 mx-auto relative block w-full max-w-fit sm:max-w-[70%] md:max-w-[90%]";
-			if (this.scale == 1.0)
-				canvas.className = `page-${pageNumber} block border border-gray-300 shadow-lg -mb-[305px]`;
-			else
-				canvas.className = `page-${pageNumber} block border border-gray-300 shadow-lg`;
-		}
-		else {
-			pageContainer.className = `mt-1 sm:mt-3 md:mt-4 mx-auto relative block w-full max-w-fit sm:max-w-[70%] md:max-w-[90%]`;
-			canvas.className = `page-${pageNumber} block border border-gray-300 shadow-lg mx-auto`;
-		}
-
-		canvasContainer.appendChild(textBoxLayer)
-		canvasContainer.appendChild(canvas)
-		canvasContainer.appendChild(pageInfo!.location.nativeElement)
-
-		pageContainer.appendChild(canvasContainer)
-		// pageContainer.addEventListener("wheel", (event: WheelEvent) => this.onWheel(event, pageNumber))
-
-		return { canvas: canvas, textBoxLayer: textBoxLayer, textLayer: textLayer, pageContainer: pageContainer, canvasContainer: canvasContainer }
-	}
 
 	/**
 	 * This function recreates all the textboxes according to the scale
@@ -409,25 +355,34 @@ export class PdfViewerComponent {
 		return { tX: translateX, tY: translateY }
 	}
 
-	/**
-	 * Get the Margin top between the pages on PDF page rerender.
-	 * @param scale => the current scale
-	 * @param pageNumber => the current page.
-	 * @returns 
-	 */
-	getScaledMargin(scale: number, pageNumber: number) {
-		let baseMarginScale = 16
-		if (scale > 1.0 && pageNumber > 1) baseMarginScale = this.pdfViewerService.getScaledMargin(scale);
-		return baseMarginScale;
+
+	replaceChildrenOfPageContainer(container: HTMLDivElement, renderdummy: Boolean, pageNumber: number, scale: number) {
+
+		let { canvas, textBoxLayer, textLayer, pageContainer, canvasContainer } = this.pdfViewerService.createPageContainers(pageNumber, renderdummy, scale)
+		const baseMarginScale = this.pdfViewerService.getScaledMargin(scale, pageNumber);
+
+		const boxesForPage = this.textEditService.textboxes.filter(b => b.pageId == pageNumber)
+		this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, textBoxLayer)
+		const existingPageContainer = container.querySelector("#" + pageContainer.id)
+		let ret;
+		if (existingPageContainer != null) {
+			let CanvasOld = existingPageContainer.querySelector("#" + canvasContainer.id) as HTMLDivElement
+			this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, textBoxLayer)
+
+
+			existingPageContainer.replaceChild(canvasContainer, CanvasOld!)
+
+			if (!renderdummy) {
+				existingPageContainer.className = "mt-1 sm:mt-3 md:mt-4 mx-auto relative block w-full max-w-fit sm:max-w-[70%] md:max-w-[90%]";
+			}
+
+			pageContainer = existingPageContainer as HTMLDivElement
+		}
+		else {
+			container.appendChild(pageContainer);
+		}
+		return { canvas, textBoxLayer, textLayer, pageContainer, canvasContainer, baseMarginScale, boxesForPage } 
 	}
-
-	/**
-	 * 
-	 */
-	recreateBoxes() {
-
-	}
-
 	/**
 	 * Main render function. This function is the entry point for the entire rendering logic.
 	 * It handles all logic from creating the pdf canvas to recreating all objects on the PDF page itself.
@@ -450,32 +405,8 @@ export class PdfViewerComponent {
 			this.pdfViewerService.setPageHeight(viewport.height);
 		}
 
-
-		let { canvas, textBoxLayer, textLayer, pageContainer, canvasContainer } = this.createPageContainers(pageNumber, renderdummy, scale)
-		const baseMarginScale = this.getScaledMargin(scale, pageNumber);
-
-		const boxesForPage = this.textEditService.textboxes.filter(b => b.pageId == pageNumber)
-		this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, textBoxLayer)
-
-
-		const existingPageContainer = container.querySelector("#" + pageContainer.id)
-		let ret;
-		if (existingPageContainer != null) {
-			let CanvasOld = existingPageContainer.querySelector("#" + canvasContainer.id) as HTMLDivElement
-			this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, textBoxLayer)
-
-
-			existingPageContainer.replaceChild(canvasContainer, CanvasOld!)
-
-			if (!renderdummy) {
-				existingPageContainer.className = "mt-1 sm:mt-3 md:mt-4 mx-auto relative block w-full max-w-fit sm:max-w-[70%] md:max-w-[90%]";
-			}
-
-			pageContainer = existingPageContainer as HTMLDivElement
-		}
-		else {
-			container.appendChild(pageContainer);
-		}
+		let { canvas, textBoxLayer, textLayer, pageContainer, canvasContainer, baseMarginScale, boxesForPage } = 
+										this.replaceChildrenOfPageContainer(container, renderdummy, pageNumber, scale)
 
 		if (!renderdummy) {
 			const context = canvas.getContext("2d")!;
@@ -497,25 +428,8 @@ export class PdfViewerComponent {
 				intent: "print"
 			};
 
-
-
-			this.pagesRendered++;
 			await page.render(renderContext).promise;
 			const newPage = new Page(pageNumber, viewport, boxesForPage, viewport.height, viewport.width, 0, pageContainer, 0, 0, scale)
-			const oldPage = this.pdfViewerService.getPageWithNumber(pageNumber)
-
-			if (oldPage) {
-				const rect = pageContainer.getBoundingClientRect();
-				ret = this.calculateZoomTranslationRender(rect, oldPage.translateX, oldPage.translateY, this.oldScale, this.scale)
-
-				canvasContainer.style.transformOrigin = `0px 0px`;
-				canvasContainer.style.transition = 'transform 0.25s ease-in-out';
-				canvasContainer.style.transform = `translate(${ret.tX}px, ${ret.tY}px)`;
-				this.oldScale = this.scale
-			}
-
-			newPage.translateX = ret?.tX
-			newPage.translateY = ret?.tY
 			this.assignPageToRendered(newPage)
 		}
 	}

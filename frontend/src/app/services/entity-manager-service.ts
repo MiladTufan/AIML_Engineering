@@ -92,9 +92,10 @@ export class EntityManagerService {
             const ret = this.textEditService.createTextBox(textbox.BoxDims, textbox.textStyleEditorState,
                 adjustedPageNum, textbox.BoxDims.currentScale,
                 this.pdfViewerService.currentScrollTop)
-
+            
             page?.appendTextBox(textbox)
             parentContainer.appendChild(ret.comp.location.nativeElement)
+            ret.comp.instance.positionChanged.subscribe((event: any) => this.executeMove(ret.box, event, page.pageNum))
         }
     }
 
