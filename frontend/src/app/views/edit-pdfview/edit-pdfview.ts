@@ -10,6 +10,7 @@ import { TextStyleEditor } from '../../models/TextStyleEditor';
 import { Subscription } from 'rxjs';
 import { Constants } from '../../models/constants/constants';
 import { provideHttpClient } from '@angular/common/http';
+import { EntityManagerService } from '../../services/entity-manager-service';
 
 
 
@@ -39,7 +40,7 @@ export class EditPDFView {
 	@ViewChild(ToolbarComponent) toolbar!: ToolbarComponent;
 
 	//=================================================== Constructor =======================================================
-	constructor(private fileService: PDFFileService, private renderer: Renderer2, private pdfViewService: PDFViewerService,
+	constructor(private pdfViewService: PDFViewerService, private entityManagerService: EntityManagerService,
 		private textEditService: TextEditService, private viewContainerRef: ViewContainerRef
 	) { }
 
@@ -123,8 +124,10 @@ export class EditPDFView {
 
 			// this.mouseY += (this.pdfViewService.pageHeight * (this.currentPageNumber - 1))
 			this.pdfViewService.setCodeResizeTimeout()
-			this.textEditService.createTextBox(box_dims, styleState, pageNumber, 
-								this.pdfViewService.currentScale, this.pdfViewService.currentScrollTop)
+			const ret = this.textEditService.createTextBox(box_dims, styleState, pageNumber,
+				this.pdfViewService.currentScale, this.pdfViewService.currentScrollTop)
+
+			ret.comp.instance.positionChanged.subscribe((event: any) => this.entityManagerService.executeMove(ret.box, event, pageNumber))
 		}
 	}
 }	

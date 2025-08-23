@@ -139,7 +139,7 @@ export class TextEditService implements OnDestroy {
     //=======================================================================================================================
     // This function is responsible for updating the textbox position, when the textbox is being dragged around.
     //=======================================================================================================================
-    public updateTextBoxPos(textBox: TextBox, pos: { top: number, left: number }, pageNum: number) {
+    public updateTextBoxPos1(textBox: TextBox, pos: { top: number, left: number }, pageNum: number) {
         const savedBox = this.textboxes.find(b => b.id === textBox.id);
         if (savedBox) {
             let adjustedPageNum = pageNum
@@ -211,8 +211,7 @@ export class TextEditService implements OnDestroy {
 
         editTextBoxComp.instance.box = textBox;
         editTextBoxComp.instance.textBoxEditClicked.subscribe((event: any) => this.onTextBoxEditClick(textBox.id, event))
-        editTextBoxComp.instance.positionChanged.subscribe((event: any) =>
-            this.updateTextBoxPos(textBox, event, pageNum))
+ 
 
         // TODO find a way to add this function
         // editTextBoxComp.instance.textBoxEditClicked.subscribe((event: any) => this.removeTextBox(textBox.id, event))
@@ -273,6 +272,4 @@ export class TextEditService implements OnDestroy {
         }
         this.textCompMap.set(id, editTextBoxComp)
     }
-
-
 }

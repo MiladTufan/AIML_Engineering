@@ -209,11 +209,10 @@ export class PdfViewerComponent {
 			if (this.renderMode == 0) {
 				for (let pageNum = 1; pageNum <= this.totalPages; pageNum++) {
 					this.renderPage(pageNum, true, this.scale).then(() => {
-						if (this.pdfContainer.nativeElement.children.length === this.totalPages || true ) {
+						if (this.pdfContainer.nativeElement.children.length === this.totalPages ) {
 							if (!this.alreadyRanObserver) this.createObserver();
 						}
 					});
-					break;
 				}
 			}
 		}
