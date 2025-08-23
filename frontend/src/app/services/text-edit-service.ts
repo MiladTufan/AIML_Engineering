@@ -178,7 +178,7 @@ export class TextEditService implements OnDestroy {
                 const ret = this.createTextBox(savedBox.BoxDims, savedBox.textStyleEditorState,
                     adjustedPageNum, savedBox.BoxDims.currentScale,
                     this.pdfViewerService.currentScrollTop)
-                
+
                 const pageOld = this.pdfViewerService.getPageWithNumber(pageNum)
                 pageOld?.removeTextBox(savedBox)
                 page?.appendTextBox(savedBox)
@@ -211,7 +211,7 @@ export class TextEditService implements OnDestroy {
 
         editTextBoxComp.instance.box = textBox;
         editTextBoxComp.instance.textBoxEditClicked.subscribe((event: any) => this.onTextBoxEditClick(textBox.id, event))
- 
+
 
         // TODO find a way to add this function
         // editTextBoxComp.instance.textBoxEditClicked.subscribe((event: any) => this.removeTextBox(textBox.id, event))
@@ -219,57 +219,65 @@ export class TextEditService implements OnDestroy {
         return editTextBoxComp
     }
 
+    private getNextId<T extends { id: number }>(list: T[]): number {
+    if (list.length === 0) {
+        return 1;
+    }
+    return Math.max(...list.map(item => item.id)) + 1;
+}
+
     //=======================================================================================================================
     // Helper function to create the actual textbox.
     // @param => Box dims = top, left, width, height
     //=======================================================================================================================
     public createTextBox(box_dims: BoxDimensions, styleState: TextStyleEditor, pageNum: number, scale: number,
-        scrollTop: number, rerender: Boolean = false, id: number = this.textboxes.length + 1) {
-        // this.mouseY += (pageHeight * (this.pageNum - 1))
+    scrollTop: number, rerender: Boolean = false, id: number = this.textboxes.length + 1) {
+    // this.mouseY += (pageHeight * (this.pageNum - 1))
+    
+    id = this.getNextId(this.textboxes)
+    const newTextBox = new TextBox(id, pageNum, box_dims, "Text", styleState)
 
-        const newTextBox = new TextBox(id, pageNum, box_dims, "Text", styleState)
+    const page = this.pdfViewerService.getPageWithNumber(pageNum)
+    const oldBox: any = this.textboxes.find(b => b.id === newTextBox.id)
+    if (oldBox) {
+        const idx = this.textboxes.indexOf(oldBox);
+        newTextBox.baseTop = oldBox.baseTop;
+        newTextBox.baseLeft = oldBox.baseLeft;
+        newTextBox.baseHeight = oldBox.baseHeight;
+        newTextBox.baseWidth = oldBox.baseWidth;
+        this.textboxes.splice(idx, 1, newTextBox);
+        page?.replaceTextBox(newTextBox, idx)
+    }
 
-        const page = this.pdfViewerService.getPageWithNumber(pageNum)
-        const oldBox: any = this.textboxes.find(b => b.id === newTextBox.id)
-        if (oldBox) {
-            const idx = this.textboxes.indexOf(oldBox);
-            newTextBox.baseTop = oldBox.baseTop;
-            newTextBox.baseLeft = oldBox.baseLeft;
-            newTextBox.baseHeight = oldBox.baseHeight;
-            newTextBox.baseWidth = oldBox.baseWidth;
-            this.textboxes.splice(idx, 1, newTextBox);
-            page?.replaceTextBox(newTextBox, idx)
-        }
+    if (!rerender) {
+        this.textboxes.push(newTextBox);
+        newTextBox.baseTop = box_dims.top;
+        newTextBox.baseLeft = box_dims.left;
+        newTextBox.baseHeight = box_dims.height;
+        newTextBox.baseWidth = box_dims.width;
 
-        if (!rerender) {
-            this.textboxes.push(newTextBox);
-            newTextBox.baseTop = box_dims.top;
-            newTextBox.baseLeft = box_dims.left;
-            newTextBox.baseHeight = box_dims.height;
-            newTextBox.baseWidth = box_dims.width;
+        page?.appendTextBox(newTextBox)
+    }
 
-            page?.appendTextBox(newTextBox)
-        }
+    let editTextBoxComp = this.pdfViewerService.dynamicContainer!.createComponent(CustomTextEditBox)
+    editTextBoxComp = this.createTextBoxContainer(editTextBoxComp, newTextBox, pageNum, scale, scrollTop);
+    this.setComprefSafely(newTextBox.id, editTextBoxComp)
 
-        let editTextBoxComp = this.pdfViewerService.dynamicContainer!.createComponent(CustomTextEditBox)
-        editTextBoxComp = this.createTextBoxContainer(editTextBoxComp, newTextBox, pageNum, scale, scrollTop);
-        this.setComprefSafely(newTextBox.id, editTextBoxComp)
-
-        if (!rerender) {
-            const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
-            text_layer?.appendChild(editTextBoxComp.location.nativeElement)
-        }
-
-
-        return { comp: editTextBoxComp, box: newTextBox }
+    if (!rerender) {
+        const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
+        text_layer?.appendChild(editTextBoxComp.location.nativeElement)
     }
 
 
-    setComprefSafely(id: number, editTextBoxComp: ComponentRef<CustomTextEditBox>) {
-        if (this.textCompMap.has(id)) {
-            const oldRef = this.textCompMap.get(id);
-            oldRef?.destroy(); // cleanup Angular component instance
-        }
-        this.textCompMap.set(id, editTextBoxComp)
+    return { comp: editTextBoxComp, box: newTextBox }
+}
+
+
+setComprefSafely(id: number, editTextBoxComp: ComponentRef<CustomTextEditBox>) {
+    if (this.textCompMap.has(id)) {
+        const oldRef = this.textCompMap.get(id);
+        oldRef?.destroy(); // cleanup Angular component instance
     }
+    this.textCompMap.set(id, editTextBoxComp)
+}
 }

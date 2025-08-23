@@ -110,6 +110,7 @@ export class CustomTextEditBox {
 	@HostListener('document:click', ['$event'])
 	onDocumentClick(event: MouseEvent) {
 		try {
+			if (this.editableDiv == null) return;
 			const clickedInsideTextBox = this.editableDiv.nativeElement.contains(event.target);
 			const eventTarget = (event.target as HTMLElement)
 
