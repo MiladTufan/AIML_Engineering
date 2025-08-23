@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -31,9 +31,11 @@ export class DropDownMenuComponent {
         { name: 'Lucida Console', value: '"Lucida Console", monospace' }
     ];
 
+    @ViewChild("headerObj", { static: true }) headerObj!: ElementRef<HTMLInputElement>;
     //==================================================== Inputs =========================================================
     @Input() dropDownItems: string[] = []
     @Input() isDropDownOpen: Boolean = false;
+    @Input() currentItem: string = "";
 
     // width and height of each drop down item
     @Input() width: number = 0;
@@ -41,13 +43,24 @@ export class DropDownMenuComponent {
 
     //==================================================== Output =========================================================
     @Output() selectedItem = new EventEmitter<string>();
-
-
-
+    @Output() selectedItemInput = new EventEmitter<string>();
 
 
     ItemClicked(item: string) {
         this.selectedItem.emit(item)
+        if (this.headerObj) {
+            this.headerObj.nativeElement.textContent = item;
+            this.currentItem = item
+        }
+    }
+
+    selectItemInput(item: string)
+    {
+        this.selectedItemInput.emit(item)
+        if (this.headerObj) {
+            this.headerObj.nativeElement.textContent = item;
+            this.currentItem = item
+        }
     }
 
     fontClass(fontName: string) {

@@ -1,21 +1,37 @@
+
+<div>
+    <div class="flex rounded-md justify-center items-center" [style.width.px]="width-20" [style.height.px]="height">
+        <!-- <input type="text" class="ml-1 resize-none cursor-text outline-none  overflow-hidden leading-normal" 
+                                    [(ngModel)]="currentItem" (ngModelChange)="ItemClicked($event)" #headerObj/> -->
+
+        <input type="text"  [style.font-family]="fontClass(currentItem)" [style.width.px]="width-60" class="focus:outline-none border-none flex  items-center font-bold text-black" #headerObj
+                [(ngModel)]="currentItem" (ngModelChange)="selectItemInput($event)" (click)="ItemClicked(currentItem)" >
+        <svg  (click)="ItemClicked(currentItem)" class="h-4 w-4 flex" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+							stroke="black" stroke-width="2">
+			<path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+		</svg>
+
+    </div>
+
 @if (isDropDownOpen) {
-<div class="flex mt-1 translucentStyle absolute z-10 flex-col items-center justify-center bg-white/100 backdrop-blur-lg rounded-xl">
+<div class="flex mt-1 ml-1  translucentStyle absolute z-10 flex-col justify-center items-center bg-white/100 backdrop-blur-lg rounded-xl">
     @for (item of dropDownItems; track $index) {
         @if ($index == 0) {
             <button  [style.font-family]="fontClass(item)" [style.width.px]="width" [style.height.px]="height" (click)="ItemClicked(item)"  
-                     class="dropdownBtnStyle block text-sm text-black  hover:bg-gray-200 text-center rounded-t-xl">{{item}}
+                     class="dropdownBtnStyle flex items-center p-2  text-sm text-black   hover:bg-gray-200 text-left rounded-t-xl">{{item}}
             </button>
         }
         @else if (dropDownItems.length - 1 == $index) {
             <button [style.font-family]="fontClass(item)" [style.width.px]="width" [style.height.px]="height" (click)="ItemClicked(item)"  
-                    class="dropdownBtnStyle block  text-sm text-black  hover:bg-gray-200 text-center rounded-b-xl">{{item}}
+                    class="dropdownBtnStyle flex items-center   p-2 text-sm text-black  hover:bg-gray-200 text-left rounded-b-xl">{{item}}
             </button>
         }
         @else {
             <button  [style.font-family]="fontClass(item)" [style.width.px]="width" [style.height.px]="height" (click)="ItemClicked(item)"  
-                      class="dropdownBtnStyle block  text-sm text-black  hover:bg-gray-200 text-center">{{item}}
+                      class="dropdownBtnStyle flex items-center  p-2 text-sm text-black  hover:bg-gray-200 text-left">{{item}}
             </button>
         }
     }
 </div>
 }
+</div>

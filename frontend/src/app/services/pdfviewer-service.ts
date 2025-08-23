@@ -197,9 +197,9 @@ export class PDFViewerService {
 
 		const pageInfo = this.dynamicContainer?.createComponent(PageInfoComponent);
 		pageInfo!.instance.pageNumber = pageNumber;
-		pageInfo!.instance.width = 60 * scale;
-		pageInfo!.instance.fontSize = 32 * scale;
-		pageInfo!.instance.borderRadius = 9 * scale;
+		pageInfo!.instance.width = 30 * scale;
+		pageInfo!.instance.fontSize = 16 * scale;
+		pageInfo!.instance.borderRadius = 6 * scale;
 
 		canvas.id = `page-${pageNumber}`;
 		canvasContainer.id = `canvasContainer-${pageNumber}`;

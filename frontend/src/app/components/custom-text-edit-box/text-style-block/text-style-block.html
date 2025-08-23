@@ -1,0 +1,97 @@
+<div class="fixed flex-col items-center justify-left text-center top-[2%] z-10 p-4
+            translucentStyle  left-1/2 transform -translate-x-1/2 rounded-xl" #textStyleBlock>
+    <div class="flex" #textAlignSection>
+        <img src="assets/icons/textAlignLeftBlack.svg" class="w-5" />
+        <img src="assets/icons/textAligncenter.svg" class="w-5 ml-2" />
+        <img src="assets/icons/textAlignRightBlack.svg" class="w-5 ml-2" />
+        <img src="assets/icons/link.svg" class="w-5 ml-2" />
+    </div>
+
+    <div class="flex mt-2" #textFormatSection>
+        <img src="assets/icons/boldB.svg" class="w-3.5" />
+        <img src="assets/icons/italic.svg" class="w-2 ml-2" />
+        <img src="assets/icons/underline.svg" class="w-3.5 ml-2" />
+        <img src="assets/icons/superscript.svg" class="w-4 ml-2" />
+        <img src="assets/icons/subscript.svg" class="w-4 ml-2" />
+    </div>
+
+
+
+    <div class="flex mt-2 text-gray-500 text-sm" #textStyle>
+        <span >Style</span>
+        <app-drop-down-menu-component class="ml-2"
+            (selectedItem)="SelectedStyle($event)" [width]="144" [height]="20"
+            (selectedItemInput)="SelectedStyleInput($event)"
+            [isDropDownOpen]="isStyleDropDownOpen" [currentItem]="availableStyles[0]"
+            [dropDownItems]="availableStyles"></app-drop-down-menu-component>
+
+    </div>
+
+    <div class="flex  text-gray-500 text-sm" #textStyle>
+        <span>Font</span>
+        <app-drop-down-menu-component class="ml-2" (selectedItem)="SelectedFont($event)" [width]="144" [height]="20"
+        (selectedItemInput)="SelectedFontInput($event)"
+            [isDropDownOpen]="isFontDropDownOpen" [currentItem]="availableFonts[0]"
+            [dropDownItems]="availableFonts"></app-drop-down-menu-component>
+
+    </div>
+
+    <div class="flex  text-gray-500 text-sm" #textStyle>
+        <span>Size</span>
+        <button class="ml-6">12</button>
+        <button class="ml-2">16</button>
+        <button class="ml-2">24</button>
+        <button class="ml-2">40</button>
+        <button class="ml-2">64</button>
+    </div>
+
+    <div class="flex  text-gray-500 text-sm" #textStyle>
+
+         <div class="flex-col text-left text-gray-500 text-sm" #textStyle>
+            <span >Color</span>
+            <div class="flex">
+                @for (color of firstRow; track $index) {
+                    @if ($index == 0)
+                    {
+                        <div class="color-container" [ngClass]="{ 'color-white': color === '#FFFFFF' }"
+                            [style.background-color]="color" [title]="color" (click)="onColorSelect(color)">
+                        </div>
+                    }
+                    @else {
+                        <div class="ml-1 color-container" [ngClass]="{ 'color-white': color === '#FFFFFF' }"
+                            [style.background-color]="color" [title]="color" (click)="onColorSelect(color)">
+                        </div>
+                    }
+                }
+		    </div>
+            <div class="flex mt-1">
+                @for (color of scndRow; track $index) {
+                    @if ($index == 0)
+                    {
+                        <div class="color-container" [ngClass]="{ 'color-white': color === '#FFFFFF' }"
+                            [style.background-color]="color" [title]="color" (click)="onColorSelect(color)">
+                        </div>
+                    }
+                    @else {
+                        <div class="ml-1 color-container" [ngClass]="{ 'color-white': color === '#FFFFFF' }"
+                            [style.background-color]="color" [title]="color" (click)="onColorSelect(color)">
+                        </div>
+                    }
+                }
+		    </div>
+        </div>
+
+        <div class="flex-col  text-gray-500 text-sm" #textStyle>
+            <span class="ml-12">Background</span>
+                
+        </div>
+
+
+    </div>
+
+
+
+
+
+
+</div>

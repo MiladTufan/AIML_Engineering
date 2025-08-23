@@ -369,7 +369,6 @@ export class PdfViewerComponent {
 			let CanvasOld = existingPageContainer.querySelector("#" + canvasContainer.id) as HTMLDivElement
 			this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, textBoxLayer)
 
-
 			existingPageContainer.replaceChild(canvasContainer, CanvasOld!)
 
 			if (!renderdummy) {

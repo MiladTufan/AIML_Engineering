@@ -4,11 +4,12 @@ import { AlertComponent } from './shared/alert/alert';
 import { AlertService } from './services/alert-service';
 import { PageInfoComponent } from './components/page-info-component/page-info-component';
 import { SessionService } from './services/communication/session-service';
+import { TextStyleBlock } from './components/custom-text-edit-box/text-style-block/text-style-block';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, AlertComponent],
+  imports: [RouterOutlet, AlertComponent, TextStyleBlock],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
