@@ -1,5 +1,5 @@
 import { Injectable, Type } from '@angular/core';
-import { BlockObject } from '../models/BlockObject';
+import { BlockObject, BoxDimensions } from '../models/BlockObject';
 import { PDFViewerService } from './pdfviewer-service';
 import { TextBox } from '../models/TextBox';
 import { Constants } from '../models/constants/constants';
@@ -98,6 +98,7 @@ export class EntityManagerService {
         }
     }
 
+
     /**
      * Executes the full move sequence. This function should be called to move a `BlockObject`. 
      * - Calls `getParentContainer()` to get the current parentContainer of the obj e.g. Text_Layer for TextBoxes.
@@ -107,6 +108,10 @@ export class EntityManagerService {
      * If the object has moved from one page to another the following sequence is executed.
      * - Calls `deleteOldObj()` to first all the removal logic of each `BlockObject`.
      * - Calls `assignAndCreateNewObj()` creates and assigns a new object to the new page.
+     * @param obj => the object to move.
+     * @param pos => the new position to move to.
+     * @param pageNum => the page number to place the object in.
+     * @returns => {error: string, success: Boolean}
      */
     public executeMove(obj: BlockObject, pos: { top: number, left: number }, pageNum: number) {
         let adjustedPageNum = pageNum
@@ -135,4 +140,52 @@ export class EntityManagerService {
 
         return { error: "", success: true }
     }
+
+    /**
+     * Calculate new dimensions for BlockObject based on the new scale.
+     * This function is mainly called when the PDF page is rerendered.
+     * @param obj => the object to recalculate the dimensions for.
+     * @param scale => the scale to use for calculation.
+     * @returns 
+     */
+    public rescaleObjOnRender(obj: BlockObject, scale: number) {
+        let newBaseWidth = obj.baseWidth;
+        let newBaseHeight = obj.baseHeight;
+
+        const condition = (obj.BoxDims.resizedHeight != 0 || obj.BoxDims.resizedWidth != 0)
+        if (condition) {
+            newBaseWidth = obj.BoxDims.resizedWidth;
+            newBaseHeight = obj.BoxDims.resizedHeight;
+        }
+
+
+        const finalWidth = newBaseWidth * (scale / obj.BoxDims.sizeCreationScale)
+        const finalHeight = newBaseHeight * (scale / obj.BoxDims.sizeCreationScale)
+
+        const box_dims = {
+            top: obj.baseTop * (scale / obj.BoxDims.posCreationScale),
+            left: obj.baseLeft * (scale / obj.BoxDims.posCreationScale),
+            width: finalWidth,
+            height: finalHeight,
+            resizedHeight: 0,
+            resizedWidth: 0,
+            currentScale: scale,
+            posCreationScale: obj.BoxDims.posCreationScale,
+            sizeCreationScale: obj.BoxDims.sizeCreationScale
+        }
+        return { dims: box_dims, baseWidth: newBaseWidth, baseHeight: newBaseHeight }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
