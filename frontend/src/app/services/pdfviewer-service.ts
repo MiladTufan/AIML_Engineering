@@ -1,6 +1,7 @@
 import { ElementRef, Injectable, ViewContainerRef } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { Page } from '../models/Page';
+import { PageInfoComponent } from '../components/page-info-component/page-info-component';
 
 @Injectable({
 	providedIn: 'root'
@@ -148,19 +149,6 @@ export class PDFViewerService {
 	}
 
 	//=======================================================================================================================
-	// This function calculates the margin between two pages on zoom. This is necessary since on zoom margin behaves
-	// differently.
-	//=======================================================================================================================
-	getScaledMargin(scale: number) {
-		if (scale === 1.0) return 16;
-		const fract = scale - Math.floor(scale)
-		const fractFull = (Math.floor(scale) - 1) + fract
-		const multiplier = 10
-		const marginOffset = fractFull * multiplier;
-		return 16 * (marginOffset);
-	}
-
-	//=======================================================================================================================
 	// This function sets a timeout on code resizing. During that time ResizeObserver does not register textbox resizing.
 	//=======================================================================================================================
 	setCodeResizeTimeout() {
@@ -170,5 +158,77 @@ export class PDFViewerService {
 		this.ignoreResizeTimeout = setTimeout(() => {
 			this.ignoreResizeTimeout = null;
 		}, 400);
+	}
+
+	/**
+	 * Get the Margin top between the pages on PDF page rerender. 
+	 * This function calculates the margin between two pages on zoom. This is necessary since on zoom margin behaves differently.
+	 * @param scale => the current scale
+	 * @param pageNumber => the current page.
+	 * @returns 
+	 */
+	getScaledMargin(scale: number, pageNumber: number) {
+		let baseMarginScale = 16
+		if (scale > 1.0 && pageNumber > 1) {
+			const fract = scale - Math.floor(scale)
+			const fractFull = (Math.floor(scale) - 1) + fract
+			const multiplier = 10
+			const marginOffset = fractFull * multiplier;
+			baseMarginScale =  16 * (marginOffset);
+		}
+
+		return baseMarginScale;
+	}
+
+	/**
+	 * This function creates all the necessary containers to render a page. That includes the pageContainer, the canvas 
+	 * for the actual page and any layers on top of the page e.g. textBoxLayer (where all textboxes reside).
+	 * @param pageNumber => the current number of the page to create the containers for
+	 * @param renderdummy => render a full page or a dummy one?
+	 * @param scale => the current scale of the PDF.
+	 * @returns 
+	 */
+	createPageContainers(pageNumber: number, renderdummy: Boolean, scale: number) {
+		const canvas = document.createElement("canvas");
+		const textBoxLayer = document.createElement("div");
+		let textLayer = document.createElement("div");
+		let pageContainer = document.createElement("div");
+		const canvasContainer = document.createElement("div");
+
+		const pageInfo = this.dynamicContainer?.createComponent(PageInfoComponent);
+		pageInfo!.instance.pageNumber = pageNumber;
+		pageInfo!.instance.width = 30 * scale;
+		pageInfo!.instance.fontSize = 16 * scale;
+		pageInfo!.instance.borderRadius = 6 * scale;
+
+		canvas.id = `page-${pageNumber}`;
+		canvasContainer.id = `canvasContainer-${pageNumber}`;
+
+		canvasContainer.style.display = "flex";
+		canvasContainer.style.gap = "8px";
+
+		pageContainer.id = `pageContainer-${pageNumber}`;
+		textBoxLayer.className = "text-box-layer"
+
+		if (!renderdummy) {
+			pageContainer.className = "mt-1 sm:mt-3 md:mt-4 mx-auto relative block w-full max-w-fit sm:max-w-[70%] md:max-w-[90%]";
+			if (scale == 1.0)
+				canvas.className = `page-${pageNumber} block border border-gray-300 shadow-lg -mb-[305px]`;
+			else
+				canvas.className = `page-${pageNumber} block border border-gray-300 shadow-lg`;
+		}
+		else {
+			pageContainer.className = `mt-1 sm:mt-3 md:mt-4 mx-auto relative block w-full max-w-fit sm:max-w-[70%] md:max-w-[90%]`;
+			canvas.className = `page-${pageNumber} block border border-gray-300 shadow-lg mx-auto`;
+		}
+
+		canvasContainer.appendChild(textBoxLayer)
+		canvasContainer.appendChild(canvas)
+		canvasContainer.appendChild(pageInfo!.location.nativeElement)
+
+		pageContainer.appendChild(canvasContainer)
+		// pageContainer.addEventListener("wheel", (event: WheelEvent) => this.onWheel(event, pageNumber))
+
+		return { canvas: canvas, textBoxLayer: textBoxLayer, textLayer: textLayer, pageContainer: pageContainer, canvasContainer: canvasContainer }
 	}
 }

@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, ViewChild, ViewContainerRef } from '@angular/core';
+import { Component, ElementRef, Input, ViewChild, ViewContainerRef, HostListener, Renderer2 } from '@angular/core';
 
 import * as pdfjsLib from "pdfjs-dist";
 import { PDFFileService } from '../../services/pdffile-service';
@@ -14,6 +14,8 @@ import { TextBox } from '../../models/TextBox';
 import { PageInfoComponent } from '../page-info-component/page-info-component';
 import { SessionService } from '../../services/communication/session-service';
 import { MiniPage } from '../../models/globalEdit';
+import { CommonModule } from '@angular/common';
+import { EntityManagerService } from '../../services/entity-manager-service';
 (pdfjsLib as any).GlobalWorkerOptions.workerSrc = "assets/pdf.worker.min.mjs";
 
 
@@ -22,7 +24,7 @@ import { MiniPage } from '../../models/globalEdit';
 //=======================================================================================================================
 @Component({
 	selector: 'app-pdf-viewer-component',
-	imports: [],
+	imports: [CommonModule],
 	templateUrl: './pdf-viewer-component.html',
 	styleUrl: './pdf-viewer-component.css'
 })
@@ -34,75 +36,81 @@ export class PdfViewerComponent {
 	private currentPageNumber: number = 1;
 	private devicePixelRatio = window.devicePixelRatio || 1;
 	private scale = 1.0 * this.devicePixelRatio;
+	private oldScale = this.scale
 	private pageNumberSub!: Subscription;
 	private alreadyRanObserver = false;
-	private renderQueue = new Set<number[]>();
-	private currentScale = 1.0;
+	private renderQueue = new Set<number>();
 	private minScale = 0.6
-	private maxScale = 6.09
+	private maxScale = 10.09
 	private observer: any;
 	private renderTrigger = new Subject<number>();
+	public mouseX = 1;
+	public mouseY = 1;
+
 
 	//=================================================== Public variables ==================================================
 	public totalPages: number = 0;
 	public pdfSrc: string | Uint8Array = ""
 	public renderMode = 0 // 0 = render all pages, 1 = render 1 page
-	public transformOrigin = '0px 0px';
-	public cssScale = 'scale(1)';
 
 	//==================================================== Children =========================================================
 	@ViewChild("pdfContainer", { static: true }) pdfContainer!: ElementRef<HTMLDivElement>;
+	@ViewChild("mousePointer", { static: true }) follower!: ElementRef<HTMLDivElement>;
 	@ViewChild('dynamicContainer', { read: ViewContainerRef }) dynamicContainer!: ViewContainerRef;
 
 
 	//==================================================== Constructor ======================================================
-	constructor(private fileService: PDFFileService, private sessionService: SessionService,
-		private pdfViewerService: PDFViewerService,
-		private textEditService: TextEditService, private alertService: AlertService) {
+	constructor(private fileService: PDFFileService, private sessionService: SessionService, private entityManagerService: EntityManagerService,
+		private pdfViewerService: PDFViewerService, private textEditService: TextEditService,) {
 		this.renderTrigger.pipe(debounceTime(10)).subscribe((finalScale) => {
-
 			Promise.all(
-				Array.from(this.renderQueue).map(renderItem => {
-					this.renderPage(renderItem[0], false, renderItem[1])
+				Array.from(this.renderQueue).map(pageNumber => {
+					console.log("Re rendering page on zoom: ", pageNumber, " scale: ", finalScale)
+					this.renderPage(pageNumber, false, finalScale)
 				})
 			).then(() => {
 				this.renderQueue.clear()
-				this.transformOrigin = '0px 0px';
-				// this.cssScale = `scale(1)`;
 			})
 		});
 	}
 
 
-	//==================================================== NG ===============================================================
+	/**
+	 * Angular lifecycle hook that is called once after the component is initialized.
+	 * Ideal for component setup, data fetching, and initial logic.
+	 */
 	async ngOnInit() {
 		this.pdfViewerService.preventWindowZoomIn()
 		this.loadPDF();
-		this.handleScroll();
+		this.initializeScrollEvent();
 		this.subscribeToVisiblePages();
 		this.pageNumberSub = this.pdfViewerService.currentPage$.subscribe(val => {
 			this.currentPageNumber = val;
 		});
 
 	}
-
+	/**
+	 * Angular lifecycle hook that is called once after the component's view
+	 * (and all child views) has been fully initialized.
+	 * Useful for DOM-dependent logic and interacting with ViewChild elements.
+	 */
 	ngAfterViewInit() {
 		if (this.dynamicContainer) this.pdfViewerService.setDynamicContainerRef(this.dynamicContainer)
 	}
 
-
-
+	/**
+ * Angular lifecycle hook that is called just before the component is destroyed.
+ * Useful for cleaning up resources such as subscriptions, intervals, or event listeners.
+ */
 	ngOnDestroy() {
 		this.pageNumberSub.unsubscribe();
 		this.observer.disconnect();
 	}
 
-	//==================================================== Methods ==========================================================
-
-	//=======================================================================================================================
-	// Handle scroll of user on the PDF. This functions sets the scroll listener and also implements pagecounting logic.
-	//=======================================================================================================================
-	handleScroll() {
+	/**
+	 * Handle scroll of user on the PDF. This functions sets the scroll listener and also implements page counting logic.
+	 */
+	initializeScrollEvent() {
 		if (this.pdfContainer) {
 			this.pdfViewerService.setPDFScrollContainer(this.pdfContainer);
 			this.pdfViewerService.dynamicContainer = this.dynamicContainer;
@@ -111,21 +119,16 @@ export class PdfViewerComponent {
 				this.pdfViewerService.currentScrollTop = this.pdfContainer.nativeElement.scrollTop;
 				this.currentPageNumber = this.pdfViewerService.getPageNumberFromScrolltop()
 				this.pdfViewerService.setCurrentPage(this.currentPageNumber);
-
-				// TODO change this => This creates an observe to watch visibile pages ... this needs to be available ASAP and not on scroll!!
-				if (!this.alreadyRanObserver) this.createObserver();
-
 			})
 		}
 	}
 
-	//=======================================================================================================================
-	// The observer tells us which pages are currently visibile on the screen. Here we subscribe to the visibile pages
-	// and render a page once it comes into the view.
-	//=======================================================================================================================
+	/** 
+	 * The observer tells us which pages are currently visibile on the screen. Here we subscribe to the visibile pages 
+	 * and render a page once it comes into the view.
+	*/
 	subscribeToVisiblePages() {
 		this.pdfViewerService.visiblePages.subscribe(set => {
-
 			for (const pageNum of set) {
 				const page = this.pdfViewerService.allRenderedPages.find(p => p.pageNum === pageNum)
 				if (page?.currentScale != this.scale) {
@@ -136,9 +139,10 @@ export class PdfViewerComponent {
 		});
 	}
 
-	//=======================================================================================================================
-	// Checks if the observed pages are currently visible. If yes they are added to the VisiblePages.
-	//=======================================================================================================================
+	/**
+	 * Checks if the observed pages are currently visible. If yes they are added to the VisiblePages.
+	 * @param entries => these entries represent pages. We need to check if they are currently in the view.
+	 */
 	checkEntry(entries: any) {
 		for (const entry of entries) {
 			const id = entry.target.id;
@@ -156,9 +160,9 @@ export class PdfViewerComponent {
 		}
 	}
 
-	//=======================================================================================================================
-	// Creates the visible pages observer. This Observe observes all pages and tells us which pages are currently visibile
-	//=======================================================================================================================
+	/**
+	 * Creates the visible pages observer. This Observe observes all pages and tells us which pages are currently visibile
+	 */
 	async createObserver() {
 		this.alreadyRanObserver = true;
 		this.observer = new IntersectionObserver(
@@ -180,12 +184,15 @@ export class PdfViewerComponent {
 		});
 	}
 
-
+	/**
+	 * This helper function supports the loading of the PDF pages.
+	 * This function renders all pages and the creates an observer to check if the pages are currently in the view.
+	 * @param file => the PDF file to load.
+	 */
 	loadingHelper(file: ArrayBuffer | File) {
 		const pdfjs = pdfjsLib as any;
 		const reader = new FileReader()
 		reader.readAsArrayBuffer(new Blob([file]))
-		console.log(this.textEditService.textboxes.length)
 
 		reader.onload = async () => {
 			const arrayBuffer = new Uint8Array(reader.result as ArrayBuffer);
@@ -201,16 +208,21 @@ export class PdfViewerComponent {
 
 			if (this.renderMode == 0) {
 				for (let pageNum = 1; pageNum <= this.totalPages; pageNum++) {
-					this.renderPage(pageNum, true, this.scale);
+					this.renderPage(pageNum, true, this.scale).then(() => {
+						if (this.pdfContainer.nativeElement.children.length === this.totalPages) {
+							if (!this.alreadyRanObserver) this.createObserver();
+						}
+					});
 				}
 			}
 		}
 	}
 
-	//=======================================================================================================================
-	// This function loads the user PDF. Depending on rendermode it loads all pages or only Page by Page.
-	// rendermode == 0 => all pages, rendermode == 1 => only 1 page
-	//=======================================================================================================================
+	/**
+	 * This function loads the user PDF. Depending on rendermode it loads all pages or only Page by Page.
+	 * rendermode == 0 => all pages, rendermode == 1 => only 1 page.
+	 * This function also makes sure that PDF is downloaded from backend if no file is specified.
+	 */
 	async loadPDF() {
 		try {
 			const file = this.fileService.getFile()
@@ -223,7 +235,8 @@ export class PdfViewerComponent {
 						this.sessionService.getEdits(signed_sid).subscribe(edits => {
 							edits.pageEdits.forEach((element: MiniPage) => {
 								element.textboxes.forEach(box => {
-									this.textEditService.textboxes.push(box)
+									if (box.pageId != 0)
+										this.textEditService.textboxes.push(box)
 								})
 							});
 							this.loadingHelper(file)
@@ -239,107 +252,42 @@ export class PdfViewerComponent {
 		}
 	}
 
-	//=======================================================================================================================
-	// This function creates all the necessary containers to render a page. That includes the pageContainer, the canvas 
-	// for the actual page and any layers on top of the page e.g. textBoxLayer (where all textboxes reside).
-	//=======================================================================================================================
-	createPageContainers(pageNumber: number, renderdummy: Boolean, scale: number) {
-		const canvas = document.createElement("canvas");
-		const textBoxLayer = document.createElement("div");
-		let textLayer = document.createElement("div");
-		let pageContainer = document.createElement("div");
-
-		const canvasContainer = document.createElement("div");
-
-		const pageInfo = this.pdfViewerService.dynamicContainer?.createComponent(PageInfoComponent);
-		pageInfo!.instance.pageNumber = pageNumber;
-		pageInfo!.instance.width = 60 * scale;
-		pageInfo!.instance.fontSize = 32 * scale;
-		pageInfo!.instance.borderRadius = 9 * scale;
-
-		canvas.id = `page-${pageNumber}`;
-		canvasContainer.id = `canvasContainer-${pageNumber}`;
-
-		canvasContainer.style.display = "flex";
-		canvasContainer.style.gap = "8px";
-
-		pageContainer.id = `pageContainer-${pageNumber}`;
-		textBoxLayer.className = "text-box-layer"
-
-		if (!renderdummy) {
-			pageContainer.className = "mt-1 sm:mt-3 md:mt-4 mx-auto relative block w-full max-w-fit sm:max-w-[70%] md:max-w-[90%]";
-
-			// canvas.className = `page-${pageNumber} w-full block border border-gray-300 shadow-lg -mb-[305px]`;
-
-			if (this.scale == 1.0)
-				canvas.className = `page-${pageNumber} block border border-gray-300 shadow-lg -mb-[305px]`;
-			else
-				canvas.className = `page-${pageNumber} block border border-gray-300 shadow-lg`;
 
 
-		}
-		else {
-			pageContainer.className = `mt-1 sm:mt-3 md:mt-4 mx-auto relative block w-full max-w-fit sm:max-w-[70%] md:max-w-[90%]`;
-			canvas.className = `page-${pageNumber} block border border-gray-300 shadow-lg mx-auto`;
-		}
-
-		canvasContainer.appendChild(canvas)
-		canvasContainer.appendChild(pageInfo!.location.nativeElement)
-
-		pageContainer.appendChild(textBoxLayer)
-		pageContainer.appendChild(canvasContainer)
-		return { canvas: canvas, textBoxLayer: textBoxLayer, textLayer: textLayer, pageContainer: pageContainer, canvasContainer: canvasContainer }
-	}
-
-	//=======================================================================================================================
-	// This function recreates all the textboxes according to the scale
-	//=======================================================================================================================
+	/**
+	 * This function recreates all the textboxes according to the scale
+	 * @param boxesForPage => all textboxes to recreate on the page
+	 * @param pageNumber => the page where the textboxes are placed
+	 * @param scale => current scale of the PDF
+	 * @param textBoxLayer => the parent container where the textboxes are placed.
+	 */
 	recreateTextBoxesForPage(boxesForPage: TextBox[], pageNumber: number,
 		scale: number, textBoxLayer: HTMLDivElement) {
 
 		boxesForPage.forEach(box => {
 			if (box.pageId === pageNumber) {
+				const scaleParams = this.entityManagerService.rescaleObjOnRender(box, scale)
 
-				let newBaseWidth = box.baseWidth;
-				let newBaseHeight = box.baseHeight;
-
-				const condition = (box.BoxDims.resizedHeight != 0 || box.BoxDims.resizedWidth != 0)
-				if (condition) {
-					newBaseWidth = box.BoxDims.resizedWidth;
-					newBaseHeight = box.BoxDims.resizedHeight;
-				}
-
-
-				const finalWidth = newBaseWidth * (scale / box.BoxDims.sizeCreationScale)
-				const finalHeight = newBaseHeight * (scale / box.BoxDims.sizeCreationScale)
-
-				const box_dims = {
-					top: box.baseTop * (scale / box.BoxDims.posCreationScale),
-					left: box.baseLeft * (scale / box.BoxDims.posCreationScale),
-					width: finalWidth,
-					height: finalHeight,
-					resizedHeight: 0,
-					resizedWidth: 0,
-					currentScale: scale,
-					posCreationScale: box.BoxDims.posCreationScale,
-					sizeCreationScale: box.BoxDims.sizeCreationScale
-				}
-
-				box.textStyleEditorState.font_size = box.textStyleEditorState.baseFontSize * scale;
+				box.TextStyleState.textFontSize = box.TextStyleState.textBaseFontSize * scale;
 				//const [left, top] = box.left, box.top //viewport.convertToViewportPoint(box.left, box.top);
 
 				this.pdfViewerService.setCodeResizeTimeout()
 
-				const ret = this.textEditService.createTextBox(box_dims, box.textStyleEditorState, pageNumber,
+				const ret = this.textEditService.createTextBox(scaleParams.dims, box.TextStyleState, pageNumber,
 					scale, this.pdfViewerService.currentScrollTop, true, box.id)
 
-				ret.box.baseHeight = newBaseHeight
-				ret.box.baseWidth = newBaseWidth
+				ret.comp.instance.positionChanged.subscribe((event: any) => this.entityManagerService.executeMove(ret.box, event, pageNumber))
+				ret.box.baseHeight = scaleParams.baseHeight
+				ret.box.baseWidth = scaleParams.baseWidth
 				textBoxLayer.appendChild(ret.comp.location.nativeElement)
 			}
 		})
 	}
 
+	/**
+	 * Adds a Page to the already rendered pages list.
+	 * @param newPage => the page to add.
+	 */
 	//=======================================================================================================================
 	// This function assigns a Page to the alreadyRenderedPages
 	//=======================================================================================================================
@@ -353,43 +301,74 @@ export class PdfViewerComponent {
 			this.pdfViewerService.allRenderedPages.push(newPage)
 	}
 
-	//=======================================================================================================================
-	// This function renders an entire page and instantiates all objects on that page.
-	//=======================================================================================================================
-	async renderPage(pageNumber: number, renderdummy: Boolean = true, scale: number) {
-		let page: any;
-		let viewport: any;
-		if (pageNumber === 1)
-			renderdummy = false;
+	/**
+	 * Calculates the translation in X and Y to use when zooming in on the cursor.
+	 * @param rect => parentContainer to use for offset
+	 * @param translateX => translation in X
+	 * @param translateY => translation in Y
+	 * @param oldScale => the old Scale that was used for previous PDF page render.
+	 * @param newScale => the newScale  to render the PDF page in.
+	 * @returns 
+	 */
+	calculateZoomTranslationCss(rect: DOMRect, translateX: number = 0, translateY: number = 0,
+		oldScale: number = this.oldScale, newScale: number = this.scale) {
+		const pointer = {
+			x: (this.mouseX - rect.left),
+			y: (this.mouseY - rect.top)
+		};
 
-		console.log("rendering page: ", pageNumber)
-		page = await this.pdfDocument.getPage(pageNumber);
+		const mousePointTo = {
+			x: (pointer.x - translateX) / oldScale,
+			y: (pointer.y - translateY) / oldScale
+		};
 
-		if (!renderdummy) {
-			page = await this.pdfDocument.getPage(pageNumber);
-			viewport = page.getViewport({ scale: scale });
-			this.pdfViewerService.setPageHeight(viewport.height);
-		}
+		translateX = pointer.x - (mousePointTo.x * newScale);
+		translateY = pointer.y - (mousePointTo.y * newScale);
 
-		const container = this.pdfContainer.nativeElement;
-		let { canvas, textBoxLayer, textLayer, pageContainer, canvasContainer } = this.createPageContainers(pageNumber, renderdummy, scale)
+		return { tX: translateX, tY: translateY }
+	}
 
-		// scale margin top
-		let baseMarginScale = 16
-		if (scale > 1.0 && pageNumber > 1) baseMarginScale = this.pdfViewerService.getScaledMargin(scale)
+	/**
+	 * Calculates the translation in X and Y to use when zooming in on the cursor.
+	 * @param rect => parentContainer to use for offset
+	 * @param translateX => translation in X
+	 * @param translateY => translation in Y
+	 * @param oldScale => the old Scale that was used for previous PDF page render.
+	 * @param newScale => the newScale  to render the PDF page in.
+	 * @returns 
+	 */
+	calculateZoomTranslationRender(rect: DOMRect, w: number, h: number, translateX: number = 0, translateY: number = 0,
+		oldScale: number = this.oldScale, newScale: number = this.scale) {
+		const pointer = {
+			x: (this.mouseX - rect.left) * (w / rect.width),
+			y: (this.mouseY - rect.top) * (h / rect.height)
+		};
+
+		const mousePointTo = {
+			x: (pointer.x - translateX) / oldScale,
+			y: (pointer.y - translateY) / oldScale
+		};
+
+		translateX = pointer.x - (mousePointTo.x * newScale);
+		translateY = pointer.y - (mousePointTo.y * newScale);
+
+		return { tX: translateX, tY: translateY }
+	}
+
+
+	replaceChildrenOfPageContainer(container: HTMLDivElement, renderdummy: Boolean, pageNumber: number, scale: number) {
+
+		let { canvas, textBoxLayer, textLayer, pageContainer, canvasContainer } = this.pdfViewerService.createPageContainers(pageNumber, renderdummy, scale)
+		const baseMarginScale = this.pdfViewerService.getScaledMargin(scale, pageNumber);
 
 		const boxesForPage = this.textEditService.textboxes.filter(b => b.pageId == pageNumber)
 		this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, textBoxLayer)
-
 		const existingPageContainer = container.querySelector("#" + pageContainer.id)
+		let ret;
 		if (existingPageContainer != null) {
-			const textOld = existingPageContainer.querySelector(Constants.OVERLAY_TEXT)
-			const CanvasOld = existingPageContainer.querySelector("#" + canvasContainer.id)
-
-			// recreate all objects on the page
+			let CanvasOld = existingPageContainer.querySelector("#" + canvasContainer.id) as HTMLDivElement
 			this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, textBoxLayer)
 
-			existingPageContainer.replaceChild(textBoxLayer, textOld!)
 			existingPageContainer.replaceChild(canvasContainer, CanvasOld!)
 
 			if (!renderdummy) {
@@ -401,6 +380,32 @@ export class PdfViewerComponent {
 		else {
 			container.appendChild(pageContainer);
 		}
+		return { canvas, textBoxLayer, textLayer, pageContainer, canvasContainer, baseMarginScale, boxesForPage } 
+	}
+	/**
+	 * Main render function. This function is the entry point for the entire rendering logic.
+	 * It handles all logic from creating the pdf canvas to recreating all objects on the PDF page itself.
+	 * @param pageNumber => the page to render
+	 * @param renderdummy => render a dummy page?
+	 * @param scale => the scale to render the page in.
+	 */
+	async renderPage(pageNumber: number, renderdummy: Boolean = true, scale: number) {
+		let page: any;
+		let viewport: any;
+		const container = this.pdfContainer.nativeElement;
+		if (pageNumber === 1) renderdummy = false;
+
+		console.log("rendering page: ", pageNumber)
+		page = await this.pdfDocument.getPage(pageNumber);
+
+		if (!renderdummy) {
+			page = await this.pdfDocument.getPage(pageNumber);
+			viewport = page.getViewport({ scale: scale });
+			this.pdfViewerService.setPageHeight(viewport.height);
+		}
+
+		let { canvas, textBoxLayer, textLayer, pageContainer, canvasContainer, baseMarginScale, boxesForPage } = 
+										this.replaceChildrenOfPageContainer(container, renderdummy, pageNumber, scale)
 
 		if (!renderdummy) {
 			const context = canvas.getContext("2d")!;
@@ -423,11 +428,14 @@ export class PdfViewerComponent {
 			};
 
 			await page.render(renderContext).promise;
-			const newPage = new Page(pageNumber, viewport, boxesForPage, viewport.height, viewport.width, 0, pageContainer, scale)
+			const newPage = new Page(pageNumber, viewport, boxesForPage, viewport.height, viewport.width, 0, pageContainer, 0, 0, scale)
 			this.assignPageToRendered(newPage)
 		}
 	}
 
+	/**
+	 * Edit the actual PDF
+	 */
 	editActualPDF() {
 		throw new Error("Not implemented");
 		//============================ EXPERIMENTAL ====================================
@@ -485,46 +493,63 @@ export class PdfViewerComponent {
 		// context.clearRect(0, 0, canvas.width, canvas.height);
 	}
 
-	//=======================================================================================================================
-	// This function handles the zoom on the PDF page. It adds pages that are in visibile pages to a renderqueue.
-	//=======================================================================================================================
+	/**
+	 * Listen on Mouseclick over the entire Window. Used to determine mouse position on the document.
+	 * @param event 
+	 */
+	@HostListener("document:mousemove", ["$event"])
+	trackmouse(event: MouseEvent) {
+		this.mouseX = event.pageX
+		this.mouseY = event.pageY
+
+	}
+
+	/**
+	 * This function handles the zoom on the PDF page. It adds pages that are in visibile pages to a renderqueue.
+	 * @param event 
+	 */
 	async onWheel(event: WheelEvent) {
 		if (event.ctrlKey) {
 			event.preventDefault();
 			const delta = event.deltaY < 0 ? 0.1 : -0.1;
+			const direction = event.deltaY < 0 ? 1 : -1
 			const oldScale = this.scale;
-			const newScale = oldScale + delta
-		
-			if (newScale > this.maxScale || newScale < this.minScale)
-				return;
+			this.oldScale = oldScale
+
+			const zoomIntensity = 0.1; // smaller = slower acceleration
+			const zoomFactor = Math.pow(1 + delta, -event.deltaY * zoomIntensity * direction);
+			let newScale = oldScale * zoomFactor
+
+			if (newScale > this.maxScale)
+				newScale = this.maxScale;
+
+			if (newScale < this.minScale)
+				newScale = this.minScale;
+
 
 			this.scale = newScale
-			console.log(newScale)
-			console.log(this.renderQueue)
-
-
 			this.pdfViewerService.currentScale = this.scale;
 
-			// const pdfRect = this.pdfContainer.nativeElement.getBoundingClientRect()
-			// const offsetX = event.clientX - pdfRect.left
-			// const offsetY = event.clientY - pdfRect.top
-			// const zoomFactor = newScale / oldScale;
-
-
-			// this.pdfContainer.nativeElement.scrollLeft = (offsetX + this.pdfContainer.nativeElement.scrollLeft) * zoomFactor - offsetX;
-			// this.pdfContainer.nativeElement.scrollTop = (offsetY + this.pdfContainer.nativeElement.scrollTop) * zoomFactor - offsetY;
-
-			// this.pdfContainer.nativeElement.style.transformOrigin = `${event.clientX}px ${event.clientY}px`;
-        	// this.pdfContainer.nativeElement.style.transform = `scale(${this.scale})`;
-
-
 			for (const p of this.pdfViewerService.visiblePages.getValue()) {
-				this.renderQueue.add([p, newScale]);
+				this.renderQueue.add(p);
+
+				// const canvas = (event.currentTarget as HTMLDivElement).querySelector(`#canvasContainer-${p}`) as HTMLDivElement
+				// const page = this.pdfViewerService.getPageWithNumber(p)
+				// if (canvas && page) {
+				// 	const rect = ((event.currentTarget as HTMLDivElement).querySelector(`#pageContainer-${p}`) as HTMLDivElement).getBoundingClientRect();
+				// 	let ret = this.calculateZoomTranslationCss(rect, page.translateX, page.translateY, oldScale, newScale)
+				// 	page.translateX = ret.tX
+				// 	page.translateY = ret.tY
+
+				// 	canvas.style.transformOrigin = `0px 0px`;
+				// 	canvas.style.transition = 'transform 0.25s ease-in-out';
+				// 	canvas.style.transform = `translate(${ret.tX}px, ${ret.tY}px) scale(${this.scale})`;
+				// 	//this.cssScale = this.scale;
+				// }
 			}
 
-			// this.alertService.createAlert("info", "CURRENT ZOOM",
-			// 		newScale.toString(), 5000)
 			this.renderTrigger.next(newScale);
+			console.log(this.renderQueue)
 		}
 	}
 }

@@ -16,24 +16,20 @@ logging.basicConfig(
     format="[%(levelname)s] %(message)s",
 )
 
-logger = logging.getLogger(__name__)
-
 
 class RouterAPI:
     def __init__(self):
-        self.logger = logger
+        self.logger = logging.getLogger(__name__)
         self.headers = {"Content-Disposition": 'attachment; filename="modified.pdf"'}
         self.origins = ["http://localhost:4200", ]
         self.session_api = SessionAPI()
         self.headers = {"Content-Disposition": 'attachment; filename="modified.pdf"'}
         
-
         self.router = APIRouter()
         self.router.post("/upload-image")(self.upload_image)
         self.router.post("/upload-pdf")(self.upload_pdf)
         self.router.post("/create-session")(self.session_api.create_session)
         self.router.post("/save-pdf-edits")(self.save_pdf_edits)
-
 
         self.router.get("/get-session")(self.session_api.get_session)
         self.router.get("/get-pdf")(self.get_pdf)
@@ -54,15 +50,20 @@ class RouterAPI:
         ret = self.session_api.verify_id(signed_sid)
         if ret is not None and ret["sid"] is not None:
             pdf = self.session_api.db.get_data(ret["sid"])
+            self.logger.info("Successfully fetched PDF from Database.")
             return pdf
+        self.logger.warning("Could not verify the session id of the user.")
         return None
     
     def _get_edits(self, signed_sid: str):
         ret = self.session_api.verify_id(signed_sid)
         if ret is not None and ret["sid"] is not None:
             edits = self.session_api.db.get_edits(ret["sid"])
+            self.logger.info("Successfully fetched Edits from Database.")
             return edits
-    
+        self.logger.warning("Could not verify the session id of the user.")
+        return None
+
     async def get_all_signed_sids(self):
         return self.session_api.db.get_all_signed_sids()
     
@@ -82,19 +83,23 @@ class RouterAPI:
             BadRequestError: If the file is not a valid PDF.
         """
         if pdf.content_type != "application/pdf":
+            self.logger.warning("Wrong file uploaded. Only accepting PDF files!")
             raise BadRequestError("Only PDF files allowed")
         
         # TODO Find out if this check is needed!   
+        # TODO Sanitize filename and FILE ITSELF
         ret = self.session_api.verify_id(signed_sid)
         if ret is not None and ret["sid"] is not None:
             pdf_bytes = await pdf.read()
-            self.session_api.db.update_session_data(ret["sid"], pdf_bytes)
-
-            # TODO Sanitize filename and FILE ITSELF
-            self.logger.debug(f"Received PDF file: {pdf.filename} ({len(pdf_bytes)} bytes)")
-            return {"filename": pdf.filename, "size": len(pdf_bytes)}
-
-        raise BadRequestError()
+            if self.session_api.db.update_session_data(ret["sid"], pdf_bytes):
+                self.logger.info("Successfully uploaded PDF to Database.")
+                self.logger.info(f"Received PDF file: {pdf.filename} ({len(pdf_bytes)} bytes)")
+                return {"filename": pdf.filename, "size": len(pdf_bytes)}
+            else:
+               self.logger.warning("Could not find session id of user in DB. Not uploading PDF!") 
+        else:
+            self.logger.warning("Could not verify the session id of the user.")
+            raise BadRequestError()
     
     
     async def get_edits(self, signed_sid: str):
@@ -103,6 +108,7 @@ class RouterAPI:
         if edits is None:
             raise NotFoundError("EDITS")
         if edits:
+            self.logger.info("Successfully got PDF Edits!")
             return edits
     
     async def get_pdf(self, signed_sid: str):
@@ -125,6 +131,7 @@ class RouterAPI:
         if data is None:
             raise NotFoundError("PDF")
         if data:
+            self.logger.info("Successfully got PDF file!")
             return Response(content=data, media_type="application/octet-stream")
 
     async def download_pdf(self, signed_sid: str):
@@ -134,6 +141,7 @@ class RouterAPI:
         if edits is None or pdf is None:
             raise BadRequestError()
         if embedded_pdf:
+            self.logger.info("Successfully downloaded file!")
             return StreamingResponse(embedded_pdf, media_type="application/pdf", 
                                     headers=self.headers)
 
@@ -146,3 +154,4 @@ class RouterAPI:
             raise BadRequestError()  
 
         self.session_api.db.update_session_edits(ret["sid"], payload)
+        self.logger.info("Successfully saved PDF edits to DB!")

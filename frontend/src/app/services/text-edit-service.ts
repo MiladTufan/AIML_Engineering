@@ -1,11 +1,11 @@
 import { ComponentRef, ElementRef, Injectable, OnDestroy, ViewContainerRef, inject } from '@angular/core';
 import { fromEvent, Subscription } from 'rxjs';
 import { BoxDimensions, TextBox } from '../models/TextBox';
-import { TextStyleEditor } from '../models/TextStyleEditor';
 import { CustomTextEditBox } from '../components/custom-text-edit-box/custom-text-edit-box';
 import { PDFViewerService } from './pdfviewer-service';
 import { Constants } from '../models/constants/constants';
 import { ToolbarComponent } from '../components/toolbar-component/toolbar-component';
+import { TextStyle } from '../models/TextStyle';
 
 
 //=======================================================================================================================
@@ -66,24 +66,24 @@ export class TextEditService implements OnDestroy {
     // helper Function to get the current textbox style. The current textbox is the textbox which is in focus 
     // e.g. which has been clicked inside. Each textbox has a different style editor.
     //=======================================================================================================================
-    public getCurrentTextStyleEditor() {
+    public getCurrentTextStyle() {
         if (this.textboxes.length > 0) {
             const focusBoxIdx = this.getIndexOfCurrentFocusBox()
             if (focusBoxIdx != -1)
-                return this.textboxes[this.getIndexOfCurrentFocusBox()].textStyleEditorState;
+                return this.textboxes[this.getIndexOfCurrentFocusBox()].TextStyleState;
         }
 
-        return new TextStyleEditor();
+        return new TextStyle();
     }
 
 
     //=======================================================================================================================
     // Helper Function to get the Current Textstyle editor by id of textbox.
     //=======================================================================================================================
-    public getCurrentTextStyleEditorById(id: number) {
+    public getCurrentTextStyleById(id: number) {
         const focusBoxIdx = this.getIndexOfCurrentFocusBox(id)
         if (focusBoxIdx != -1)
-            return this.textboxes[focusBoxIdx].textStyleEditorState;
+            return this.textboxes[focusBoxIdx].TextStyleState;
 
         return undefined
     }
@@ -93,15 +93,12 @@ export class TextEditService implements OnDestroy {
     // textBoxClicked event is emitted from the CustomTextEditBox. 
     //=======================================================================================================================
     onTextBoxEditClick(id: number, editState: Boolean) {
-        console.log("Edit called for box with id: ", id)
-        if (editState) {
+        const box = this.textboxes.find(b => b.id === id);
+        if (box)
+            box.TextStyleState.isCollapsed = !editState;
+        
+        if (editState)
             this.currentFocusTextBoxId = id;
-            this.toolbarComponent!.enableTextStyleEditor(editState);
-        }
-        else {
-            if (id === this.currentFocusTextBoxId)
-                this.toolbarComponent!.enableTextStyleEditor(editState);
-        }
     }
 
 
@@ -139,7 +136,7 @@ export class TextEditService implements OnDestroy {
     //=======================================================================================================================
     // This function is responsible for updating the textbox position, when the textbox is being dragged around.
     //=======================================================================================================================
-    public updateTextBoxPos(textBox: TextBox, pos: { top: number, left: number }, pageNum: number) {
+    public updateTextBoxPos1(textBox: TextBox, pos: { top: number, left: number }, pageNum: number) {
         const savedBox = this.textboxes.find(b => b.id === textBox.id);
         if (savedBox) {
             let adjustedPageNum = pageNum
@@ -175,10 +172,10 @@ export class TextEditService implements OnDestroy {
                 const idx = this.textboxes.indexOf(oldBox);
                 this.textboxes.splice(idx, 1);
 
-                const ret = this.createTextBox(savedBox.BoxDims, savedBox.textStyleEditorState,
+                const ret = this.createTextBox(savedBox.BoxDims, savedBox.TextStyleState,
                     adjustedPageNum, savedBox.BoxDims.currentScale,
                     this.pdfViewerService.currentScrollTop)
-                
+
                 const pageOld = this.pdfViewerService.getPageWithNumber(pageNum)
                 pageOld?.removeTextBox(savedBox)
                 page?.appendTextBox(savedBox)
@@ -194,7 +191,7 @@ export class TextEditService implements OnDestroy {
     public removeTextBox(event: KeyboardEvent) {
         if (event.key === "Delete") {
             const box = this.textboxes[this.getIndexOfCurrentFocusBox()];
-            box.textStyleEditorState.isCollapsed = true;
+            box.TextStyleState.isCollapsed = true;
             this.removeBoxFromPage(box.id)
             this.textboxes.splice(this.textboxes.indexOf(box!), 1)
             this.currentFocusTextBoxId = -1;
@@ -211,8 +208,7 @@ export class TextEditService implements OnDestroy {
 
         editTextBoxComp.instance.box = textBox;
         editTextBoxComp.instance.textBoxEditClicked.subscribe((event: any) => this.onTextBoxEditClick(textBox.id, event))
-        editTextBoxComp.instance.positionChanged.subscribe((event: any) =>
-            this.updateTextBoxPos(textBox, event, pageNum))
+
 
         // TODO find a way to add this function
         // editTextBoxComp.instance.textBoxEditClicked.subscribe((event: any) => this.removeTextBox(textBox.id, event))
@@ -220,14 +216,22 @@ export class TextEditService implements OnDestroy {
         return editTextBoxComp
     }
 
+    private getNextId<T extends { id: number }>(list: T[]): number {
+        if (list.length === 0) {
+            return 1;
+        }
+        return Math.max(...list.map(item => item.id)) + 1;
+    }
+
     //=======================================================================================================================
     // Helper function to create the actual textbox.
     // @param => Box dims = top, left, width, height
     //=======================================================================================================================
-    public createTextBox(box_dims: BoxDimensions, styleState: TextStyleEditor, pageNum: number, scale: number,
+    public createTextBox(box_dims: BoxDimensions, styleState: TextStyle, pageNum: number, scale: number,
         scrollTop: number, rerender: Boolean = false, id: number = this.textboxes.length + 1) {
         // this.mouseY += (pageHeight * (this.pageNum - 1))
 
+        id = this.getNextId(this.textboxes)
         const newTextBox = new TextBox(id, pageNum, box_dims, "Text", styleState)
 
         const page = this.pdfViewerService.getPageWithNumber(pageNum)
@@ -273,6 +277,4 @@ export class TextEditService implements OnDestroy {
         }
         this.textCompMap.set(id, editTextBoxComp)
     }
-
-
 }

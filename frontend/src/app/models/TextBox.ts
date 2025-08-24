@@ -1,20 +1,7 @@
-import { TextStyleEditor } from "./TextStyleEditor";
+import { BlockObject } from "./BlockObject";
+import { TextStyle } from "./TextStyle";
 
 
-export class TextBox {
-    public baseTop: number = 0;
-    public baseLeft: number = 0;
-    public baseWidth: number = 0;
-    public baseHeight: number = 0;
-
-    constructor(public id: number, public pageId: number, public BoxDims: BoxDimensions, public text: string,
-        public textStyleEditorState: TextStyleEditor) { }
-
-
-
-        // public top: number, public currentScale: number = 1.0,
-        // public left: number, public width: number, public height: number,
-}
 
 export type BoxDimensions = {
   top: number;
@@ -27,3 +14,12 @@ export type BoxDimensions = {
   posCreationScale: number;
   sizeCreationScale: number;
 };
+
+
+export class TextBox  extends BlockObject
+{
+  constructor(id: number, pageId: number, BoxDims: BoxDimensions, public text: string,
+        public TextStyleState: TextStyle) { 
+          super(id, pageId, BoxDims)
+        }
+}

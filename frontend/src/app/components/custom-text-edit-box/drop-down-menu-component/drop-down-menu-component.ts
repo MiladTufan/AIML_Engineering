@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, Output, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -31,9 +31,11 @@ export class DropDownMenuComponent {
         { name: 'Lucida Console', value: '"Lucida Console", monospace' }
     ];
 
+    @ViewChild("headerObj", { static: true }) headerObj!: ElementRef<HTMLInputElement>;
     //==================================================== Inputs =========================================================
     @Input() dropDownItems: string[] = []
     @Input() isDropDownOpen: Boolean = false;
+    @Input() currentItem: string = "";
 
     // width and height of each drop down item
     @Input() width: number = 0;
@@ -41,17 +43,61 @@ export class DropDownMenuComponent {
 
     //==================================================== Output =========================================================
     @Output() selectedItem = new EventEmitter<string>();
-
-
-
+    @Output() selectedItemInput = new EventEmitter<string>();
 
 
     ItemClicked(item: string) {
         this.selectedItem.emit(item)
+        if (this.headerObj) {
+            this.headerObj.nativeElement.textContent = item;
+            this.currentItem = item
+        }
+    }
+
+    selectItemInput(item: string) {
+        this.selectedItemInput.emit(item)
+        if (this.headerObj) {
+            this.headerObj.nativeElement.textContent = item;
+            this.currentItem = item
+        }
     }
 
     fontClass(fontName: string) {
         const fontFamiliy = this.fontOptions.find(f => f.name === fontName)
         return fontFamiliy ? fontFamiliy : ""
+    }
+
+    _checkClick(id: string, target: HTMLElement) {
+        let clickInsideFontSelect = false;
+        let node = target
+        clickInsideFontSelect = node?.id === id ? true : false;
+        while (node.parentElement) {
+            clickInsideFontSelect = node?.id === id ? true : false;
+            if (clickInsideFontSelect) return true;
+            node = node.parentElement
+        }
+        return clickInsideFontSelect;
+    }
+
+    @HostListener('document:click', ['$event'])
+    onDocumentClick(event: MouseEvent) {
+
+        try {
+            const eventTarget = (event.target as HTMLElement)
+            let clickInsideFontSelect = false;
+            let clickInsideFontSizeSelect = false;
+
+            clickInsideFontSelect = this._checkClick("fontSelect", eventTarget)
+            clickInsideFontSizeSelect = this._checkClick("fontSizeSelect", eventTarget)
+
+            if (this.isDropDownOpen && !clickInsideFontSelect)
+                this.isDropDownOpen = false;
+
+            if (this.isDropDownOpen && !clickInsideFontSizeSelect)
+                this.isDropDownOpen = false;
+        }
+        catch {
+
+        }
     }
 }

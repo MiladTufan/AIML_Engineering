@@ -1,0 +1,130 @@
+<div class="p-4 translucentStyle flex-col rounded-xl  z-100 select-none both overflow-visible absolute"
+    [style.transform]="'scale(' + 1 + ')'"
+    [@genieGrow]="this.box.TextStyleState.isCollapsed ? 'hidden' : 'visible'"
+    [style.left.px]="translateX"
+    [style.top.px]="translateY"
+    id="TextStyleContainer">
+    <div>
+    <div class="flex -ml-0.5" #textAlignSection>
+        <img src="assets/icons/textAlignLeftBlack.svg" class="w-5 textStyleBlockItem" (click)="textAlignLeft($event)"/>
+        <img src="assets/icons/textAligncenter.svg" class="w-5 ml-6.5 textStyleBlockItem" (click)="textAlignCenter($event)"/>
+        <img src="assets/icons/textAlignRightBlack.svg" class="w-5 ml-7 textStyleBlockItem" (click)="textAlignRight($event)"/>
+        <img src="assets/icons/link.svg" class="w-5 ml-7 textStyleBlockItem" (click)="textAlignLeft($event)"/>
+    </div>
+
+    <div class="flex mt-2" #textFormatSection>
+        <img src="assets/icons/boldB.svg" class="w-3.5 textStyleBlockItem" (click)="textFormatBold($event)"/>
+        <img src="assets/icons/italic.svg" class="w-2 ml-6 textStyleBlockItem" (click)="textFormatItalic($event)"/>
+        <img src="assets/icons/underline.svg" class="w-3.5 ml-6 textStyleBlockItem" (click)="textFormatUnderline($event)"/>
+        <img src="assets/icons/superscript.svg" class="w-4 ml-6 textStyleBlockItem" (click)="textFormatSuperscript($event)"/>
+        <img src="assets/icons/subscript.svg" class="w-4 ml-5.5 textStyleBlockItem" (click)="textFormatSubscript($event)"/>
+    </div>
+
+
+    <div class="flex mt-2 text-gray-500 text-sm font-thin" #textStyle>
+        <span >Style</span>
+        <app-drop-down-menu-component class="ml-6"
+            (selectedItem)="SelectedStyle($event)" [width]="144" [height]="20"
+            (selectedItemInput)="SelectedStyle($event, false)"
+            [isDropDownOpen]="isStyleDropDownOpen" [currentItem]="availableStyles[0]"
+            [dropDownItems]="availableStyles"></app-drop-down-menu-component>
+
+    </div>
+
+    <div class="flex  text-gray-500 text-sm font-thin  mt-2" #textStyle>
+        <span>Font</span>
+        <app-drop-down-menu-component class="ml-6.5" (selectedItem)="SelectedFont($event)" [width]="144" [height]="20"
+            (selectedItemInput)="SelectedFont($event, false)"
+            [isDropDownOpen]="isFontDropDownOpen" [currentItem]="availableFonts[0]"
+            [dropDownItems]="availableFonts"></app-drop-down-menu-component>
+
+    </div>
+
+    <div class="flex  text-gray-500 text-sm font-thin  mt-2" #textStyle>
+        <span>Size</span>
+        <button class="ml-7.5 inline-flex w-[12px] text-black  hover:font-medium  textStyleBlockItem" (click)="SelectedFontSize('12', false)">12</button>
+        <button class="ml-2 inline-flex w-[12px] text-black  hover:font-medium textStyleBlockItem" (click)="SelectedFontSize('16', false)">16</button>
+        <button class="ml-2 inline-flex w-[12px] text-black  hover:font-medium textStyleBlockItem" (click)="SelectedFontSize('24', false)">24</button>
+        <!-- <button class="ml-2 text-black  textStyleBlockItem" (click)="selectedSize($event, 40)">40</button> -->
+        <!-- <button class="ml-2 text-black  textStyleBlockItem" (click)="selectedSize($event, 64)">64</button> -->
+
+        <app-drop-down-menu-component class="ml-2.5 inline-flex w-[12px]" (selectedItem)="SelectedFontSize($event)"
+            [width]="80" [height]="20"
+            (selectedItemInput)="SelectedFontSize($event, false)"
+            [isDropDownOpen]="isSizeDropDownOpen" [currentItem]="fontSizeSteps[10]"
+            [dropDownItems]="fontSizeSteps"></app-drop-down-menu-component>
+    </div>
+
+    <div class="flex  text-gray-500 text-sm font-thin  mt-2" #textStyle>
+
+         <div class="flex-col text-left text-gray-500 text-sm" #textStyle>
+            <span >Color</span>
+            <div class="flex">
+                @for (color of firstRowStyle; track $index) {
+                    @if ($index == 0)
+                    {
+                        <div class="color-container" [ngClass]="{ 'color-white': color === '#FFFFFF' }"
+                            [style.background-color]="color" [title]="color" (click)="onColorSelect(color)">
+                        </div>
+                    }
+                    @else {
+                        <div class="ml-1 color-container" [ngClass]="{ 'color-white': color === '#FFFFFF' }"
+                            [style.background-color]="color" [title]="color" (click)="onColorSelect(color)">
+                        </div>
+                    }
+                }
+		    </div>
+            <div class="flex mt-1">
+                @for (color of scndRowStyle; track $index) {
+                    @if ($index == 0)
+                    {
+                        <div class="color-container" [ngClass]="{ 'color-white': color === '#FFFFFF' }"
+                            [style.background-color]="color" [title]="color" (click)="onColorSelect(color)">
+                        </div>
+                    }
+                    @else {
+                        <div class="ml-1 color-container" [ngClass]="{ 'color-white': color === '#FFFFFF', 'rainbow': color === '#F59E0B' }"
+                            [style.background-color]="color" [title]="color" (click)="onColorSelect(color)">
+                        </div>
+                    }
+                }
+		    </div>
+        </div>
+
+        <div class="flex-col  text-gray-500 text-sm ml-5 font-thin" #textStyle>
+            <span class="">Background</span>
+
+            <div class="flex">
+                @for (color of firstRowBg; track $index) {
+                    @if ($index == 0)
+                    {
+                        <div class="color-container" [ngClass]="{ 'color-white': color === '#FFFFFF' }"
+                            [style.background-color]="color" [title]="color" (click)="onBgColorSelect(color)">
+                        </div>
+                    }
+                    @else {
+                        <div class="ml-1 color-container" [ngClass]="{ 'color-white': color === '#FFFFFF'  }"
+                            [style.background-color]="color" [title]="color" (click)="onBgColorSelect(color)">
+                        </div>
+                    }
+                }
+		    </div>
+            <div class="flex mt-1">
+                @for (color of scndRowBg; track $index) {
+                    @if ($index == 0)
+                    {
+                        <div class="color-container" [ngClass]="{ 'color-white': color === '#FFFFFF' }"
+                            [style.background-color]="color" [title]="color" (click)="onBgColorSelect(color)">
+                        </div>
+                    }
+                    @else {
+                        <div class="ml-1 color-container" [ngClass]="{ 'color-white': color === '#FFFFFF', 'rainbow': color === '#F59E0B' }"
+                            [style.background-color]="color" [title]="color" (click)="onBgColorSelect(color)">
+                        </div>
+                    }
+                }
+		    </div>
+        </div>
+    </div>
+    </div>
+</div>

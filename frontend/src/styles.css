@@ -52,6 +52,16 @@ body {
   left: -9999px;
 }
 
+@layer base {
+  h1 {
+    @apply text-4xl font-bold mb-4;
+  }
+  p {
+    @apply text-base mb-2;
+  }
+}
+
+
 /* .asdasdd {
   @apply absolute w-[100px] h-[30px] border border-dashed border-gray-700 px-2 py-1 bg-transparent cursor-move flex justify-left items-left rounded-md text-sm text-gray-800 shadow-sm hover:border-gray-900 hover:shadow-md transition-all
 } */
@@ -68,12 +78,17 @@ body {
   @apply backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer
 }
 
+.textStyleBlockItem {
+  @apply bg-transparent opacity-40 hover:opacity-100  backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer
+}
+
+
 .toolbarBtnStyle {
   @apply flex items-center rounded-md text-sm font-medium text-gray-800 bg-transparent hover:bg-white/100 backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer font-standard
 }
 
 .dropdownBtnStyle {
-  @apply text-sm font-medium text-black bg-white/80 hover:bg-gray-100/100 backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer
+  @apply text-sm  text-black bg-white/80 hover:bg-gray-100/100 backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer
 }
 
 .dropdownBtnStyleLowOp {

@@ -22,5 +22,6 @@ export class Constants {
     // ERROR messages
     public static ERROR_INVALID_FILETYPE: string = "You uploaded a non-PDF file. Please upload a valid PDF document only."
     public static ERROR_INVALID_FILETYPE_TITLE: string = "Invalid File Type"
+    public static ERROR_NO_PARENT_CONTAINER: string = "No Parent Container found!"
 
 }

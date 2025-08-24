@@ -10,9 +10,9 @@
         <!-- <span id="textBtnText" class=>Text</span> -->
         <img src="assets/icons/textIcon.svg" class="w-[20px] h-[20px]"/>
         <!-- <div class="flex w-[20px] h-[20px] bg-black rounded-[5px] ml-[7px]"
-            [style.background-color]="textEditService.getCurrentTextStyleEditor().currentColor"
-            [ngStyle]="{ 'background-color': textEditService.getCurrentTextStyleEditor().currentColor }"
-            [ngClass]="{'borderedColorContainer': textEditService.getCurrentTextStyleEditor().currentColor === '#FFFFFF'}">
+            [style.background-color]="textEditService.getCurrentTextStyle().currentColor"
+            [ngStyle]="{ 'background-color': textEditService.getCurrentTextStyle().currentColor }"
+            [ngClass]="{'borderedColorContainer': textEditService.getCurrentTextStyle().currentColor === '#FFFFFF'}">
         </div> -->
     </button>
 
@@ -39,4 +39,3 @@
     </button>
 </div>
 
-<app-text-style-bar></app-text-style-bar>

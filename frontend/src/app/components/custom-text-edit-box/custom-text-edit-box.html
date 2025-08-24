@@ -1,29 +1,26 @@
 
-
+<div>
 <div class="textBoxStyle border-4 border-dashed border-blue-500 z-50
            hover:border-blue-700 hover:shadow-md cursor-move resize both overflow-hidden"
     (mousedown)="onDragStart($event)"
     (dragend)="onDragEnd($event)"
     draggable="true"
     #editableDiv
-    [ngStyle]="{ transform: 'translate(' + box.BoxDims.left + 'px, 
-                                       ' + box.BoxDims.top + 'px)',
+    [ngStyle]="{ transform: 'translate(' + box.BoxDims.left + 'px, ' + box.BoxDims.top + 'px)',
                                       width: box.BoxDims.width + 'px',
                                       height: box.BoxDims.height + 'px'}">
-  
-      
       <div>
-        <textarea
+        <div [contentEditable]="true"
           class="textBoxStyle w-full h-full
                 outline-none  overflow-hidden leading-normal"
-          [style.color]="textEditService.getCurrentTextStyleEditorById(box.id)?.currentColor"
+          [style.color]="box.TextStyleState.textColor"
           contenteditable="true"
-          [ngStyle]="{ 'font-size': box.textStyleEditorState.font_size + 'px' , 'font-family' : box.textStyleEditorState.fontFamily}"
-          (input)="onInput($event)"> {{ box.text }}
-        </textarea>
+          [ngStyle]="{ 'font-size': box.TextStyleState.textFontSize + 'px' , 'font-family' : box.TextStyleState.textFontFamily}"
+          (input)="onInput($event)"
+          [innerHTML]="box.text">
+        </div>
       </div>
 
-  
     <!-- <div
       *ngIf="isDragging"
         class="textBoxStyle"
@@ -31,4 +28,15 @@
         [style.top.px] = "mouseY">
         <input placeholder="Text" class="ghostInput"/>
     </div> -->
+</div>
+  @if (box.BoxDims.resizedHeight == 0 && box.BoxDims.resizedWidth == 0) {
+    <app-text-style-block [translateX]="box.BoxDims.left+box.BoxDims.width+10"
+                          [translateY]="box.BoxDims.top"
+                          [box]="box"></app-text-style-block>
+  } @else {
+    <app-text-style-block [translateX]="box.BoxDims.left+box.BoxDims.resizedWidth+10"
+                          [translateY]="box.BoxDims.top"
+                          [box]="box"></app-text-style-block>
+  }
+
 </div>

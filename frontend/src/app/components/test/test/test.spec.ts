@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { TextStyleBar } from './text-style-bar';
+import { Test } from './test';
 
-describe('TextStyleBar', () => {
-  let component: TextStyleBar;
-  let fixture: ComponentFixture<TextStyleBar>;
+describe('Test', () => {
+  let component: Test;
+  let fixture: ComponentFixture<Test>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TextStyleBar]
+      imports: [Test]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(TextStyleBar);
+    fixture = TestBed.createComponent(Test);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
