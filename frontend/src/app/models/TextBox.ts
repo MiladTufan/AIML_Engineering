@@ -1,5 +1,6 @@
 import { BlockObject } from "./BlockObject";
-import { TextStyleEditor } from "./TextStyleEditor";
+import { TextStyle } from "./TextStyle";
+
 
 
 export type BoxDimensions = {
@@ -18,7 +19,7 @@ export type BoxDimensions = {
 export class TextBox  extends BlockObject
 {
   constructor(id: number, pageId: number, BoxDims: BoxDimensions, public text: string,
-        public textStyleEditorState: TextStyleEditor) { 
+        public TextStyleState: TextStyle) { 
           super(id, pageId, BoxDims)
         }
 }

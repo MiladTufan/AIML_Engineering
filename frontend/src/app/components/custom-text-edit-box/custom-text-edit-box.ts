@@ -3,11 +3,12 @@ import { TextEditService } from '../../services/text-edit-service';
 import { CommonModule } from '@angular/common';
 import { TextBox } from '../../models/TextBox';
 import { PDFViewerService } from '../../services/pdfviewer-service';
+import { TextStyleBlock } from './text-style-block/text-style-block';
 
 @Component({
 	selector: 'app-custom-text-edit-box',
 	standalone: true,
-	imports: [CommonModule],
+	imports: [CommonModule, TextStyleBlock],
 	templateUrl: './custom-text-edit-box.html',
 	styleUrl: './custom-text-edit-box.css'
 })
@@ -37,6 +38,7 @@ export class CustomTextEditBox {
 
 	//=================================================== Children =================================================
 	@ViewChild('editableDiv') editableDiv!: ElementRef;
+	@ViewChild(TextStyleBlock) textStyleBlockComponent!: TextStyleBlock
 
 
 	constructor(public textEditService: TextEditService, private pdfViewerService: PDFViewerService) { }
@@ -56,8 +58,7 @@ export class CustomTextEditBox {
 					box.BoxDims.resizedHeight = height
 					const diff = Math.abs(box.BoxDims.left - rect2.width)
 
-					if (width > diff) 
-					{
+					if (width > diff) {
 						box.BoxDims.resizedWidth = diff
 						box.BoxDims.width = diff
 					}
@@ -67,10 +68,9 @@ export class CustomTextEditBox {
 		});
 	}
 
-	roundedWidth(w: number){
+	roundedWidth(w: number) {
 		return Math.round(w);
 	}
-
 
 	ngAfterViewInit() {
 		this.resizeObserver.observe(this.editableDiv.nativeElement);
@@ -86,11 +86,9 @@ export class CustomTextEditBox {
 		this.mouseY = event.clientY - this.dragOffsetY
 		this.isDragging = false;
 		this.positionChanged.emit({ top: this.mouseY, left: this.mouseX })
-
 	}
 
 	onDragStart(event: MouseEvent) {
-
 		const rect = (event.target as HTMLElement).getBoundingClientRect();
 
 		// Store the offset between mouse and top-left of box
@@ -107,24 +105,39 @@ export class CustomTextEditBox {
 		}
 	}
 
+
+	expandColorPallet() {
+		const currentTextStyle = this.textEditService.getCurrentTextStyle()
+		// this.currentFontSize = currentTextStyle.textBaseFontSize.toString()
+		// this.currentFont = currentTextStyle.textFontFamily
+		// this.currentFontName = currentTextStyle.textFontName
+		this.textEditService.getCurrentTextStyle().isCollapsed = false;
+	}
+
+	collapseColorPallet() {
+		this.textEditService.getCurrentTextStyle().isCollapsed = true;
+	}
+
+
 	@HostListener('document:click', ['$event'])
 	onDocumentClick(event: MouseEvent) {
 		try {
 			if (this.editableDiv == null) return;
+
+			console.log(this.editableDiv.nativeElement);
 			const clickedInsideTextBox = this.editableDiv.nativeElement.contains(event.target);
 			const eventTarget = (event.target as HTMLElement)
 
-			let clickInsideColorPalette = false;
+			let clickInsideTextStyle = false;
 			let node = eventTarget
-			while(node.parentElement)
-			{
-				clickInsideColorPalette = node?.id === "TextStyleContainer" ? true : false;
-				if (clickInsideColorPalette) break;
+			while (node.parentElement) {
+				clickInsideTextStyle = node?.id === "TextStyleContainer" ? true : false;
+				if (clickInsideTextStyle) break;
 				node = node.parentElement
 			}
 
 
-			if (!clickInsideColorPalette) {
+			if (!clickInsideTextStyle) {
 				this.currentlyEditing = clickedInsideTextBox;
 				this.textBoxEditClicked.emit(this.currentlyEditing)
 				console.log(this.currentlyEditing)

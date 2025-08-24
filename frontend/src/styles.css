@@ -68,12 +68,17 @@ body {
   @apply backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer
 }
 
+.textStyleBlockItem {
+  @apply bg-transparent opacity-40 hover:opacity-100  backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer
+}
+
+
 .toolbarBtnStyle {
   @apply flex items-center rounded-md text-sm font-medium text-gray-800 bg-transparent hover:bg-white/100 backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer font-standard
 }
 
 .dropdownBtnStyle {
-  @apply text-sm font-medium text-black bg-white/80 hover:bg-gray-100/100 backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer
+  @apply text-sm  text-black bg-white/80 hover:bg-gray-100/100 backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer
 }
 
 .dropdownBtnStyleLowOp {

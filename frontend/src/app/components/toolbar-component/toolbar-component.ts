@@ -2,17 +2,17 @@ import { CommonModule } from '@angular/common';
 import { Component, Output, EventEmitter, ViewChild, Input } from '@angular/core';
 import { Constants } from '../../models/constants/constants';
 import { TextEditService } from '../../services/text-edit-service';
-import { TextStyleBar } from '../custom-text-edit-box/text-style-bar/text-style-bar';
 import { PDFViewerService } from '../../services/pdfviewer-service';
 import { FormsModule, MinLengthValidator } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { DownloadService } from '../../services/communication/download-service';
 import { GlobalEdit, MiniPage } from '../../models/globalEdit';
 import { SessionService } from '../../services/communication/session-service';
+import { TextStyleBlock } from '../custom-text-edit-box/text-style-block/text-style-block';
 
 @Component({
 	selector: 'app-toolbar-component',
-	imports: [CommonModule, TextStyleBar, FormsModule],
+	imports: [CommonModule, FormsModule],
 	templateUrl: './toolbar-component.html',
 	styleUrl: './toolbar-component.css'
 })
@@ -25,7 +25,7 @@ export class ToolbarComponent {
 
 	//=============================================== Children ============================================
 	// @ViewChild("TextButtonContainer") textContainer!: ElementRef<HTMLDivElement>;
-	@ViewChild(TextStyleBar) textStyleBarComponent!: TextStyleBar
+	@ViewChild(TextStyleBlock) textStyleBlockComponent!: TextStyleBlock
 
 	//=============================================== Constructor =========================================
 	constructor(public textEditService: TextEditService, private sessionService: SessionService,
@@ -80,11 +80,11 @@ export class ToolbarComponent {
 	//=============================================== Methods ==============================================
 
 
-	public enableTextStyleEditor(editState: Boolean) {
-		if (editState)
-			this.textStyleBarComponent.expandColorPallet();
-		else
-			this.textStyleBarComponent.collapseColorPallet();
+	public enableTextStyle(editState: Boolean) {
+		// if (editState)
+		// 	this.textStyleBlockComponent.expandColorPallet();
+		// else
+		// 	this.textStyleBlockComponent.collapseColorPallet();
 	}
 
 	public onPageChange(pageNum: number) {

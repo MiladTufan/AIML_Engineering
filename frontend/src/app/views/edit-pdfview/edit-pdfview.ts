@@ -1,16 +1,12 @@
 import { PdfViewerComponent } from '../../components/pdf-viewer-component/pdf-viewer-component';
 import { Component, ComponentRef, ElementRef, HostListener, Renderer2, signal, ViewChild, ViewContainerRef } from '@angular/core';
-import { PDFFileService } from '../../services/pdffile-service';
 import { ToolbarComponent } from '../../components/toolbar-component/toolbar-component';
-import { CustomTextEditBox } from '../../components/custom-text-edit-box/custom-text-edit-box';
-import { TextBox } from '../../models/TextBox';
 import { PDFViewerService } from '../../services/pdfviewer-service';
 import { TextEditService } from '../../services/text-edit-service';
-import { TextStyleEditor } from '../../models/TextStyleEditor';
 import { Subscription } from 'rxjs';
 import { Constants } from '../../models/constants/constants';
-import { provideHttpClient } from '@angular/common/http';
 import { EntityManagerService } from '../../services/entity-manager-service';
+import { TextStyle } from '../../models/TextStyle';
 
 
 
@@ -113,14 +109,8 @@ export class EditPDFView {
 				sizeCreationScale: this.pdfViewService.currentScale
 			}
 
-
-			// top: (box.BoxDims.top - baseMarginScale+16) * this.scale, 
-			// 						  left: box.BoxDims.left  * this.scale, 
-			// 						  width: box.BoxDims.width * this.scale, 
-			// 						  height:  box.BoxDims.height * this.scale,
-
-			const styleState = new TextStyleEditor()
-			styleState.font_size = styleState.baseFontSize * this.pdfViewService.currentScale
+			const styleState = new TextStyle()
+			styleState.textFontSize = styleState.textBaseFontSize * this.pdfViewService.currentScale
 
 			// this.mouseY += (this.pdfViewService.pageHeight * (this.currentPageNumber - 1))
 			this.pdfViewService.setCodeResizeTimeout()

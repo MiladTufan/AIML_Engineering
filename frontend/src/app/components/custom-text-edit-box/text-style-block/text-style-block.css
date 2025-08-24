@@ -28,5 +28,34 @@
 }
 
 .color-white {
-    border: 1px solid #999; 
+    border: 1px solid #999;
+}
+
+.rainbow {
+  background: linear-gradient(
+    to bottom right,
+    #e53935,  /* red */
+    #fb8c00,  /* orange */
+    #fdd835,  /* yellow */
+    #43a047,  /* green */
+    #1e88e5,  /* blue */
+    #5e35b1,  /* indigo */
+    #8e24aa   /* violet */
+  );
+  /* background-size: 1400% 1400%;
+  animation: rainbowShift 8s ease infinite; */
+}
+
+/* @keyframes rainbowShift {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 0%; }
+} */
+
+#TextStyleContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* 👇 This is the key change */
+  transform-origin: top left;
 }

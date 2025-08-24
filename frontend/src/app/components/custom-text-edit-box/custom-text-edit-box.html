@@ -1,5 +1,5 @@
 
-
+<div>
 <div class="textBoxStyle border-4 border-dashed border-blue-500 z-50
            hover:border-blue-700 hover:shadow-md cursor-move resize both overflow-hidden"
     (mousedown)="onDragStart($event)"
@@ -10,19 +10,16 @@
                                        ' + box.BoxDims.top + 'px)',
                                       width: box.BoxDims.width + 'px',
                                       height: box.BoxDims.height + 'px'}">
-  
-      
       <div>
         <textarea
           class="textBoxStyle w-full h-full
                 outline-none  overflow-hidden leading-normal"
-          [style.color]="textEditService.getCurrentTextStyleEditorById(box.id)?.currentColor"
+          [style.color]="box.TextStyleState.textColor"
           contenteditable="true"
-          [ngStyle]="{ 'font-size': box.textStyleEditorState.font_size + 'px' , 'font-family' : box.textStyleEditorState.fontFamily}"
+          [ngStyle]="{ 'font-size': box.TextStyleState.textFontSize + 'px' , 'font-family' : box.TextStyleState.textFontFamily}"
           (input)="onInput($event)"> {{ box.text }}
         </textarea>
       </div>
-
   
     <!-- <div
       *ngIf="isDragging"
@@ -32,3 +29,12 @@
         <input placeholder="Text" class="ghostInput"/>
     </div> -->
 </div>
+<app-text-style-block [translateX]="box.BoxDims.left+box.BoxDims.width+10" 
+                      [translateY]="box.BoxDims.top-box.BoxDims.height"
+                      [box]="box"></app-text-style-block>
+</div>
+
+<select id="textType">
+  <option value="p">Paragraph</option>
+  <option value="h1">Heading H1</option>
+</select>

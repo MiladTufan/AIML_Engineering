@@ -62,7 +62,7 @@ export class PdfViewerComponent {
 	//==================================================== Constructor ======================================================
 	constructor(private fileService: PDFFileService, private sessionService: SessionService, private entityManagerService: EntityManagerService,
 		private pdfViewerService: PDFViewerService, private textEditService: TextEditService,) {
-		this.renderTrigger.pipe(debounceTime(200)).subscribe((finalScale) => {
+		this.renderTrigger.pipe(debounceTime(10)).subscribe((finalScale) => {
 			Promise.all(
 				Array.from(this.renderQueue).map(pageNumber => {
 					console.log("Re rendering page on zoom: ", pageNumber, " scale: ", finalScale)
@@ -268,12 +268,12 @@ export class PdfViewerComponent {
 			if (box.pageId === pageNumber) {
 				const scaleParams = this.entityManagerService.rescaleObjOnRender(box, scale)
 
-				box.textStyleEditorState.font_size = box.textStyleEditorState.baseFontSize * scale;
+				box.TextStyleState.textFontSize = box.TextStyleState.textBaseFontSize * scale;
 				//const [left, top] = box.left, box.top //viewport.convertToViewportPoint(box.left, box.top);
 
 				this.pdfViewerService.setCodeResizeTimeout()
 
-				const ret = this.textEditService.createTextBox(scaleParams.dims, box.textStyleEditorState, pageNumber,
+				const ret = this.textEditService.createTextBox(scaleParams.dims, box.TextStyleState, pageNumber,
 					scale, this.pdfViewerService.currentScrollTop, true, box.id)
 
 				ret.comp.instance.positionChanged.subscribe((event: any) => this.entityManagerService.executeMove(ret.box, event, pageNumber))
@@ -533,19 +533,19 @@ export class PdfViewerComponent {
 			for (const p of this.pdfViewerService.visiblePages.getValue()) {
 				this.renderQueue.add(p);
 
-				const canvas = (event.currentTarget as HTMLDivElement).querySelector(`#canvasContainer-${p}`) as HTMLDivElement
-				const page = this.pdfViewerService.getPageWithNumber(p)
-				if (canvas && page) {
-					const rect = ((event.currentTarget as HTMLDivElement).querySelector(`#pageContainer-${p}`) as HTMLDivElement).getBoundingClientRect();
-					let ret = this.calculateZoomTranslationCss(rect, page.translateX, page.translateY, oldScale, newScale)
-					page.translateX = ret.tX
-					page.translateY = ret.tY
+				// const canvas = (event.currentTarget as HTMLDivElement).querySelector(`#canvasContainer-${p}`) as HTMLDivElement
+				// const page = this.pdfViewerService.getPageWithNumber(p)
+				// if (canvas && page) {
+				// 	const rect = ((event.currentTarget as HTMLDivElement).querySelector(`#pageContainer-${p}`) as HTMLDivElement).getBoundingClientRect();
+				// 	let ret = this.calculateZoomTranslationCss(rect, page.translateX, page.translateY, oldScale, newScale)
+				// 	page.translateX = ret.tX
+				// 	page.translateY = ret.tY
 
-					canvas.style.transformOrigin = `0px 0px`;
-					canvas.style.transition = 'transform 0.25s ease-in-out';
-					canvas.style.transform = `translate(${ret.tX}px, ${ret.tY}px) scale(${this.scale})`;
-					//this.cssScale = this.scale;
-				}
+				// 	canvas.style.transformOrigin = `0px 0px`;
+				// 	canvas.style.transition = 'transform 0.25s ease-in-out';
+				// 	canvas.style.transform = `translate(${ret.tX}px, ${ret.tY}px) scale(${this.scale})`;
+				// 	//this.cssScale = this.scale;
+				// }
 			}
 
 			this.renderTrigger.next(newScale);

@@ -89,7 +89,7 @@ export class EntityManagerService {
         adjustedPageNum: number, page: Page) {
         if (obj instanceof TextBox) {
             const textbox = obj as TextBox
-            const ret = this.textEditService.createTextBox(textbox.BoxDims, textbox.textStyleEditorState,
+            const ret = this.textEditService.createTextBox(textbox.BoxDims, textbox.TextStyleState,
                 adjustedPageNum, textbox.BoxDims.currentScale,
                 this.pdfViewerService.currentScrollTop)
             
