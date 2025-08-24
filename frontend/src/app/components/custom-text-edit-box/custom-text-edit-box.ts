@@ -124,7 +124,6 @@ export class CustomTextEditBox {
 		try {
 			if (this.editableDiv == null) return;
 
-			console.log(this.editableDiv.nativeElement);
 			const clickedInsideTextBox = this.editableDiv.nativeElement.contains(event.target);
 			const eventTarget = (event.target as HTMLElement)
 

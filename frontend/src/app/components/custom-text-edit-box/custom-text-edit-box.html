@@ -15,19 +15,15 @@
                 outline-none  overflow-hidden leading-normal"
           [style.color]="box.TextStyleState.textColor"
           contenteditable="true"
-          [ngStyle]="{ 'font-size': box.TextStyleState.textFontSize + 'px' , 'font-family' : box.TextStyleState.textFontFamily}"
+          [ngStyle]="{ 'font-size': box.TextStyleState.textFontSize + 'px' ,
+                       'font-weight': box.TextStyleState.textFormat.isBold ? 'bold' : 'normal',
+                       'font-style': box.TextStyleState.textFormat.isItalic ? 'italic' : 'normal',
+                       'text-decoration': box.TextStyleState.textFormat.isUnderline ? 'underline' : 'none',
+                      'font-family' : box.TextStyleState.textFontFamily}"
           (input)="onInput($event)"
           [innerHTML]="box.text">
         </div>
       </div>
-
-    <!-- <div
-      *ngIf="isDragging"
-        class="textBoxStyle"
-        [style.left.px] = "mouseX"
-        [style.top.px] = "mouseY">
-        <input placeholder="Text" class="ghostInput"/>
-    </div> -->
 </div>
   @if (box.BoxDims.resizedHeight == 0 && box.BoxDims.resizedWidth == 0) {
     <app-text-style-block [translateX]="box.BoxDims.left+box.BoxDims.width+10"

@@ -54,6 +54,12 @@ body {
 
 @layer base {
   h1 {
+    @apply text-6xl font-bold mb-4;
+  }
+  h2 {
+    @apply text-5xl font-bold mb-4;
+  }
+  h3 {
     @apply text-4xl font-bold mb-4;
   }
   p {
@@ -79,7 +85,7 @@ body {
 }
 
 .textStyleBlockItem {
-  @apply bg-transparent opacity-40 hover:opacity-100  backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer
+  @apply bg-transparent  hover:opacity-100  backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer
 }
 
 

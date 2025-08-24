@@ -15,7 +15,6 @@ import { TextBox } from '../../../models/TextBox';
 })
 export class TextStyleBlock {
 
-
   @Input() translateX: number = 0;
   @Input() translateY: number = 0;
   @Input() box: any;
@@ -24,6 +23,17 @@ export class TextStyleBlock {
   isFontDropDownOpen: Boolean = false;
   isStyleDropDownOpen: Boolean = false;
   isSizeDropDownOpen: Boolean = false;
+
+  public isFontBold: Boolean = false;
+  public isFontItalic: Boolean = false;
+  public isFontUnderline: Boolean = false;
+  public isFontSuperscript: Boolean = false;
+  public isFontSubScript: Boolean = false;
+
+  public isLeftAlign: Boolean = false;
+  public isCenterAlign: Boolean = false;
+  public isRightAlign: Boolean = false;
+  public isLink: Boolean = false;
 
   currentFont: string = "Inter, sans-serif";
   currentFontName: string = "Inter";
@@ -145,9 +155,9 @@ export class TextStyleBlock {
       const currType = this.styleOptions.find(s => s.style === style)
       if (currType)
       {
-        this.box.text = this.stripHtmlTags(this.box.text)
-        this.box.text = `<${currType.value}>${this.box.text}</${currType.value}>`;
-        this.box.TextStyleState.textStyle = currType.style
+        this.globalTextbox!.text = this.stripHtmlTags(this.box.text)
+        this.globalTextbox!.text = `<${currType.value}>${this.box.text}</${currType.value}>`;
+        this.globalTextbox!.TextStyleState.textStyle = currType.style
       }
   }
 
@@ -155,35 +165,70 @@ export class TextStyleBlock {
   // Text Align
   //=============================================================================================================
   textAlignLeft($event: MouseEvent) {
-    throw new Error('Method not implemented.');
+    this.isLeftAlign = !this.isLeftAlign;
+    this.globalTextbox!.TextStyleState.textFormat.isLeftAlign = this.isLeftAlign;
+
+    if (this.isLeftAlign)
+    {
+      this.isRightAlign = false;
+      this.isCenterAlign = false;
+      this.globalTextbox!.TextStyleState.textFormat.isRightAlign = false;
+      this.globalTextbox!.TextStyleState.textFormat.isCenterAlign = false;
+    }
   }
 
   textAlignRight($event: MouseEvent) {
-    throw new Error('Method not implemented.');
+    this.isRightAlign = !this.isRightAlign;
+    this.globalTextbox!.TextStyleState.textFormat.isRightAlign = this.isRightAlign;
+
+    if (this.isRightAlign)
+    {
+      this.isLeftAlign = false;
+      this.isCenterAlign = false;
+      this.globalTextbox!.TextStyleState.textFormat.isLeftAlign = false;
+      this.globalTextbox!.TextStyleState.textFormat.isCenterAlign = false;
+    }
   }
 
   textAlignCenter($event: MouseEvent) {
-    throw new Error('Method not implemented.');
+    this.isCenterAlign = !this.isCenterAlign;
+    this.globalTextbox!.TextStyleState.textFormat.isCenterAlign = this.isCenterAlign;
+
+    if (this.isCenterAlign)
+    {
+      this.isLeftAlign = false;
+      this.isRightAlign = false;
+      this.globalTextbox!.TextStyleState.textFormat.isLeftAlign = false;
+      this.globalTextbox!.TextStyleState.textFormat.isRightAlign = false;
+    }
   }
 
 
   //=============================================================================================================
   // Text Format
   //=============================================================================================================
-  textFormatSubscript($event: MouseEvent) {
-    throw new Error('Method not implemented.');
-  }
-  textFormatSuperscript($event: MouseEvent) {
-    throw new Error('Method not implemented.');
-  }
-  textFormatItalic($event: MouseEvent) {
-    throw new Error('Method not implemented.');
-  }
-  textFormatBold($event: MouseEvent) {
-    throw new Error('Method not implemented.');
+  textFormatSubscript() {
+    this.isFontSubScript = !this.isFontSubScript;
+    this.globalTextbox!.TextStyleState.textFormat.isSubscript = this.isFontSubScript;
   }
 
-  textFormatUnderline($event: MouseEvent) {
-    throw new Error('Method not implemented.');
+  textFormatSuperscript() {
+    this.isFontSuperscript = !this.isFontSuperscript;
+    this.globalTextbox!.TextStyleState.textFormat.isSuperscript = this.isFontSuperscript;
+  }
+
+  textFormatItalic() {
+    this.isFontItalic = !this.isFontItalic;
+    this.globalTextbox!.TextStyleState.textFormat.isItalic = this.isFontItalic;
+  }
+
+  textFormatBold() {
+    this.isFontBold = !this.isFontBold;
+    this.globalTextbox!.TextStyleState.textFormat.isBold = this.isFontBold;
+  }
+
+  textFormatUnderline() {
+    this.isFontUnderline = !this.isFontUnderline;
+    this.globalTextbox!.TextStyleState.textFormat.isUnderline = this.isFontUnderline;
   }
 }

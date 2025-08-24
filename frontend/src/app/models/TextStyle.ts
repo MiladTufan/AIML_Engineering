@@ -17,9 +17,12 @@ export class TextStyle {
 
 export class TextFormat
 {
-    public bold: Boolean = false;
-    public italic: Boolean = false;
-    public underline: Boolean = false;
-    public superscript: Boolean = false;
-    public subscript: Boolean = false;
+    public isBold: Boolean = false;
+    public isItalic: Boolean = false;
+    public isUnderline: Boolean = false;
+    public isSuperscript: Boolean = false;
+    public isSubscript: Boolean = false;
+    public isLeftAlign: Boolean = false;
+    public isRightAlign: Boolean = false;
+    public isCenterAlign: Boolean = false;
 }
