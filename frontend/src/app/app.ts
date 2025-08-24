@@ -2,6 +2,7 @@ import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { AlertComponent } from './shared/alert/alert';
 import { SessionService } from './services/communication/session-service';
+import {Test} from './components/test/test/test';
 
 @Component({
   selector: 'app-root',

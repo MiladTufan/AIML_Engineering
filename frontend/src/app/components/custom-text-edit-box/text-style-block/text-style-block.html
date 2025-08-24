@@ -1,4 +1,4 @@
-<div class="p-4 translucentStyle flex-col rounded-xl  z-100 select-none both overflow-visible absolute" 
+<div class="p-4 translucentStyle flex-col rounded-xl  z-100 select-none both overflow-visible absolute"
     [style.transform]="'scale(' + 1 + ')'"
     [@genieGrow]="this.box.TextStyleState.isCollapsed ? 'hidden' : 'visible'"
     [style.left.px]="translateX"
@@ -34,7 +34,7 @@
     <div class="flex  text-gray-500 text-sm font-thin  mt-2" #textStyle>
         <span>Font</span>
         <app-drop-down-menu-component class="ml-6.5" (selectedItem)="SelectedFont($event)" [width]="144" [height]="20"
-        (selectedItemInput)="SelectedFontInput($event)"
+            (selectedItemInput)="SelectedFont($event, false)"
             [isDropDownOpen]="isFontDropDownOpen" [currentItem]="availableFonts[0]"
             [dropDownItems]="availableFonts"></app-drop-down-menu-component>
 
@@ -48,7 +48,7 @@
         <!-- <button class="ml-2 text-black  textStyleBlockItem" (click)="selectedSize($event, 40)">40</button> -->
         <!-- <button class="ml-2 text-black  textStyleBlockItem" (click)="selectedSize($event, 64)">64</button> -->
 
-        <app-drop-down-menu-component class="ml-2.5 inline-flex w-[12px]" (selectedItem)="SelectedFontSize($event)" 
+        <app-drop-down-menu-component class="ml-2.5 inline-flex w-[12px]" (selectedItem)="SelectedFontSize($event)"
             [width]="80" [height]="20"
             (selectedItemInput)="SelectedFontSize($event, false)"
             [isDropDownOpen]="isSizeDropDownOpen" [currentItem]="fontSizeSteps[10]"

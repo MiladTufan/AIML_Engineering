@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 # --- Frontend ---
 Write-Host "Starting Angular frontend..."
 Set-Location -Path  (Join-Path $PSScriptRoot "frontend")
-Start-Process powershell -ArgumentList "ng serve"
+Start-Process powershell -ArgumentList "ng serve" -NoNewWindow
 
 # --- Backend environment setup ---
 Write-Host "Setting up backend environment..."

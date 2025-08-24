@@ -6,21 +6,21 @@
     (dragend)="onDragEnd($event)"
     draggable="true"
     #editableDiv
-    [ngStyle]="{ transform: 'translate(' + box.BoxDims.left + 'px, 
-                                       ' + box.BoxDims.top + 'px)',
+    [ngStyle]="{ transform: 'translate(' + box.BoxDims.left + 'px, ' + box.BoxDims.top + 'px)',
                                       width: box.BoxDims.width + 'px',
                                       height: box.BoxDims.height + 'px'}">
       <div>
-        <textarea
+        <div [contentEditable]="true"
           class="textBoxStyle w-full h-full
                 outline-none  overflow-hidden leading-normal"
           [style.color]="box.TextStyleState.textColor"
           contenteditable="true"
           [ngStyle]="{ 'font-size': box.TextStyleState.textFontSize + 'px' , 'font-family' : box.TextStyleState.textFontFamily}"
-          (input)="onInput($event)"> {{ box.text }}
-        </textarea>
+          (input)="onInput($event)"
+          [innerHTML]="box.text">
+        </div>
       </div>
-  
+
     <!-- <div
       *ngIf="isDragging"
         class="textBoxStyle"
@@ -29,12 +29,14 @@
         <input placeholder="Text" class="ghostInput"/>
     </div> -->
 </div>
-<app-text-style-block [translateX]="box.BoxDims.left+box.BoxDims.width+10" 
-                      [translateY]="box.BoxDims.top-box.BoxDims.height"
-                      [box]="box"></app-text-style-block>
-</div>
+  @if (box.BoxDims.resizedHeight == 0 && box.BoxDims.resizedWidth == 0) {
+    <app-text-style-block [translateX]="box.BoxDims.left+box.BoxDims.width+10"
+                          [translateY]="box.BoxDims.top"
+                          [box]="box"></app-text-style-block>
+  } @else {
+    <app-text-style-block [translateX]="box.BoxDims.left+box.BoxDims.resizedWidth+10"
+                          [translateY]="box.BoxDims.top"
+                          [box]="box"></app-text-style-block>
+  }
 
-<select id="textType">
-  <option value="p">Paragraph</option>
-  <option value="h1">Heading H1</option>
-</select>
+</div>

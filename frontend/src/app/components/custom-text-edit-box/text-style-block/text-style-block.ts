@@ -33,7 +33,7 @@ export class TextStyleBlock {
   private globalTextbox: TextBox | null = null
 
   constructor(public textEditService: TextEditService, public pdfViewerService: PDFViewerService) {
-    
+
   }
 
   colors: string[] = [
@@ -101,20 +101,10 @@ export class TextStyleBlock {
     throw new Error('Method not implemented.');
   }
 
-  SelectedFont(fontName: string) {
+  SelectedFont(fontName: string, toggleDropDown: boolean = true) {
     this.currentFontName = fontName
-    this.isFontDropDownOpen = !this.isFontDropDownOpen;
-    const fontFamily = this.fontOptions.find(f => f.name == fontName)?.value
-    this.currentFont = fontFamily!;
-    this.globalTextbox!.TextStyleState.textFontFamily = fontFamily!
-    this.globalTextbox!.TextStyleState.textFontName = fontName
-  }
-
-
-
-  SelectedFontInput(fontName: string) {
-    this.currentFontName = fontName
-    // this.isFontDropDownOpen = !this.isFontDropDownOpen;
+    if (toggleDropDown)
+      this.isFontDropDownOpen = !this.isFontDropDownOpen;
     const fontFamily = this.fontOptions.find(f => f.name == fontName)?.value
     this.currentFont = fontFamily!;
     this.globalTextbox!.TextStyleState.textFontFamily = fontFamily!
@@ -140,21 +130,25 @@ export class TextStyleBlock {
     }
   }
 
+  stripHtmlTags(text: string) {
+    return text.replace(/<[^>]*>/g, '');
+  }
 
   //=========================================================================================================
   // When A user selects/types a fontsize in the dropdown menu of the TextStyleBar then this is handled here.
   // @param fontSize: string => the selected or typed fontsize.
   //=========================================================================================================
   SelectedStyle(style: string, toggleDropDown: Boolean = true) {
-    try {
       if (toggleDropDown)
         this.isStyleDropDownOpen = !this.isStyleDropDownOpen
 
       const currType = this.styleOptions.find(s => s.style === style)
-    }
-    catch {
-      console.log("Invalid Fontsize");
-    }
+      if (currType)
+      {
+        this.box.text = this.stripHtmlTags(this.box.text)
+        this.box.text = `<${currType.value}>${this.box.text}</${currType.value}>`;
+        this.box.TextStyleState.textStyle = currType.style
+      }
   }
 
   //=============================================================================================================
