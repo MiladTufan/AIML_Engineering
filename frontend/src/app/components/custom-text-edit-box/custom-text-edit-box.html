@@ -5,21 +5,15 @@
     (mousedown)="onDragStart($event)"
     (dragend)="onDragEnd($event)"
     draggable="true"
-    #editableDiv
+    #movableDiv
     [ngStyle]="{ transform: 'translate(' + box.BoxDims.left + 'px, ' + box.BoxDims.top + 'px)',
                                       width: box.BoxDims.width + 'px',
                                       height: box.BoxDims.height + 'px'}">
       <div>
-        <div [contentEditable]="true"
+        <div [contentEditable]="true" #editableDiv
           class="textBoxStyle w-full h-full
-                outline-none  overflow-hidden leading-normal"
-          [style.color]="box.TextStyleState.textColor"
+                outline-none  overflow-hidden leading-normal cursor-text"
           contenteditable="true"
-          [ngStyle]="{ 'font-size': box.TextStyleState.textFontSize + 'px' ,
-                       'font-weight': box.TextStyleState.textFormat.isBold ? 'bold' : 'normal',
-                       'font-style': box.TextStyleState.textFormat.isItalic ? 'italic' : 'normal',
-                       'text-decoration': box.TextStyleState.textFormat.isUnderline ? 'underline' : 'none',
-                      'font-family' : box.TextStyleState.textFontFamily}"
           (input)="onInput($event)"
           [innerHTML]="box.text">
         </div>
@@ -28,11 +22,22 @@
   @if (box.BoxDims.resizedHeight == 0 && box.BoxDims.resizedWidth == 0) {
     <app-text-style-block [translateX]="box.BoxDims.left+box.BoxDims.width+10"
                           [translateY]="box.BoxDims.top"
+                          (styleChanged)="updateTextStyle()"
                           [box]="box"></app-text-style-block>
   } @else {
     <app-text-style-block [translateX]="box.BoxDims.left+box.BoxDims.resizedWidth+10"
                           [translateY]="box.BoxDims.top"
+                          (styleChanged)="updateTextStyle()"
                           [box]="box"></app-text-style-block>
   }
 
 </div>
+
+<!-- 
+   [ngStyle]="{  'text-align': box.TextStyleState.textFormat.isLeftAlign ? 'left' : (box.TextStyleState.textFormat.isRightAlign ? 'right' : 'center'),
+                       'color': box.TextStyleState.textColor,
+                       'font-size': box.TextStyleState.textFontSize + 'px' ,
+                       'font-weight': box.TextStyleState.textFormat.isBold ? 'bold' : 'normal',
+                       'font-style': box.TextStyleState.textFormat.isItalic ? 'italic' : 'normal',
+                       'text-decoration': box.TextStyleState.textFormat.isUnderline ? 'underline' : 'none',
+                      'font-family' : box.TextStyleState.textFontFamily}" -->

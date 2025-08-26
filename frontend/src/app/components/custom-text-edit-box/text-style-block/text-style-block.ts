@@ -1,4 +1,4 @@
-import { Component, Input, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, Output, SimpleChanges } from '@angular/core';
 import { DropDownMenuComponent } from '../drop-down-menu-component/drop-down-menu-component';
 import { TextEditService } from '../../../services/text-edit-service';
 import { PDFViewerService } from '../../../services/pdfviewer-service';
@@ -18,6 +18,8 @@ export class TextStyleBlock {
   @Input() translateX: number = 0;
   @Input() translateY: number = 0;
   @Input() box: any;
+
+  @Output() styleChanged = new EventEmitter();
 
   isCollapsed: Boolean = true;
   isFontDropDownOpen: Boolean = false;
@@ -105,10 +107,11 @@ export class TextStyleBlock {
 
   onColorSelect(color: string) {
     this.globalTextbox!.TextStyleState.textColor = color;
+    this.styleChanged.emit()
   }
 
   onBgColorSelect(bgColor: string) {
-    throw new Error('Method not implemented.');
+    console.log("NoT implemented yet")
   }
 
   SelectedFont(fontName: string, toggleDropDown: boolean = true) {
@@ -119,6 +122,7 @@ export class TextStyleBlock {
     this.currentFont = fontFamily!;
     this.globalTextbox!.TextStyleState.textFontFamily = fontFamily!
     this.globalTextbox!.TextStyleState.textFontName = fontName
+    this.styleChanged.emit()
   }
 
   //=========================================================================================================
@@ -134,6 +138,7 @@ export class TextStyleBlock {
       this.globalTextbox!.TextStyleState.textFontSize = fontSizeNumeric * this.pdfViewerService.currentScale
 
       this.globalTextbox!.TextStyleState.textBaseFontSize = fontSizeNumeric
+      this.styleChanged.emit()
     }
     catch {
       console.log("Invalid Fontsize");
@@ -158,6 +163,7 @@ export class TextStyleBlock {
         this.globalTextbox!.text = this.stripHtmlTags(this.box.text)
         this.globalTextbox!.text = `<${currType.value}>${this.box.text}</${currType.value}>`;
         this.globalTextbox!.TextStyleState.textStyle = currType.style
+        this.styleChanged.emit()
       }
   }
 
@@ -175,6 +181,7 @@ export class TextStyleBlock {
       this.globalTextbox!.TextStyleState.textFormat.isRightAlign = false;
       this.globalTextbox!.TextStyleState.textFormat.isCenterAlign = false;
     }
+    this.styleChanged.emit()
   }
 
   textAlignRight($event: MouseEvent) {
@@ -188,6 +195,7 @@ export class TextStyleBlock {
       this.globalTextbox!.TextStyleState.textFormat.isLeftAlign = false;
       this.globalTextbox!.TextStyleState.textFormat.isCenterAlign = false;
     }
+    this.styleChanged.emit()
   }
 
   textAlignCenter($event: MouseEvent) {
@@ -201,6 +209,7 @@ export class TextStyleBlock {
       this.globalTextbox!.TextStyleState.textFormat.isLeftAlign = false;
       this.globalTextbox!.TextStyleState.textFormat.isRightAlign = false;
     }
+    this.styleChanged.emit()
   }
 
 
@@ -210,25 +219,30 @@ export class TextStyleBlock {
   textFormatSubscript() {
     this.isFontSubScript = !this.isFontSubScript;
     this.globalTextbox!.TextStyleState.textFormat.isSubscript = this.isFontSubScript;
+    this.styleChanged.emit()
   }
 
   textFormatSuperscript() {
     this.isFontSuperscript = !this.isFontSuperscript;
     this.globalTextbox!.TextStyleState.textFormat.isSuperscript = this.isFontSuperscript;
+    this.styleChanged.emit()
   }
 
   textFormatItalic() {
     this.isFontItalic = !this.isFontItalic;
     this.globalTextbox!.TextStyleState.textFormat.isItalic = this.isFontItalic;
+    this.styleChanged.emit()
   }
 
   textFormatBold() {
     this.isFontBold = !this.isFontBold;
     this.globalTextbox!.TextStyleState.textFormat.isBold = this.isFontBold;
+    this.styleChanged.emit()
   }
 
   textFormatUnderline() {
     this.isFontUnderline = !this.isFontUnderline;
     this.globalTextbox!.TextStyleState.textFormat.isUnderline = this.isFontUnderline;
+    this.styleChanged.emit()
   }
 }

@@ -102,7 +102,7 @@ body {
 }
 
 .textBoxStyle {
-  @apply absolute flex rounded-md text-sm text-black
+  @apply absolute flex rounded-md 
 }
 
 .translucentDiv {

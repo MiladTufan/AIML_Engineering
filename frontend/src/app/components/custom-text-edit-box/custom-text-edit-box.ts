@@ -26,6 +26,7 @@ export class CustomTextEditBox {
 	mouseX: number = 0;
 	mouseY: number = 0;
 	cntr = 0;
+	currentAlignment: string = "left"
 	currentEventTarget: EventTarget | null = null;
 	private resizeObserver!: ResizeObserver;
 
@@ -37,6 +38,7 @@ export class CustomTextEditBox {
 	@Output() positionChanged = new EventEmitter<{ top: number; left: number }>();
 
 	//=================================================== Children =================================================
+	@ViewChild('movableDiv') movableDiv!: ElementRef;
 	@ViewChild('editableDiv') editableDiv!: ElementRef;
 	@ViewChild(TextStyleBlock) textStyleBlockComponent!: TextStyleBlock
 
@@ -73,11 +75,11 @@ export class CustomTextEditBox {
 	}
 
 	ngAfterViewInit() {
-		this.resizeObserver.observe(this.editableDiv.nativeElement);
+		this.resizeObserver.observe(this.movableDiv.nativeElement);
 	}
 
-	getEditableDiv() {
-		return this.editableDiv;
+	getmovableDiv() {
+		return this.movableDiv;
 	}
 
 	onDragEnd(event: DragEvent) {
@@ -119,12 +121,74 @@ export class CustomTextEditBox {
 	}
 
 
+	getTextAlignment() {
+		if (this.box.TextStyleState.textFormat.isCenterAlign)
+			return "center"
+		else if (this.box.TextStyleState.textFormat.isRightAlign)
+			return "right"
+		else
+			return "left"
+	}
+
+
+	styleText(elem: HTMLElement) {
+		elem.style.textAlign = this.getTextAlignment();
+		elem.style.color = this.box.TextStyleState.textColor;
+		elem.style.fontSize = this.box.TextStyleState.textFontSize + "px";
+		elem.style.fontWeight = this.box.TextStyleState.textFormat.isBold ? "bold" : "normal"
+		elem.style.fontStyle = this.box.TextStyleState.textFormat.isItalic ? "italic" : "normal"
+		elem.style.textDecoration = this.box.TextStyleState.textFormat.isUnderline ? "underline" : "normal"
+		elem.style.fontFamily = this.box.TextStyleState.textFontFamily
+
+		return elem
+	}
+
+	updateTextStyle() {
+
+		const div = this.editableDiv.nativeElement;
+		this.styleText(div)
+
+		// const selection = window.getSelection();
+		// if (!selection) return;
+
+		// if (selection.isCollapsed) {
+		// 	this.styleText(div)
+		// 	return;
+		// }
+
+		// if (selection.rangeCount === 0) return;
+
+		// const range = selection.getRangeAt(0);
+		// if (!div.contains(range.commonAncestorContainer)) return;
+
+		// const blocks = this.getTouchedBlocks(range, div);
+
+		// blocks.forEach(block => {
+		// 	this.styleText(block)
+		// });
+
+		// const span = document.createElement('span');
+		// this.styleText(span)
+
+		// span.appendChild(range.extractContents());
+		// range.insertNode(span);
+
+		// range.setStartAfter(span);
+		// range.collapse(true);
+		// selection.removeAllRanges();
+		// selection.addRange(range);
+
+		div.focus();
+	}
+
+
+
 	@HostListener('document:click', ['$event'])
 	onDocumentClick(event: MouseEvent) {
 		try {
-			if (this.editableDiv == null) return;
+			if (this.movableDiv == null) return;
 
-			const clickedInsideTextBox = this.editableDiv.nativeElement.contains(event.target);
+			const clickedInsideTextBox = this.movableDiv.nativeElement.contains(event.target);
 			const eventTarget = (event.target as HTMLElement)
 
 			let clickInsideTextStyle = false;
@@ -146,5 +210,40 @@ export class CustomTextEditBox {
 		catch (error) {
 			console.log(error)
 		}
+	}
+
+	getTouchedBlocks(range: Range, root: HTMLElement): HTMLElement[] {
+		const blocks: HTMLElement[] = [];
+		const walker = document.createTreeWalker(
+			root,
+			NodeFilter.SHOW_ELEMENT,
+			{
+				acceptNode: (node) => {
+					const el = node as HTMLElement;
+					const style = window.getComputedStyle(el);
+					if (style.display === 'block' && range.intersectsNode(el)) {
+						return NodeFilter.FILTER_ACCEPT;
+					}
+					return NodeFilter.FILTER_SKIP;
+				}
+			}
+		);
+
+		let node = walker.nextNode();
+		while (node) {
+			blocks.push(node as HTMLElement);
+			node = walker.nextNode();
+		}
+
+		// If no blocks found, fall back to the common ancestor
+		if (blocks.length === 0) {
+			let el = range.commonAncestorContainer as HTMLElement;
+			while (el && el !== root && window.getComputedStyle(el).display !== 'block') {
+				el = el.parentElement!;
+			}
+			if (el) blocks.push(el);
+		}
+
+		return blocks;
 	}
 }
