@@ -90,7 +90,7 @@ body {
 
 
 .toolbarBtnStyle {
-  @apply flex items-center rounded-md text-sm font-medium text-gray-800 bg-transparent hover:bg-white/100 backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer font-standard
+  @apply flex items-center rounded-md text-sm font-medium text-gray-800  hover:bg-white/100 backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer font-standard
 }
 
 .dropdownBtnStyle {

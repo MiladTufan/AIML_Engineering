@@ -76,6 +76,7 @@ export class CustomTextEditBox {
 
 	ngAfterViewInit() {
 		this.resizeObserver.observe(this.movableDiv.nativeElement);
+		this.updateTextStyle()
 	}
 
 	getmovableDiv() {

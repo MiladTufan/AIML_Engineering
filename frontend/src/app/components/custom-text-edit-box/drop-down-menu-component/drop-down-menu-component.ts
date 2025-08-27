@@ -45,7 +45,13 @@ export class DropDownMenuComponent {
     @Output() selectedItem = new EventEmitter<string>();
     @Output() selectedItemInput = new EventEmitter<string>();
 
-
+    toggleDropDown(item: string) {
+        this.isDropDownOpen = !this.isDropDownOpen
+        if (this.headerObj) {
+            this.headerObj.nativeElement.textContent = item;
+            this.currentItem = item
+        }
+    }
     ItemClicked(item: string) {
         this.selectedItem.emit(item)
         if (this.headerObj) {

@@ -1,8 +1,10 @@
 import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { AlertComponent } from './shared/alert/alert';
 import { SessionService } from './services/communication/session-service';
-import {Test} from './components/test/test/test';
+import { Test } from './components/test/test/test';
+import { Credits } from './views/credits/credits';
+import { Constants } from './models/constants/constants';
 
 @Component({
   selector: 'app-root',
@@ -12,11 +14,14 @@ import {Test} from './components/test/test/test';
   styleUrl: './app.css'
 })
 export class App {
-  protected readonly title = signal('frontend');
-  constructor(private sessionService: SessionService) {}
 
-  ngOnInit()
-  {
+  protected readonly title = signal('frontend');
+  constructor(private sessionService: SessionService, private router: Router) { }
+
+  goToCredits() {
+    this.router.navigate([Constants.CREDITS_VIEW]);
+  }
+  ngOnInit() {
     // this.sessionService.getAllSignedSids().subscribe((signeds_sids: Array<string>) => {
     //   const signed_sid = this.sessionService.getSessionIdFromBrowser("session_id")
     //   const cookies = document.cookie ? document.cookie.split(";") : []

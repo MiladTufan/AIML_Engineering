@@ -1,0 +1,32 @@
+<!-- icons-overview.component.html -->
+<div class="icons-list">
+  <h2>📋 Icons Used in This App</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Preview</th>
+        <th>Name</th>
+        <th>Used In</th>
+        <th>Purpose</th>
+        <th>Source</th>
+        <th>License</th>
+        <th>Link</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let icon of icons">
+        <td>
+          <!-- Render icon via Iconify -->
+          <!-- <iconify-icon [icon]="icon.source.toLowerCase() + ':' + icon.name" width="24"></iconify-icon> -->
+           icon
+        </td>
+        <td>{{ icon.name }}</td>
+        <td>{{ icon.usedIn }}</td>
+        <td>{{ icon.purpose }}</td>
+        <td>{{ icon.source }}</td>
+        <td>{{ icon.license }}</td>
+        <td><a [href]="icon.link" target="_blank">View</a></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
