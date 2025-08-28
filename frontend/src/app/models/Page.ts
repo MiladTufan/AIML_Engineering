@@ -1,10 +1,12 @@
 
+import { BlockObject } from "./BlockObject";
 import { TextBox } from "./TextBox";
 
 export class Page {
     private _pageNum: number = 0;
     private _viewport: any;
     private _textboxes: TextBox[] = [];
+    private _blockObjects: BlockObject[] = [];
     private _height: number = 0;
     private _width: number = 0;
     private _rotation: number = 0;
@@ -17,6 +19,7 @@ export class Page {
         pageNum: number = 0,
         viewport: any = null,
         textboxes: any[] = [],
+        blockObjects: any[] = [],
         height: number = 0,
         width: number = 0,
         rotation: number = 0,
@@ -35,6 +38,8 @@ export class Page {
         this._currentScale = currentScale;
         this._translateX = translateX;
         this._translateY = translateY;
+        this._translateY = translateY;
+        this._blockObjects = blockObjects;
     }
 
     get pageNum(): number { return this._pageNum; }
@@ -45,6 +50,10 @@ export class Page {
 
     get textboxes(): any[] { return this._textboxes; }
     set textboxes(value: any[]) { this._textboxes = value; }
+
+    
+    get blockObjects(): any[] { return this._blockObjects; }
+    set blockObjects(value: any[]) { this._blockObjects = value; }
 
     get height(): number { return this._height; }
     set height(value: number) { this._height = value; }
@@ -74,6 +83,10 @@ export class Page {
 
     replaceTextBox(nexTextBox: TextBox, idx: number) {
         this.textboxes.splice(idx, 1, nexTextBox);
+    }
+
+    replaceBlockObject(obj: BlockObject, idx: number) {
+        this.blockObjects.splice(idx, 1, obj);
     }
 
     removeTextBox(textBoxToRemove: TextBox) {

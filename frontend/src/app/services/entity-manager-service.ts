@@ -5,6 +5,7 @@ import { TextBox } from '../models/TextBox';
 import { Constants } from '../models/constants/constants';
 import { Page } from '../models/Page';
 import { TextEditService } from './text-edit-service';
+import { ImgBox } from '../models/ImgBox';
 
 @Injectable({
     providedIn: 'root'
@@ -13,6 +14,8 @@ export class EntityManagerService {
 
     constructor(private pdfViewerService: PDFViewerService, private textEditService: TextEditService) { }
 
+    public blockObjects: BlockObject[] = [];
+
     /**
      * Finds and returns the parent container of the current object.
      * Useful for checking boundaries or removing the object from its context.
@@ -20,6 +23,8 @@ export class EntityManagerService {
     private getParentContainer(obj: BlockObject, page: Page): HTMLElement | null {
         if (obj instanceof TextBox)
             return page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
+        if (obj instanceof ImgBox)
+            return page?.htmlContainer?.querySelector(Constants.OVERLAY_IMG)
         return null
     }
 
@@ -92,13 +97,77 @@ export class EntityManagerService {
             const ret = this.textEditService.createTextBox(textbox.BoxDims, textbox.TextStyleState,
                 adjustedPageNum, textbox.BoxDims.currentScale,
                 this.pdfViewerService.currentScrollTop)
-            
+
             page?.appendTextBox(textbox)
             parentContainer.appendChild(ret.comp.location.nativeElement)
             ret.comp.instance.positionChanged.subscribe((event: any) => this.executeMove(ret.box, event, page.pageNum))
         }
     }
 
+    /**
+     * This function adds a BlockObject to this.blockObjects. If it already exists then it replaces it.
+     * On Replace it also sets the baseBoxDims.
+     * @param obj => obj to add
+     * @param rerender => currently rerendering?
+     */
+    private addOrReplaceBlockObject(obj: BlockObject, rerender: Boolean) {
+        const page = this.pdfViewerService.getPageWithNumber(obj.pageId)
+        const oldBox: any = this.blockObjects.find(b => b.id === obj.id)
+        if (oldBox) {
+            const idx = this.blockObjects.indexOf(oldBox);
+            obj.baseTop = oldBox.baseTop;
+            obj.baseLeft = oldBox.baseLeft;
+            obj.baseHeight = oldBox.baseHeight;
+            obj.baseWidth = oldBox.baseWidth;
+            this.blockObjects.splice(idx, 1, obj);
+            page?.replaceBlockObject(obj, idx)
+        }
+        else if (!rerender) {
+            this.blockObjects.push(obj)
+            page?.blockObjects.push(obj)
+        }
+    }
+
+    /**
+     * sets the BlockObjects baseBoxDims at the time of creation.
+     * @param obj => BlockObject where baseBoxDims are set
+     * @param boxDims => new BoxDims
+     */
+    private setObjCoords(obj: BlockObject, boxDims: BoxDimensions) {
+        obj.baseTop = boxDims.top;
+        obj.baseLeft = boxDims.left;
+        obj.baseHeight = boxDims.height;
+        obj.baseWidth = boxDims.width;
+    }
+
+    
+    /**
+     * Calculates the initial Box Dimensions based on the parameters given.
+     * @param mouseX => current X coordinate of the mouse.
+     * @param mouseY => current Y coordinate of the mouse.
+     * @param scale => current scale of the PDF
+     * @param entityParentRect => the entity Parent rect => e.g. TextBoxLayer or ImgBoxLayer
+     * @returns 
+     */
+    private calculateInitialBoxDims(mouseX: number, mouseY: number, scale: number, entityParentRect: DOMRect): BoxDimensions {
+        const top = (mouseY) - entityParentRect.top
+        const left = (mouseX) - entityParentRect.left
+        const width = 110
+        const height = 30
+
+        const boxDims = {
+            top: top,
+            left: left,
+            width: width * scale,
+            height: height * scale,
+            resizedHeight: 0,
+            resizedWidth: 0,
+            currentScale: scale,
+            posCreationScale: scale,
+            sizeCreationScale: scale
+        }
+        return boxDims
+    }
 
     /**
      * Executes the full move sequence. This function should be called to move a `BlockObject`. 
@@ -177,15 +246,40 @@ export class EntityManagerService {
         return { dims: box_dims, baseWidth: newBaseWidth, baseHeight: newBaseHeight }
     }
 
+    /**
+     * Gets a unique id to add to a specific list. **Note**: ID is only unique in @param list!!
+     * @param list => list where the Id should be unique.
+     * @returns 
+     */
+    public getUniqueId<T extends { id: number }>(list: T[]): number {
+        {
+            if (list.length === 0) {
+                return 1;
+            }
+            return Math.max(...list.map(item => item.id)) + 1;
+        }
+    }
 
 
+    /**
+     * Creates a BlockObject, adds it to this.blockObjects and also sets it baseCoords.
+     * @param id => new ID of the BlockObject
+     * @param pageNumber => pageId of the BlockObject
+     * @param boxDims => new Dimensions
+     * @param rerender => currently rerendering?
+     * @returns 
+     */
+    public createBlockObject(pageNumber: number, mouseX: number, mouseY: number, scale: number, entityParentRect: DOMRect, rerender: Boolean = false) {
+        const uniqueId = this.getUniqueId(this.blockObjects)
+        const boxDims = this.calculateInitialBoxDims(mouseX, mouseY, scale, entityParentRect)
+        const blockObj = new BlockObject(uniqueId, pageNumber, boxDims)
+        this.addOrReplaceBlockObject(blockObj, rerender)
 
+        if (!rerender)
+            this.setObjCoords(blockObj, boxDims)
 
-
-
-
-
-
+        return blockObj
+    }
 
 
 

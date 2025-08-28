@@ -19,7 +19,6 @@ import { ImgBoxService } from '../../services/img-box-service';
 	styleUrl: './edit-pdfview.css',
 })
 export class EditPDFView {
-
 	//=================================================== Private variables =================================================
 	private mouseX: number = 0;
 	private mouseY: number = 0;
@@ -89,6 +88,19 @@ export class EditPDFView {
 		this.canCreateImgBox = true;
 	}
 
+	/**
+	 * Select an Image file on ImageInsert click
+	 * @param event 
+	 */
+	onFileSelected(event: Event) {
+		const input = event.target as HTMLInputElement;
+		if (input.files && input.files.length > 0) {
+			const file = input.files[0];
+			console.log("Selected file:", file.name);
+			// Do something with the file (upload, preview, etc.)
+		}
+	}
+
 	//=======================================================================================================================
 	// This function is responsible for placing the Image inside the PDF canvas.
 	//=======================================================================================================================
@@ -97,7 +109,19 @@ export class EditPDFView {
 			this.canCreateImgBox = false;
 			const containerElement = event.target as HTMLElement;
 			const pageNumber = parseInt(containerElement.id?.split('-')[1]);
-			this.imgBoxService.createImgBox(pageNumber)
+			const page = this.pdfViewService.getPageWithNumber(pageNumber)
+			const entityParentContainer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
+			const entityParentRect = (entityParentContainer as HTMLElement).getBoundingClientRect();
+
+
+			const blockObj = this.entityManagerService.createBlockObject(pageNumber, this.mouseX, this.mouseY,
+				this.pdfViewService.currentScale, entityParentRect)
+
+			const imgBox = this.imgBoxService.toImgBox(blockObj)
+			imgBox.src = "/assets/test_images/020_The_lion_king_Snyggve_in_the_Serengeti_National_Park_Photo_by_Giles_Laurent.jpg"
+
+			const ret = this.imgBoxService.placeImgBoxOntoCanvas(pageNumber, imgBox)
+			ret.comp.instance.positionChanged.subscribe((event: any) => this.entityManagerService.executeMove(ret.box, event, pageNumber))
 		}
 	}
 	//=======================================================================================================================

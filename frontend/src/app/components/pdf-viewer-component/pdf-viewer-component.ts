@@ -428,7 +428,7 @@ export class PdfViewerComponent {
 			};
 
 			await page.render(renderContext).promise;
-			const newPage = new Page(pageNumber, viewport, boxesForPage, viewport.height, viewport.width, 0, pageContainer, 0, 0, scale)
+			const newPage = new Page(pageNumber, viewport, boxesForPage, [], viewport.height, viewport.width, 0, pageContainer, 0, 0, scale)
 			this.assignPageToRendered(newPage)
 		}
 	}

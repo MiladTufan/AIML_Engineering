@@ -3,6 +3,8 @@ import { ImgBox } from '../models/ImgBox';
 import { CustomImgBox } from '../components/custom-img-box/custom-img-box';
 import { PDFViewerService } from './pdfviewer-service';
 import { Constants } from '../models/constants/constants';
+import { EntityManagerService } from './entity-manager-service';
+import { BlockObject } from '../models/BlockObject';
 
 @Injectable({
   providedIn: 'root'
@@ -11,36 +13,28 @@ export class ImgBoxService {
   public imgboxes: ImgBox[] = [];
   public pdfViewerService = inject(PDFViewerService)
 
-
-
-  public createImgBox(pageNumber: number) {
+  /**
+   * Please create an BlockObject with this.entityManagerService.createBlockObject adn then cast it so ImgBox and pass it here.
+   * This function will create the ImgBox HTML container and place it on the pageNumber specified by @pageNumber .
+   * @param pageNumber => the page where the img should be placed in.
+   * @param img => the img
+   */
+  public placeImgBoxOntoCanvas(pageNumber: number, imgBox: ImgBox) {
     let editTextBoxComp = this.pdfViewerService.dynamicContainer!.createComponent(CustomImgBox)
-
-    const box_dims = {
-      top: 0,
-      left: 0,
-      width: 500 * this.pdfViewerService.currentScale,
-      height: 500 * this.pdfViewerService.currentScale,
-      resizedHeight: 0,
-      resizedWidth: 0,
-      currentScale: this.pdfViewerService.currentScale,
-      posCreationScale: this.pdfViewerService.currentScale,
-      sizeCreationScale: this.pdfViewerService.currentScale
-    }
-
-    const imgBox = new ImgBox(0, 0, box_dims, "/assets/test_images/020_The_lion_king_Snyggve_in_the_Serengeti_National_Park_Photo_by_Giles_Laurent.jpg")
-    editTextBoxComp = this.createTextBoxContainer(editTextBoxComp, imgBox);
+    editTextBoxComp = this.createImgBoxContainer(editTextBoxComp, imgBox);
 
     const page = this.pdfViewerService.getPageWithNumber(pageNumber)
-    const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_IMG)
-    text_layer?.appendChild(editTextBoxComp.location.nativeElement)
+    const imgLayer = page?.htmlContainer?.querySelector(Constants.OVERLAY_IMG)
+    imgLayer?.appendChild(editTextBoxComp.location.nativeElement)
+
+    return { comp: editTextBoxComp, box: imgBox }
   }
 
   //=======================================================================================================================
   // Helper function to create the container where the textbox is being placed. This also registers all
   // events for the textbox like editing, and moving.
   //=======================================================================================================================
-  public createTextBoxContainer(editTextBoxComp: ComponentRef<CustomImgBox>, imgbox: ImgBox) {
+  private createImgBoxContainer(editTextBoxComp: ComponentRef<CustomImgBox>, imgbox: ImgBox) {
 
     editTextBoxComp.instance.imgBox = imgbox;
     // editTextBoxComp.instance.textBoxEditClicked.subscribe((event: any) => this.onTextBoxEditClick(textBox.id, event))
@@ -52,4 +46,30 @@ export class ImgBoxService {
     return editTextBoxComp
   }
 
+  /**
+   * Converts a BlockObject to an ImgBox
+   * @param obj => the BlockObject to convert.
+   * @returns 
+   */
+  public toImgBox(obj: BlockObject): ImgBox {
+    // dummy dims
+    const dims = {
+      top: 0,
+      left: 0,
+      width: 0,
+      height: 0,
+      resizedHeight: 0,
+      resizedWidth: 0,
+      currentScale: 0,
+      posCreationScale: 0,
+      sizeCreationScale: 0,
+    }
+    const img = new ImgBox(0, 0, dims, "");
+
+    Object.assign(img, obj);
+
+    img.src = "Default Src";
+
+    return img;
+  }
 }
