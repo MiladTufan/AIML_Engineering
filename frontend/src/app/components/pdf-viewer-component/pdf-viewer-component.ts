@@ -236,7 +236,7 @@ export class PdfViewerComponent {
 							edits.pageEdits.forEach((element: MiniPage) => {
 								element.textboxes.forEach(box => {
 									if (box.pageId != 0)
-										this.textEditService.textboxes.push(box)
+										this.textEditService.textboxes.push(box as TextBox)
 								})
 							});
 							this.loadingHelper(file)
@@ -358,7 +358,7 @@ export class PdfViewerComponent {
 
 	replaceChildrenOfPageContainer(container: HTMLDivElement, renderdummy: Boolean, pageNumber: number, scale: number) {
 
-		let { canvas, textBoxLayer, textLayer, pageContainer, canvasContainer } = this.pdfViewerService.createPageContainers(pageNumber, renderdummy, scale)
+		let { canvas, textBoxLayer, textLayer, pageContainer, canvasContainer, imgBoxLayer } = this.pdfViewerService.createPageContainers(pageNumber, renderdummy, scale)
 		const baseMarginScale = this.pdfViewerService.getScaledMargin(scale, pageNumber);
 
 		const boxesForPage = this.textEditService.textboxes.filter(b => b.pageId == pageNumber)
@@ -380,7 +380,7 @@ export class PdfViewerComponent {
 		else {
 			container.appendChild(pageContainer);
 		}
-		return { canvas, textBoxLayer, textLayer, pageContainer, canvasContainer, baseMarginScale, boxesForPage } 
+		return { canvas, textBoxLayer, textLayer, pageContainer, canvasContainer, baseMarginScale, boxesForPage, imgBoxLayer }
 	}
 	/**
 	 * Main render function. This function is the entry point for the entire rendering logic.
@@ -404,8 +404,8 @@ export class PdfViewerComponent {
 			this.pdfViewerService.setPageHeight(viewport.height);
 		}
 
-		let { canvas, textBoxLayer, textLayer, pageContainer, canvasContainer, baseMarginScale, boxesForPage } = 
-										this.replaceChildrenOfPageContainer(container, renderdummy, pageNumber, scale)
+		let { canvas, textBoxLayer, textLayer, pageContainer, canvasContainer, baseMarginScale, boxesForPage, imgBoxLayer } =
+			this.replaceChildrenOfPageContainer(container, renderdummy, pageNumber, scale)
 
 		if (!renderdummy) {
 			const context = canvas.getContext("2d")!;
@@ -516,7 +516,7 @@ export class PdfViewerComponent {
 			const oldScale = this.scale;
 			this.oldScale = oldScale
 
-			const zoomIntensity = 0.1; // smaller = slower acceleration
+			const zoomIntensity = 0.001; // smaller = slower acceleration
 			const zoomFactor = Math.pow(1 + delta, -event.deltaY * zoomIntensity * direction);
 			let newScale = oldScale * zoomFactor
 
@@ -528,6 +528,7 @@ export class PdfViewerComponent {
 
 
 			this.scale = newScale
+			console.log(this.scale)
 			this.pdfViewerService.currentScale = this.scale;
 
 			for (const p of this.pdfViewerService.visiblePages.getValue()) {

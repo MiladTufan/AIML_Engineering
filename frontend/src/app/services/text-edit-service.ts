@@ -228,10 +228,10 @@ export class TextEditService implements OnDestroy {
     // @param => Box dims = top, left, width, height
     //=======================================================================================================================
     public createTextBox(box_dims: BoxDimensions, styleState: TextStyle, pageNum: number, scale: number,
-        scrollTop: number, rerender: Boolean = false, id: number = this.textboxes.length + 1) {
+        scrollTop: number, rerender: Boolean = false, id: number = -1) {
         // this.mouseY += (pageHeight * (this.pageNum - 1))
-
-        id = this.getNextId(this.textboxes)
+        if (id == -1)
+            id = this.getNextId(this.textboxes)
         const newTextBox = new TextBox(id, pageNum, box_dims, "Text", styleState)
 
         const page = this.pdfViewerService.getPageWithNumber(pageNum)

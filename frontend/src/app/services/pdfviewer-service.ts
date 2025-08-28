@@ -191,6 +191,8 @@ export class PDFViewerService {
 	createPageContainers(pageNumber: number, renderdummy: Boolean, scale: number) {
 		const canvas = document.createElement("canvas");
 		const textBoxLayer = document.createElement("div");
+		const imgBoxLayer = document.createElement("div");
+
 		let textLayer = document.createElement("div");
 		let pageContainer = document.createElement("div");
 		const canvasContainer = document.createElement("div");
@@ -209,6 +211,7 @@ export class PDFViewerService {
 
 		pageContainer.id = `pageContainer-${pageNumber}`;
 		textBoxLayer.className = "text-box-layer"
+		imgBoxLayer.className = "img-box-layer"
 
 		if (!renderdummy) {
 			pageContainer.className = "mt-1 sm:mt-3 md:mt-4 mx-auto relative block w-full max-w-fit sm:max-w-[70%] md:max-w-[90%]";
@@ -222,13 +225,14 @@ export class PDFViewerService {
 			canvas.className = `page-${pageNumber} block border border-gray-300 shadow-lg mx-auto`;
 		}
 
+		canvasContainer.appendChild(imgBoxLayer)
 		canvasContainer.appendChild(textBoxLayer)
 		canvasContainer.appendChild(canvas)
 		canvasContainer.appendChild(pageInfo!.location.nativeElement)
 
 		pageContainer.appendChild(canvasContainer)
-		// pageContainer.addEventListener("wheel", (event: WheelEvent) => this.onWheel(event, pageNumber))
 
-		return { canvas: canvas, textBoxLayer: textBoxLayer, textLayer: textLayer, pageContainer: pageContainer, canvasContainer: canvasContainer }
+		return { canvas: canvas, textBoxLayer: textBoxLayer, textLayer: textLayer, 
+				 pageContainer: pageContainer, canvasContainer: canvasContainer, imgBoxLayer: imgBoxLayer }
 	}
 }

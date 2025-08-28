@@ -3,7 +3,6 @@
 
 export class TextStyle {
     public isCollapsed: Boolean = true;
-    public textAlign: string = "left" // either left, center, or right
     public textFormat: TextFormat = new TextFormat()
     public textStyle: string = "Paragraph"
     public textFontFamily: string = "Inter"

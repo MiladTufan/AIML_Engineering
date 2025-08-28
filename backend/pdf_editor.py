@@ -9,6 +9,9 @@ import io
 from models.global_edits import GlobalEdit
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+
+from models.global_edits import cast_blockobject_to_textbox
+
 pdfmetrics.registerFont(TTFont('Inter', 'fonts/Inter_18pt-Regular.ttf'))
 
 class PDFEditor(object):
@@ -21,17 +24,19 @@ class PDFEditor(object):
         existing_pdf = PdfReader(BytesIO(pdf))
         width, height = PDFEditor.get_pdf_dims(existing_pdf)
         num_changes = 0
+        
         for edit in edits.pageEdits:
             packet = BytesIO()
             can = canvas.Canvas(packet, pagesize=A4)
             for box in edit.textboxes:
-                can.setFont(box.textStyleEditorState.fontname, box.textStyleEditorState.baseFontSize)  # Font name, size in points
-                                                                                                    # 48 is margin top so 64px = 48pt
+                textbox = cast_blockobject_to_textbox(box)
+                can.setFont(textbox.TextStyleState.textFontName, textbox.TextStyleState.textBaseFontSize) 
+                                                              
                 offset_left = 3.5 * box.BoxDims.currentScale                                                              
-                offset_top = (box.textStyleEditorState.baseFontSize ) * box.BoxDims.currentScale                                                              
+                offset_top = (textbox.TextStyleState.textBaseFontSize ) * box.BoxDims.currentScale                                                              
                                                                                                     
                 can.drawString(((box.BoxDims.left + offset_left) / box.BoxDims.currentScale), 
-                               height - (((box.BoxDims.top + offset_top) / box.BoxDims.currentScale)), box.text)
+                               height - (((box.BoxDims.top + offset_top) / box.BoxDims.currentScale)), textbox.text)
                 num_changes += 1
         
             can.save()

@@ -7,6 +7,7 @@ import { Subscription } from 'rxjs';
 import { Constants } from '../../models/constants/constants';
 import { EntityManagerService } from '../../services/entity-manager-service';
 import { TextStyle } from '../../models/TextStyle';
+import { ImgBoxService } from '../../services/img-box-service';
 
 
 
@@ -18,10 +19,13 @@ import { TextStyle } from '../../models/TextStyle';
 	styleUrl: './edit-pdfview.css',
 })
 export class EditPDFView {
+
 	//=================================================== Private variables =================================================
 	private mouseX: number = 0;
 	private mouseY: number = 0;
 	private canCreateTextbox: Boolean = false;
+	private canCreateImgBox: Boolean = false;
+
 
 	//=================================================== Public variables ==================================================
 	public pdfSrc = signal(new Uint8Array)
@@ -37,7 +41,7 @@ export class EditPDFView {
 
 	//=================================================== Constructor =======================================================
 	constructor(private pdfViewService: PDFViewerService, private entityManagerService: EntityManagerService,
-		private textEditService: TextEditService, private viewContainerRef: ViewContainerRef
+		private textEditService: TextEditService, private viewContainerRef: ViewContainerRef, private imgBoxService: ImgBoxService,
 	) { }
 
 	// ================================================== Listener functions ================================================
@@ -78,6 +82,24 @@ export class EditPDFView {
 		this.canCreateTextbox = true;
 	}
 
+	//=======================================================================================================================
+	// When the user clicks on the Image Insert button on the toolbar this function is fired.
+	//=======================================================================================================================
+	canCreateImg() {
+		this.canCreateImgBox = true;
+	}
+
+	//=======================================================================================================================
+	// This function is responsible for placing the Image inside the PDF canvas.
+	//=======================================================================================================================
+	public createImageBox(event: Event) {
+		if (this.canCreateImgBox) {
+			this.canCreateImgBox = false;
+			const containerElement = event.target as HTMLElement;
+			const pageNumber = parseInt(containerElement.id?.split('-')[1]);
+			this.imgBoxService.createImgBox(pageNumber)
+		}
+	}
 	//=======================================================================================================================
 	// This function is responsible for placing the Textbox inside the PDF canvas.
 	//=======================================================================================================================

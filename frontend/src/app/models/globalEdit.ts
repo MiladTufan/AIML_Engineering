@@ -1,9 +1,9 @@
-import { TextBox } from "./TextBox";
+import { BlockObject } from "./BlockObject";
 
 
 
 export class MiniPage {
-    constructor(public id: number, public textboxes: TextBox[]) {}
+    constructor(public id: number, public textboxes: BlockObject[]) {}
 }
 
 

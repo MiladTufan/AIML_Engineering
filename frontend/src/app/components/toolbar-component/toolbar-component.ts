@@ -19,6 +19,7 @@ import { TextStyleBlock } from '../custom-text-edit-box/text-style-block/text-st
 export class ToolbarComponent {
 	//=============================================== Outputs =============================================
 	@Output() textBoxClicked = new EventEmitter<Boolean>();
+	@Output() imgInsertClicked = new EventEmitter<Boolean>();
 
 	public currentPage: number = 1;
 	private pageNumberSub!: Subscription;
@@ -48,7 +49,7 @@ export class ToolbarComponent {
 	}
 
 	public OnInsertImageBtnClicked(event: Event) {
-		console.log("image paste clicked!")
+		this.imgInsertClicked.emit(true)
 	}
 
 

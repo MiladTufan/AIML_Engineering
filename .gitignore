@@ -37,6 +37,10 @@ venv/
 env/
 ENV/
 
+
+#ignore test
+test_images
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

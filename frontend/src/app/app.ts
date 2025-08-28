@@ -22,6 +22,10 @@ export class App {
     this.router.navigate([Constants.CREDITS_VIEW]);
   }
   ngOnInit() {
+
+
+
+    
     // this.sessionService.getAllSignedSids().subscribe((signeds_sids: Array<string>) => {
     //   const signed_sid = this.sessionService.getSessionIdFromBrowser("session_id")
     //   const cookies = document.cookie ? document.cookie.split(";") : []
@@ -41,5 +45,10 @@ export class App {
     //     }
     //   }
     // })
+
+
+
+
+
   }
 }
