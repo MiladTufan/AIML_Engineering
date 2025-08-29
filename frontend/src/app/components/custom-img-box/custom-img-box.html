@@ -1,13 +1,5 @@
-<div>
-<div class="textBoxStyle border-4 border-dashed border-blue-500 z-50
-           hover:border-blue-700 hover:shadow-md cursor-move resize both overflow-hidden"
-    (mousedown)="onDragStart($event)"
-    (dragend)="onDragEnd($event)"
-    draggable="true"
-    #movableDiv
-    [ngStyle]="{ transform: 'translate(' + imgBox.BoxDims.left + 'px, ' + imgBox.BoxDims.top + 'px)',
-                                      width: imgBox.BoxDims.width + 'px',
-                                      height: imgBox.BoxDims.height + 'px'}">
-                                    
-    <img [src]="imgBox.src" />
-</div>
+<img content [src]="imgBox.src" #img/>
+
+<app-text-style-block addOn [translateX]="imgBox.BoxDims.left+imgBox.BoxDims.width+10"
+                            [translateY]="imgBox.BoxDims.top"
+                            [box]="imgBox"></app-text-style-block>

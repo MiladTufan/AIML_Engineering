@@ -1,0 +1,17 @@
+#movableDiv {
+     position: relative;
+     display: inline-block;
+     border: 2px solid #333;
+     overflow: hidden;
+     cursor: nwse-resize;
+     user-select: none;
+ }
+
+#movableDiv img {
+     width: 100%;
+     height: 100%;
+     object-fit: contain;
+     display: block;
+     pointer-events: none;
+     /* prevents img from blocking drag */
+ }

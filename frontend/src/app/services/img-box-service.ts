@@ -20,14 +20,14 @@ export class ImgBoxService {
    * @param img => the img
    */
   public placeImgBoxOntoCanvas(pageNumber: number, imgBox: ImgBox) {
-    let editTextBoxComp = this.pdfViewerService.dynamicContainer!.createComponent(CustomImgBox)
-    editTextBoxComp = this.createImgBoxContainer(editTextBoxComp, imgBox);
+    let editImgBoxComp = this.pdfViewerService.dynamicContainer!.createComponent(CustomImgBox)
+    editImgBoxComp = this.createImgBoxContainer(editImgBoxComp, imgBox);
 
     const page = this.pdfViewerService.getPageWithNumber(pageNumber)
     const imgLayer = page?.htmlContainer?.querySelector(Constants.OVERLAY_IMG)
-    imgLayer?.appendChild(editTextBoxComp.location.nativeElement)
+    imgLayer?.appendChild(editImgBoxComp.location.nativeElement)
 
-    return { comp: editTextBoxComp, box: imgBox }
+    return { comp: editImgBoxComp, box: imgBox }
   }
 
   //=======================================================================================================================
@@ -45,6 +45,24 @@ export class ImgBoxService {
 
     return editTextBoxComp
   }
+
+  /**
+   * gets the Dimensions of an image.
+   * @param file => the image to get the dimensions for.
+   * @returns Promise
+   */
+  public getImageDimensions(file: File): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+
+    img.onload = () => {
+      resolve({ width: img.naturalWidth, height: img.naturalHeight });
+    };
+
+    img.onerror = (err) => reject(err);
+  });
+}
 
   /**
    * Converts a BlockObject to an ImgBox

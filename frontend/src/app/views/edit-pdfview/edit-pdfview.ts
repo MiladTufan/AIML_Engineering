@@ -8,6 +8,8 @@ import { Constants } from '../../models/constants/constants';
 import { EntityManagerService } from '../../services/entity-manager-service';
 import { TextStyle } from '../../models/TextStyle';
 import { ImgBoxService } from '../../services/img-box-service';
+import { PDFFileService } from '../../services/pdffile-service';
+import { AbortException } from 'pdfjs-dist';
 
 
 
@@ -39,7 +41,7 @@ export class EditPDFView {
 	@ViewChild(ToolbarComponent) toolbar!: ToolbarComponent;
 
 	//=================================================== Constructor =======================================================
-	constructor(private pdfViewService: PDFViewerService, private entityManagerService: EntityManagerService,
+	constructor(private pdfViewService: PDFViewerService, private entityManagerService: EntityManagerService, private pdfFileService: PDFFileService,
 		private textEditService: TextEditService, private viewContainerRef: ViewContainerRef, private imgBoxService: ImgBoxService,
 	) { }
 
@@ -96,8 +98,7 @@ export class EditPDFView {
 		const input = event.target as HTMLInputElement;
 		if (input.files && input.files.length > 0) {
 			const file = input.files[0];
-			console.log("Selected file:", file.name);
-			// Do something with the file (upload, preview, etc.)
+			this.pdfFileService.imgFile = file
 		}
 	}
 
@@ -108,20 +109,31 @@ export class EditPDFView {
 		if (this.canCreateImgBox) {
 			this.canCreateImgBox = false;
 			const containerElement = event.target as HTMLElement;
-			const pageNumber = parseInt(containerElement.id?.split('-')[1]);
-			const page = this.pdfViewService.getPageWithNumber(pageNumber)
-			const entityParentContainer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
-			const entityParentRect = (entityParentContainer as HTMLElement).getBoundingClientRect();
+			const imgFile = this.pdfFileService.imgFile
 
+			if (imgFile) {
+				const pageNumber = parseInt(containerElement.id?.split('-')[1]);
+				const page = this.pdfViewService.getPageWithNumber(pageNumber)
+				const entityParentContainer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
+				const entityParentRect = (entityParentContainer as HTMLElement).getBoundingClientRect();
+				this.imgBoxService.getImageDimensions(imgFile).then(dim => {
+					console.log("Original width:", dim.width);
+					console.log("Original height:", dim.height);
 
-			const blockObj = this.entityManagerService.createBlockObject(pageNumber, this.mouseX, this.mouseY,
-				this.pdfViewService.currentScale, entityParentRect)
+					const blockObj = this.entityManagerService.createBlockObject(pageNumber, this.mouseX, this.mouseY,
+						this.pdfViewService.currentScale, entityParentRect, dim.width, dim.height, false)
 
-			const imgBox = this.imgBoxService.toImgBox(blockObj)
-			imgBox.src = "/assets/test_images/020_The_lion_king_Snyggve_in_the_Serengeti_National_Park_Photo_by_Giles_Laurent.jpg"
+					const imgBox = this.imgBoxService.toImgBox(blockObj)
+					imgBox.src = URL.createObjectURL(imgFile);
 
-			const ret = this.imgBoxService.placeImgBoxOntoCanvas(pageNumber, imgBox)
-			ret.comp.instance.positionChanged.subscribe((event: any) => this.entityManagerService.executeMove(ret.box, event, pageNumber))
+					const ret = this.imgBoxService.placeImgBoxOntoCanvas(pageNumber, imgBox)
+					ret.comp.instance.positionChanged.subscribe((event: any) => this.entityManagerService.executeMove(ret.box, event, pageNumber))
+				})
+				return;
+			}
+
+			console.error("Invalid Image file");
+			throw new AbortException("Invalid Image File in Edit-pdfview createImageBox.")
 		}
 	}
 	//=======================================================================================================================

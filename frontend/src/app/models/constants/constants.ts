@@ -16,5 +16,9 @@ export class Constants {
     public static ERROR_INVALID_FILETYPE: string = "You uploaded a non-PDF file. Please upload a valid PDF document only."
     public static ERROR_INVALID_FILETYPE_TITLE: string = "Invalid File Type"
     public static ERROR_NO_PARENT_CONTAINER: string = "No Parent Container found!"
+    public static ERROR_DROPTARGET_UNKNOWN: string = "Drop target for Dragging is unknown! Can not move!"
+    public static ERROR_IMG_BOX_NULL: string = "Image Box is null in resizeObserver! Can not resize!"
+
+    
 
 }

@@ -1,11 +1,87 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Constants } from '../../models/constants/constants';
+import { CommonModule } from '@angular/common';
+import { EntityManagerService } from '../../services/entity-manager-service';
+import { PDFViewerService } from '../../services/pdfviewer-service';
+import { ImgBox } from '../../models/ImgBox';
+import { BlockObject } from '../../models/BlockObject';
 
 @Component({
   selector: 'app-common-box-object',
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './common-box-object.html',
   styleUrl: './common-box-object.css'
 })
 export class CommonBoxObject {
 
+  isDragging = false;
+  dragOffsetX = 0;
+  dragOffsetY = 0;
+  mouseX: number = 0;
+  mouseY: number = 0;
+  private resizeObserver!: ResizeObserver;
+  public boxBase: BlockObject | null = null
+
+  @Output() positionChanged = new EventEmitter<{ top: number; left: number, clickedPageNum: number }>();
+  constructor(private pdfViewerService: PDFViewerService, private entityManagerService: EntityManagerService) { }
+
+  ngOnInit() {
+    console.log("init TextBoxComponent")
+    this.resizeObserver = new ResizeObserver(entries => {
+      if (this.boxBase == null) {
+        console.warn(Constants.ERROR_IMG_BOX_NULL)
+        return;
+      }
+
+      for (const entry of entries) {
+        if (this.pdfViewerService.ignoreResizeTimeout) return;
+
+        const { width, height } = entry.target.getBoundingClientRect();
+        const box = this.entityManagerService.blockObjects.find(b => b.id === this.boxBase!.id);
+
+        if (box) {
+          const page = this.pdfViewerService.getPageWithNumber(box.pageId)
+          const rect2 = (page!.htmlContainer! as HTMLElement).getBoundingClientRect();
+          box.BoxDims.resizedWidth = width
+          box.BoxDims.resizedHeight = height
+          const diff = Math.abs(box.BoxDims.left - rect2.width)
+
+          if (width > diff) {
+            box.BoxDims.resizedWidth = diff
+            box.BoxDims.width = diff
+          }
+          box.BoxDims.sizeCreationScale = this.pdfViewerService.currentScale;
+        }
+      }
+    });
+  }
+
+  setBaseBox(value: BlockObject) {
+    this.boxBase = value
+  }
+
+  onDragEnd(event: DragEvent) {
+    if (!event.clientX || !event.clientY) return;
+    this.mouseX = event.clientX - this.dragOffsetX
+    this.mouseY = event.clientY - this.dragOffsetY
+    this.isDragging = false;
+
+    const dropTarget = document.elementFromPoint(event.clientX, event.clientY);
+    if (dropTarget) {
+      const pageNumber = parseInt(dropTarget.id?.split('-')[1]);
+      this.positionChanged.emit({ top: this.mouseY, left: this.mouseX, clickedPageNum: pageNumber })
+    }
+    else
+      console.error(Constants.ERROR_DROPTARGET_UNKNOWN)
+
+  }
+
+  onDragStart(event: MouseEvent) {
+    const rect = (event.target as HTMLElement).getBoundingClientRect();
+
+    // Store the offset between mouse and top-left of box
+    this.dragOffsetX = event.clientX - rect.left;
+    this.dragOffsetY = event.clientY - rect.top;
+    this.isDragging = true;
+  }
 }

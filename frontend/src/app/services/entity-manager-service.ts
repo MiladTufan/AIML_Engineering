@@ -33,8 +33,12 @@ export class EntityManagerService {
      * Prevents moving outside of horizontal limits.
      */
     private checkXBounds(box: BlockObject, container: DOMRect) {
+        const width = (box.BoxDims.resizedWidth != 0) ? box.BoxDims.resizedWidth : box.BoxDims.width
+
         if (box.BoxDims.left < 0) box.BoxDims.left = 0;
-        if ((box.BoxDims.left + box.BoxDims.width) > container.width) box.BoxDims.left = (container.width - box.BoxDims.width);
+        
+        if ((box.BoxDims.left + width) > container.width) 
+            box.BoxDims.left = (container.width - width);
 
         return box.BoxDims.left
     }
@@ -44,8 +48,11 @@ export class EntityManagerService {
      * Prevents moving outside of vertical limits.
      */
     private checkYBounds(box: BlockObject, container: DOMRect) {
+        const height = (box.BoxDims.resizedHeight != 0) ? box.BoxDims.resizedHeight : box.BoxDims.height
         if (box.BoxDims.top < 0) box.BoxDims.top = 0;
-        if ((box.BoxDims.top + box.BoxDims.height) > container.height) box.BoxDims.top = (container.height - box.BoxDims.height);
+
+        if ((box.BoxDims.top + height) > container.height) 
+            box.BoxDims.top = (container.height - height);
 
         return box.BoxDims.top
     }
@@ -149,11 +156,10 @@ export class EntityManagerService {
      * @param entityParentRect => the entity Parent rect => e.g. TextBoxLayer or ImgBoxLayer
      * @returns 
      */
-    private calculateInitialBoxDims(mouseX: number, mouseY: number, scale: number, entityParentRect: DOMRect): BoxDimensions {
+    private calculateInitialBoxDims(mouseX: number, mouseY: number, scale: number, entityParentRect: DOMRect,
+                                    width: number = 110, height: number = 30,): BoxDimensions {
         const top = (mouseY) - entityParentRect.top
         const left = (mouseX) - entityParentRect.left
-        const width = 110
-        const height = 30
 
         const boxDims = {
             top: top,
@@ -183,16 +189,10 @@ export class EntityManagerService {
      * @param pageNum => the page number to place the object in.
      * @returns => {error: string, success: Boolean}
      */
-    public executeMove(obj: BlockObject, pos: { top: number, left: number }, pageNum: number) {
-        let adjustedPageNum = pageNum
+    public executeMove(obj: BlockObject, pos: { top: number, left: number, clickedPageNum: number }, pageNum: number) {
+        
         console.log("Calling execute move!")
-
-        // TODO find the correct current page from the pos.top 
-        // this is not accurate enough.
-        adjustedPageNum = this.pdfViewerService.getPageNumberFromScrolltop(pos.top + this.pdfViewerService.currentScrollTop -
-            (this.pdfViewerService.standardMarginTop))
-
-        const page = this.pdfViewerService.getPageWithNumber(adjustedPageNum)
+        const page = this.pdfViewerService.getPageWithNumber(pos.clickedPageNum)
         const parentContainer = this.getParentContainer(obj, page!)
         if (parentContainer == null)
             return { error: Constants.ERROR_NO_PARENT_CONTAINER, success: true }
@@ -203,9 +203,9 @@ export class EntityManagerService {
 
         // handle obj move from one page to another.
         // We have to delete the object on one page and recreate on the other page.
-        if (adjustedPageNum != pageNum) {
+        if (pos.clickedPageNum != pageNum) {
             this.deleteOldObj(obj, pageNum)
-            this.assignAndCreateNewObj(obj, parentContainer, adjustedPageNum, page!)
+            this.assignAndCreateNewObj(obj, parentContainer, pos.clickedPageNum, page!)
         }
 
         return { error: "", success: true }
@@ -269,9 +269,10 @@ export class EntityManagerService {
      * @param rerender => currently rerendering?
      * @returns 
      */
-    public createBlockObject(pageNumber: number, mouseX: number, mouseY: number, scale: number, entityParentRect: DOMRect, rerender: Boolean = false) {
+    public createBlockObject(pageNumber: number, mouseX: number, mouseY: number, scale: number, 
+                             entityParentRect: DOMRect, width: number = 110, height: number = 30, rerender: Boolean = false) {
         const uniqueId = this.getUniqueId(this.blockObjects)
-        const boxDims = this.calculateInitialBoxDims(mouseX, mouseY, scale, entityParentRect)
+        const boxDims = this.calculateInitialBoxDims(mouseX, mouseY, scale, entityParentRect, width, height)
         const blockObj = new BlockObject(uniqueId, pageNumber, boxDims)
         this.addOrReplaceBlockObject(blockObj, rerender)
 
