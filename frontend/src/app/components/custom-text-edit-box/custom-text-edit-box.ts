@@ -123,9 +123,9 @@ export class CustomTextEditBox {
 
 
 	getTextAlignment() {
-		if (this.box.TextStyleState.textFormat.isCenterAlign)
+		if (this.box.StyleState.textFormat.isCenterAlign)
 			return "center"
-		else if (this.box.TextStyleState.textFormat.isRightAlign)
+		else if (this.box.StyleState.textFormat.isRightAlign)
 			return "right"
 		else
 			return "left"
@@ -134,12 +134,12 @@ export class CustomTextEditBox {
 
 	styleText(elem: HTMLElement) {
 		elem.style.textAlign = this.getTextAlignment();
-		elem.style.color = this.box.TextStyleState.textColor;
-		elem.style.fontSize = this.box.TextStyleState.textFontSize + "px";
-		elem.style.fontWeight = this.box.TextStyleState.textFormat.isBold ? "bold" : "normal"
-		elem.style.fontStyle = this.box.TextStyleState.textFormat.isItalic ? "italic" : "normal"
-		elem.style.textDecoration = this.box.TextStyleState.textFormat.isUnderline ? "underline" : "normal"
-		elem.style.fontFamily = this.box.TextStyleState.textFontFamily
+		elem.style.color = this.box.StyleState.textColor;
+		elem.style.fontSize = this.box.StyleState.textFontSize + "px";
+		elem.style.fontWeight = this.box.StyleState.textFormat.isBold ? "bold" : "normal"
+		elem.style.fontStyle = this.box.StyleState.textFormat.isItalic ? "italic" : "normal"
+		elem.style.textDecoration = this.box.StyleState.textFormat.isUnderline ? "underline" : "normal"
+		elem.style.fontFamily = this.box.StyleState.textFontFamily
 
 		return elem
 	}

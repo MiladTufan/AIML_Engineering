@@ -18,7 +18,7 @@ export type BoxDimensions = {
 
 export class TextBox extends BlockObject {
   constructor(id: number, pageId: number, BoxDims: BoxDimensions, public text: string,
-    public TextStyleState: TextStyle) {
+    public StyleState: TextStyle) {
     super(id, pageId, BoxDims)
   }
 }

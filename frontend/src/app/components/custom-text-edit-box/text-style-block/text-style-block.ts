@@ -106,7 +106,7 @@ export class TextStyleBlock {
   }
 
   onColorSelect(color: string) {
-    this.globalTextbox!.TextStyleState.textColor = color;
+    this.globalTextbox!.StyleState.textColor = color;
     this.styleChanged.emit()
   }
 
@@ -120,8 +120,8 @@ export class TextStyleBlock {
       this.isFontDropDownOpen = !this.isFontDropDownOpen;
     const fontFamily = this.fontOptions.find(f => f.name == fontName)?.value
     this.currentFont = fontFamily!;
-    this.globalTextbox!.TextStyleState.textFontFamily = fontFamily!
-    this.globalTextbox!.TextStyleState.textFontName = fontName
+    this.globalTextbox!.StyleState.textFontFamily = fontFamily!
+    this.globalTextbox!.StyleState.textFontName = fontName
     this.styleChanged.emit()
   }
 
@@ -135,9 +135,9 @@ export class TextStyleBlock {
       this.currentFontSize = fontSize;
       if (toggleDropDown)
         this.isSizeDropDownOpen = !this.isSizeDropDownOpen
-      this.globalTextbox!.TextStyleState.textFontSize = fontSizeNumeric * this.pdfViewerService.currentScale
+      this.globalTextbox!.StyleState.textFontSize = fontSizeNumeric * this.pdfViewerService.currentScale
 
-      this.globalTextbox!.TextStyleState.textBaseFontSize = fontSizeNumeric
+      this.globalTextbox!.StyleState.textBaseFontSize = fontSizeNumeric
       this.styleChanged.emit()
     }
     catch {
@@ -162,7 +162,7 @@ export class TextStyleBlock {
       {
         this.globalTextbox!.text = this.stripHtmlTags(this.box.text)
         this.globalTextbox!.text = `<${currType.value}>${this.box.text}</${currType.value}>`;
-        this.globalTextbox!.TextStyleState.textStyle = currType.style
+        this.globalTextbox!.StyleState.textStyle = currType.style
         this.styleChanged.emit()
       }
   }
@@ -172,42 +172,42 @@ export class TextStyleBlock {
   //=============================================================================================================
   textAlignLeft($event: MouseEvent) {
     this.isLeftAlign = !this.isLeftAlign;
-    this.globalTextbox!.TextStyleState.textFormat.isLeftAlign = this.isLeftAlign;
+    this.globalTextbox!.StyleState.textFormat.isLeftAlign = this.isLeftAlign;
 
     if (this.isLeftAlign)
     {
       this.isRightAlign = false;
       this.isCenterAlign = false;
-      this.globalTextbox!.TextStyleState.textFormat.isRightAlign = false;
-      this.globalTextbox!.TextStyleState.textFormat.isCenterAlign = false;
+      this.globalTextbox!.StyleState.textFormat.isRightAlign = false;
+      this.globalTextbox!.StyleState.textFormat.isCenterAlign = false;
     }
     this.styleChanged.emit()
   }
 
   textAlignRight($event: MouseEvent) {
     this.isRightAlign = !this.isRightAlign;
-    this.globalTextbox!.TextStyleState.textFormat.isRightAlign = this.isRightAlign;
+    this.globalTextbox!.StyleState.textFormat.isRightAlign = this.isRightAlign;
 
     if (this.isRightAlign)
     {
       this.isLeftAlign = false;
       this.isCenterAlign = false;
-      this.globalTextbox!.TextStyleState.textFormat.isLeftAlign = false;
-      this.globalTextbox!.TextStyleState.textFormat.isCenterAlign = false;
+      this.globalTextbox!.StyleState.textFormat.isLeftAlign = false;
+      this.globalTextbox!.StyleState.textFormat.isCenterAlign = false;
     }
     this.styleChanged.emit()
   }
 
   textAlignCenter($event: MouseEvent) {
     this.isCenterAlign = !this.isCenterAlign;
-    this.globalTextbox!.TextStyleState.textFormat.isCenterAlign = this.isCenterAlign;
+    this.globalTextbox!.StyleState.textFormat.isCenterAlign = this.isCenterAlign;
 
     if (this.isCenterAlign)
     {
       this.isLeftAlign = false;
       this.isRightAlign = false;
-      this.globalTextbox!.TextStyleState.textFormat.isLeftAlign = false;
-      this.globalTextbox!.TextStyleState.textFormat.isRightAlign = false;
+      this.globalTextbox!.StyleState.textFormat.isLeftAlign = false;
+      this.globalTextbox!.StyleState.textFormat.isRightAlign = false;
     }
     this.styleChanged.emit()
   }
@@ -218,31 +218,31 @@ export class TextStyleBlock {
   //=============================================================================================================
   textFormatSubscript() {
     this.isFontSubScript = !this.isFontSubScript;
-    this.globalTextbox!.TextStyleState.textFormat.isSubscript = this.isFontSubScript;
+    this.globalTextbox!.StyleState.textFormat.isSubscript = this.isFontSubScript;
     this.styleChanged.emit()
   }
 
   textFormatSuperscript() {
     this.isFontSuperscript = !this.isFontSuperscript;
-    this.globalTextbox!.TextStyleState.textFormat.isSuperscript = this.isFontSuperscript;
+    this.globalTextbox!.StyleState.textFormat.isSuperscript = this.isFontSuperscript;
     this.styleChanged.emit()
   }
 
   textFormatItalic() {
     this.isFontItalic = !this.isFontItalic;
-    this.globalTextbox!.TextStyleState.textFormat.isItalic = this.isFontItalic;
+    this.globalTextbox!.StyleState.textFormat.isItalic = this.isFontItalic;
     this.styleChanged.emit()
   }
 
   textFormatBold() {
     this.isFontBold = !this.isFontBold;
-    this.globalTextbox!.TextStyleState.textFormat.isBold = this.isFontBold;
+    this.globalTextbox!.StyleState.textFormat.isBold = this.isFontBold;
     this.styleChanged.emit()
   }
 
   textFormatUnderline() {
     this.isFontUnderline = !this.isFontUnderline;
-    this.globalTextbox!.TextStyleState.textFormat.isUnderline = this.isFontUnderline;
+    this.globalTextbox!.StyleState.textFormat.isUnderline = this.isFontUnderline;
     this.styleChanged.emit()
   }
 }

@@ -11,6 +11,10 @@ export class Constants {
     public static OVERLAY_IMG: string = ".img-box-layer";
     public static OVERLAY_STACK_PAGES_HORIZONTALLY: string = "relative inline-block mt-4";
 
+
+    // Events
+    public static EVENT_POSITION_CHANGED: string = "positionChanged"
+
     
     // ERROR messages
     public static ERROR_INVALID_FILETYPE: string = "You uploaded a non-PDF file. Please upload a valid PDF document only."

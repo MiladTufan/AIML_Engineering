@@ -70,7 +70,7 @@ export class TextEditService implements OnDestroy {
         if (this.textboxes.length > 0) {
             const focusBoxIdx = this.getIndexOfCurrentFocusBox()
             if (focusBoxIdx != -1)
-                return this.textboxes[this.getIndexOfCurrentFocusBox()].TextStyleState;
+                return this.textboxes[this.getIndexOfCurrentFocusBox()].StyleState;
         }
 
         return new TextStyle();
@@ -83,7 +83,7 @@ export class TextEditService implements OnDestroy {
     public getCurrentTextStyleById(id: number) {
         const focusBoxIdx = this.getIndexOfCurrentFocusBox(id)
         if (focusBoxIdx != -1)
-            return this.textboxes[focusBoxIdx].TextStyleState;
+            return this.textboxes[focusBoxIdx].StyleState;
 
         return undefined
     }
@@ -95,7 +95,7 @@ export class TextEditService implements OnDestroy {
     onTextBoxEditClick(id: number, editState: Boolean) {
         const box = this.textboxes.find(b => b.id === id);
         if (box)
-            box.TextStyleState.isCollapsed = !editState;
+            box.StyleState.isCollapsed = !editState;
         
         if (editState)
             this.currentFocusTextBoxId = id;
@@ -172,7 +172,7 @@ export class TextEditService implements OnDestroy {
                 const idx = this.textboxes.indexOf(oldBox);
                 this.textboxes.splice(idx, 1);
 
-                const ret = this.createTextBox(savedBox.BoxDims, savedBox.TextStyleState,
+                const ret = this.createTextBox(savedBox.BoxDims, savedBox.StyleState,
                     adjustedPageNum, savedBox.BoxDims.currentScale,
                     this.pdfViewerService.currentScrollTop)
 
@@ -191,7 +191,7 @@ export class TextEditService implements OnDestroy {
     public removeTextBox(event: KeyboardEvent) {
         if (event.key === "Delete") {
             const box = this.textboxes[this.getIndexOfCurrentFocusBox()];
-            box.TextStyleState.isCollapsed = true;
+            box.StyleState.isCollapsed = true;
             this.removeBoxFromPage(box.id)
             this.textboxes.splice(this.textboxes.indexOf(box!), 1)
             this.currentFocusTextBoxId = -1;

@@ -1,5 +1,9 @@
-<img content [src]="imgBox.src" #img/>
+<!-- <app-common-box-object>
+    <img content [src]="_imgBox.src"  (baseBoxEmitter)="" #img />
+</app-common-box-object> -->
 
-<app-text-style-block addOn [translateX]="imgBox.BoxDims.left+imgBox.BoxDims.width+10"
-                            [translateY]="imgBox.BoxDims.top"
-                            [box]="imgBox"></app-text-style-block>
+<!-- <app-text-style-block addOn [translateX]="_imgBox.BoxDims.left+_imgBox.BoxDims.width+10"
+                            [translateY]="_imgBox.BoxDims.top"
+                            [box]="_imgBox"></app-text-style-block> -->
+
+<img  [src]="_imgBox.src"  #img class="z-1000 fixed" />

@@ -12,7 +12,6 @@ import { PDFFileService } from '../../services/pdffile-service';
 import { AbortException } from 'pdfjs-dist';
 
 
-
 @Component({
 	selector: 'app-edit-pdfview',
 	standalone: true,
@@ -120,14 +119,19 @@ export class EditPDFView {
 					console.log("Original width:", dim.width);
 					console.log("Original height:", dim.height);
 
-					const blockObj = this.entityManagerService.createBlockObject(pageNumber, this.mouseX, this.mouseY,
+					const blockObj = this.entityManagerService.createBlockObjectAndInitDims(pageNumber, this.mouseX, this.mouseY,
 						this.pdfViewService.currentScale, entityParentRect, dim.width, dim.height, false)
 
 					const imgBox = this.imgBoxService.toImgBox(blockObj)
 					imgBox.src = URL.createObjectURL(imgFile);
+					this.entityManagerService.addOrReplaceBlockObject(imgBox, imgBox.id, false)
 
 					const ret = this.imgBoxService.placeImgBoxOntoCanvas(pageNumber, imgBox)
-					ret.comp.instance.positionChanged.subscribe((event: any) => this.entityManagerService.executeMove(ret.box, event, pageNumber))
+
+					ret.parent.instance.positionChanged.subscribe((event: any) => this.entityManagerService.executeMove(imgBox, event, pageNumber))
+					// ret.comp.instance.positionChangedBox )
+					// this.eventBusService.on<{ top: number; left: number; clickedPageNum: number; }>
+					// 						(Constants.EVENT_POSITION_CHANGED, ret.box.id.toString()).subscribe(coords => this.entityManagerService.executeMove(ret.box, coords, pageNumber))
 				})
 				return;
 			}

@@ -1,10 +1,8 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, ContentChild, ElementRef, EventEmitter, forwardRef, Input, Output, ViewChild, ViewContainerRef } from '@angular/core';
 import { Constants } from '../../models/constants/constants';
 import { CommonModule } from '@angular/common';
 import { EntityManagerService } from '../../services/entity-manager-service';
 import { PDFViewerService } from '../../services/pdfviewer-service';
-import { ImgBox } from '../../models/ImgBox';
-import { BlockObject } from '../../models/BlockObject';
 
 @Component({
   selector: 'app-common-box-object',
@@ -14,25 +12,27 @@ import { BlockObject } from '../../models/BlockObject';
 })
 export class CommonBoxObject {
 
+
   isDragging = false;
   dragOffsetX = 0;
   dragOffsetY = 0;
   mouseX: number = 0;
   mouseY: number = 0;
   private resizeObserver!: ResizeObserver;
-  public boxBase: BlockObject | null = null
 
+  @ViewChild('childContainer', { read: ViewContainerRef, static: true }) childContainer!: ViewContainerRef;
+  @ViewChild('movableDiv') movableDiv!: ElementRef;
+
+  @Input() boxBase: any
   @Output() positionChanged = new EventEmitter<{ top: number; left: number, clickedPageNum: number }>();
-  constructor(private pdfViewerService: PDFViewerService, private entityManagerService: EntityManagerService) { }
+
+  constructor(private pdfViewerService: PDFViewerService, private entityManagerService: EntityManagerService) {
+  }
 
   ngOnInit() {
-    console.log("init TextBoxComponent")
+    console.log("init CommonBoxComponent")
+    
     this.resizeObserver = new ResizeObserver(entries => {
-      if (this.boxBase == null) {
-        console.warn(Constants.ERROR_IMG_BOX_NULL)
-        return;
-      }
-
       for (const entry of entries) {
         if (this.pdfViewerService.ignoreResizeTimeout) return;
 
@@ -56,9 +56,9 @@ export class CommonBoxObject {
     });
   }
 
-  setBaseBox(value: BlockObject) {
-    this.boxBase = value
-  }
+	ngAfterViewInit() {
+		this.resizeObserver.observe(this.movableDiv.nativeElement);
+	}
 
   onDragEnd(event: DragEvent) {
     if (!event.clientX || !event.clientY) return;
@@ -83,5 +83,9 @@ export class CommonBoxObject {
     this.dragOffsetX = event.clientX - rect.left;
     this.dragOffsetY = event.clientY - rect.top;
     this.isDragging = true;
+  }
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
   }
 }

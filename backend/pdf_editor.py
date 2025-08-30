@@ -30,10 +30,10 @@ class PDFEditor(object):
             can = canvas.Canvas(packet, pagesize=A4)
             for box in edit.textboxes:
                 textbox = cast_blockobject_to_textbox(box)
-                can.setFont(textbox.TextStyleState.textFontName, textbox.TextStyleState.textBaseFontSize) 
+                can.setFont(textbox.StyleState.textFontName, textbox.StyleState.textBaseFontSize) 
                                                               
                 offset_left = 3.5 * box.BoxDims.currentScale                                                              
-                offset_top = (textbox.TextStyleState.textBaseFontSize ) * box.BoxDims.currentScale                                                              
+                offset_top = (textbox.StyleState.textBaseFontSize ) * box.BoxDims.currentScale                                                              
                                                                                                     
                 can.drawString(((box.BoxDims.left + offset_left) / box.BoxDims.currentScale), 
                                height - (((box.BoxDims.top + offset_top) / box.BoxDims.currentScale)), textbox.text)

@@ -101,7 +101,7 @@ export class EntityManagerService {
         adjustedPageNum: number, page: Page) {
         if (obj instanceof TextBox) {
             const textbox = obj as TextBox
-            const ret = this.textEditService.createTextBox(textbox.BoxDims, textbox.TextStyleState,
+            const ret = this.textEditService.createTextBox(textbox.BoxDims, textbox.StyleState,
                 adjustedPageNum, textbox.BoxDims.currentScale,
                 this.pdfViewerService.currentScrollTop)
 
@@ -117,21 +117,21 @@ export class EntityManagerService {
      * @param obj => obj to add
      * @param rerender => currently rerendering?
      */
-    private addOrReplaceBlockObject(obj: BlockObject, rerender: Boolean) {
-        const page = this.pdfViewerService.getPageWithNumber(obj.pageId)
-        const oldBox: any = this.blockObjects.find(b => b.id === obj.id)
+    public addOrReplaceBlockObject(newObj: BlockObject, oldObjId: number, rerender: Boolean) {
+        const page = this.pdfViewerService.getPageWithNumber(newObj.pageId)
+        const oldBox: any = this.blockObjects.find(b => b.id === oldObjId)
         if (oldBox) {
             const idx = this.blockObjects.indexOf(oldBox);
-            obj.baseTop = oldBox.baseTop;
-            obj.baseLeft = oldBox.baseLeft;
-            obj.baseHeight = oldBox.baseHeight;
-            obj.baseWidth = oldBox.baseWidth;
-            this.blockObjects.splice(idx, 1, obj);
-            page?.replaceBlockObject(obj, idx)
+            newObj.baseTop = oldBox.baseTop;
+            newObj.baseLeft = oldBox.baseLeft;
+            newObj.baseHeight = oldBox.baseHeight;
+            newObj.baseWidth = oldBox.baseWidth;
+            this.blockObjects.splice(idx, 1, newObj);
+            page?.replaceBlockObject(newObj, idx)
         }
         else if (!rerender) {
-            this.blockObjects.push(obj)
-            page?.blockObjects.push(obj)
+            this.blockObjects.push(newObj)
+            page?.blockObjects.push(newObj)
         }
     }
 
@@ -146,7 +146,6 @@ export class EntityManagerService {
         obj.baseHeight = boxDims.height;
         obj.baseWidth = boxDims.width;
     }
-
     
     /**
      * Calculates the initial Box Dimensions based on the parameters given.
@@ -190,7 +189,6 @@ export class EntityManagerService {
      * @returns => {error: string, success: Boolean}
      */
     public executeMove(obj: BlockObject, pos: { top: number, left: number, clickedPageNum: number }, pageNum: number) {
-        
         console.log("Calling execute move!")
         const page = this.pdfViewerService.getPageWithNumber(pos.clickedPageNum)
         const parentContainer = this.getParentContainer(obj, page!)
@@ -269,12 +267,13 @@ export class EntityManagerService {
      * @param rerender => currently rerendering?
      * @returns 
      */
-    public createBlockObject(pageNumber: number, mouseX: number, mouseY: number, scale: number, 
+    public createBlockObjectAndInitDims(pageNumber: number, mouseX: number, mouseY: number, scale: number, 
                              entityParentRect: DOMRect, width: number = 110, height: number = 30, rerender: Boolean = false) {
         const uniqueId = this.getUniqueId(this.blockObjects)
         const boxDims = this.calculateInitialBoxDims(mouseX, mouseY, scale, entityParentRect, width, height)
+
         const blockObj = new BlockObject(uniqueId, pageNumber, boxDims)
-        this.addOrReplaceBlockObject(blockObj, rerender)
+       
 
         if (!rerender)
             this.setObjCoords(blockObj, boxDims)
@@ -283,5 +282,22 @@ export class EntityManagerService {
     }
 
 
+        /**
+     * Creates a BlockObject, adds it to this.blockObjects and also sets it baseCoords.
+     * @param id => new ID of the BlockObject
+     * @param pageNumber => pageId of the BlockObject
+     * @param boxDims => new Dimensions
+     * @param rerender => currently rerendering?
+     * @returns 
+     */
+    public createBlockObject(oldId: number, pageNumber: number, boxDims: BoxDimensions, rerender: Boolean = false) {
+        const uniqueId = this.getUniqueId(this.blockObjects)
+        const blockObj = new BlockObject(uniqueId, pageNumber, boxDims)
+        //this.addOrReplaceBlockObject(blockObj, oldId, rerender)
 
+        if (!rerender)
+            this.setObjCoords(blockObj, boxDims)
+
+        return blockObj
+    }
 }

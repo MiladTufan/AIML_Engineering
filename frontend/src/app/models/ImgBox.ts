@@ -1,5 +1,5 @@
 import { BlockObject } from "./BlockObject";
-import { TextStyle } from "./TextStyle";
+import { ImgStyle, TextStyle } from "./TextStyle";
 
 
 
@@ -17,7 +17,7 @@ export type BoxDimensions = {
 
 
 export class ImgBox extends BlockObject {
-  constructor(id: number, pageId: number, BoxDims: BoxDimensions, public src: string) {
+  constructor(id: number, pageId: number, BoxDims: BoxDimensions, public src: string, public StyleState: ImgStyle) {
     super(id, pageId, BoxDims)
   }
 }

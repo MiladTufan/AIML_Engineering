@@ -25,3 +25,7 @@ export class TextFormat
     public isRightAlign: Boolean = false;
     public isCenterAlign: Boolean = false;
 }
+
+export class ImgStyle {
+    public isCollapsed: Boolean = true;
+}

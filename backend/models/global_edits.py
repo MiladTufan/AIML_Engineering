@@ -49,7 +49,7 @@ class BlockObject(BaseModel):
     
 class TextBox(BlockObject):
     text: str
-    TextStyleState: TextStyle
+    StyleState: TextStyle
     
 class MiniPage(BaseModel):
     id: int
@@ -75,7 +75,7 @@ def cast_blockobject_to_textbox(b: BlockObject):
 dims = BoxDimensions(top=0, left=0, width=0, height=0, resizedHeight=0, 
                      resizedWidth=0, currentScale=0, posCreationScale=0, sizeCreationScale=0)
 
-t = TextBox(id=0, pageId=0, BoxDims=dims, text="INIT", TextStyleState=TextStyle(), 
+t = TextBox(id=0, pageId=0, BoxDims=dims, text="INIT", StyleState=TextStyle(), 
             baseTop=0, baseLeft=0, baseWidth=0, baseHeight=0)
 
 mini = MiniPage(id=0, textboxes=[cast_textbox_to_blockobject(t)])

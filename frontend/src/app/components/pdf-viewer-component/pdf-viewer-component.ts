@@ -16,6 +16,8 @@ import { SessionService } from '../../services/communication/session-service';
 import { MiniPage } from '../../models/globalEdit';
 import { CommonModule } from '@angular/common';
 import { EntityManagerService } from '../../services/entity-manager-service';
+import { ImgBox } from '../../models/ImgBox';
+import { ImgBoxService } from '../../services/img-box-service';
 (pdfjsLib as any).GlobalWorkerOptions.workerSrc = "assets/pdf.worker.min.mjs";
 
 
@@ -60,8 +62,9 @@ export class PdfViewerComponent {
 
 
 	//==================================================== Constructor ======================================================
-	constructor(private fileService: PDFFileService, private sessionService: SessionService, private entityManagerService: EntityManagerService,
-		private pdfViewerService: PDFViewerService, private textEditService: TextEditService,) {
+	constructor(private fileService: PDFFileService, private sessionService: SessionService,
+		private entityManagerService: EntityManagerService, private imgBoxService: ImgBoxService,
+		private pdfViewerService: PDFViewerService, private textEditService: TextEditService) {
 		this.renderTrigger.pipe(debounceTime(10)).subscribe((finalScale) => {
 			Promise.all(
 				Array.from(this.renderQueue).map(pageNumber => {
@@ -268,12 +271,12 @@ export class PdfViewerComponent {
 			if (box.pageId === pageNumber) {
 				const scaleParams = this.entityManagerService.rescaleObjOnRender(box, scale)
 
-				box.TextStyleState.textFontSize = box.TextStyleState.textBaseFontSize * scale;
+				box.StyleState.textFontSize = box.StyleState.textBaseFontSize * scale;
 				//const [left, top] = box.left, box.top //viewport.convertToViewportPoint(box.left, box.top);
 
 				this.pdfViewerService.setCodeResizeTimeout()
 
-				const ret = this.textEditService.createTextBox(scaleParams.dims, box.TextStyleState, pageNumber,
+				const ret = this.textEditService.createTextBox(scaleParams.dims, box.StyleState, pageNumber,
 					scale, this.pdfViewerService.currentScrollTop, true, box.id)
 
 				ret.comp.instance.positionChanged.subscribe((event: any) => this.entityManagerService.executeMove(ret.box, event, pageNumber))
@@ -282,6 +285,46 @@ export class PdfViewerComponent {
 				textBoxLayer.appendChild(ret.comp.location.nativeElement)
 			}
 		})
+	}
+
+	/**
+	 * This function recreates all the ImgBoxes according to the scale
+	 * @param boxesForPage => all ImgBoxes to recreate on the page
+	 * @param pageNumber => the page where the ImgBoxes are placed
+	 * @param scale => current scale of the PDF
+	 * @param textBoxLayer => the parent container where the ImgBoxes are placed.
+	 */
+	recreateImgBoxesForPage(boxesForPage: ImgBox[], pageNumber: number, scale: number, imgBoxLayer: HTMLDivElement) {
+		boxesForPage.forEach(box => {
+			if (box.pageId === pageNumber) {
+				const scaleParams = this.entityManagerService.rescaleObjOnRender(box, scale)
+				this.pdfViewerService.setCodeResizeTimeout()
+
+				const blockObj = this.entityManagerService.createBlockObject(box.id, pageNumber, box.BoxDims, true)
+
+				const imgBox = this.imgBoxService.toImgBox(blockObj)
+				imgBox.src = box.src;
+				this.entityManagerService.addOrReplaceBlockObject(imgBox, box.id, true)
+
+				const ret = this.imgBoxService.placeImgBoxOntoCanvas(pageNumber, imgBox, true)
+
+				ret.parent.instance.positionChanged.subscribe((event: any) => this.entityManagerService.executeMove(imgBox, event, pageNumber))
+
+				ret.box.baseHeight = scaleParams.baseHeight
+				ret.box.baseWidth = scaleParams.baseWidth
+				imgBoxLayer.appendChild(ret.parent.location.nativeElement)
+			}
+		})
+	}
+
+	private recreateObjectsForPage(pageNumber: number, scale: number, textBoxLayer: HTMLDivElement, imgBoxLayer: HTMLDivElement) {
+		const boxesForPage = this.entityManagerService.blockObjects.filter(b => b.pageId === pageNumber && b instanceof TextBox) as TextBox[]
+		const imgBoxesForPage = this.entityManagerService.blockObjects.filter(b => b.pageId === pageNumber && b instanceof ImgBox) as ImgBox[]
+
+		this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, textBoxLayer)
+		this.recreateImgBoxesForPage(imgBoxesForPage, pageNumber, scale, imgBoxLayer)
+
+		return { boxesForPage: boxesForPage, imgBoxesForPage: imgBoxesForPage }
 	}
 
 	/**
@@ -361,8 +404,9 @@ export class PdfViewerComponent {
 		let { canvas, textBoxLayer, textLayer, pageContainer, canvasContainer, imgBoxLayer } = this.pdfViewerService.createPageContainers(pageNumber, renderdummy, scale)
 		const baseMarginScale = this.pdfViewerService.getScaledMargin(scale, pageNumber);
 
-		const boxesForPage = this.textEditService.textboxes.filter(b => b.pageId == pageNumber)
-		this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, textBoxLayer)
+
+		const { boxesForPage, imgBoxesForPage } = this.recreateObjectsForPage(pageNumber, scale, textBoxLayer, imgBoxLayer)
+
 		const existingPageContainer = container.querySelector("#" + pageContainer.id)
 		let ret;
 		if (existingPageContainer != null) {
