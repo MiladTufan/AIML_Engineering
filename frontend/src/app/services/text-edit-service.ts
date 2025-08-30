@@ -1,11 +1,9 @@
 import { ComponentRef, ElementRef, Injectable, OnDestroy, ViewContainerRef, inject } from '@angular/core';
 import { fromEvent, Subscription } from 'rxjs';
 import { BoxDimensions, TextBox } from '../models/TextBox';
-import { CustomTextEditBox } from '../components/custom-text-edit-box/custom-text-edit-box';
 import { PDFViewerService } from './pdfviewer-service';
-import { Constants } from '../models/constants/constants';
-import { ToolbarComponent } from '../components/toolbar-component/toolbar-component';
 import { TextStyle } from '../models/TextStyle';
+import { BlockObject } from '../models/BlockObject';
 
 
 //=======================================================================================================================
@@ -15,24 +13,14 @@ import { TextStyle } from '../models/TextStyle';
 @Injectable({
     providedIn: 'root'
 })
-export class TextEditService implements OnDestroy {
+export class TextEditService {
     public textboxes: TextBox[] = [];
-    public textCompMap = new Map<number, ComponentRef<CustomTextEditBox>>();
+    
     public currentFocusTextBoxId: number = 0;
     public pdfViewerContainer: ElementRef | null = null;
     public dynamicContainer: ViewContainerRef | null = null;
     public pdfViewerService = inject(PDFViewerService)
-    private toolbarComponent?: ToolbarComponent;
-    private keydownSubscription?: Subscription;
 
-    constructor() {
-        this.keydownSubscription = fromEvent<KeyboardEvent>(window, 'keydown')
-            .subscribe(event => this.removeTextBox(event));
-    }
-
-    ngOnDestroy() {
-        this.keydownSubscription?.unsubscribe();
-    }
 
     //=======================================================================================================================
     // Helper function to get the index of the current focus textbox. The focus textbox is the textbox that has been
@@ -47,12 +35,6 @@ export class TextEditService implements OnDestroy {
         return ret;
     }
 
-    //=======================================================================================================================
-    // Setter for the ToolbarComponent
-    //=======================================================================================================================
-    setToolbar(toolbar: ToolbarComponent) {
-        this.toolbarComponent = toolbar;
-    }
 
     //=======================================================================================================================
     // helper Function to get the current textbox. The current textbox is the textbox which is in focus 
@@ -76,7 +58,6 @@ export class TextEditService implements OnDestroy {
         return new TextStyle();
     }
 
-
     //=======================================================================================================================
     // Helper Function to get the Current Textstyle editor by id of textbox.
     //=======================================================================================================================
@@ -88,193 +69,28 @@ export class TextEditService implements OnDestroy {
         return undefined
     }
 
-    //=======================================================================================================================
-    // Click function that is called when someone clicks inside a textbox. This functions is called when the
-    // textBoxClicked event is emitted from the CustomTextEditBox. 
-    //=======================================================================================================================
-    onTextBoxEditClick(id: number, editState: Boolean) {
-        const box = this.textboxes.find(b => b.id === id);
-        if (box)
-            box.StyleState.isCollapsed = !editState;
-        
-        if (editState)
-            this.currentFocusTextBoxId = id;
-    }
+  
 
-
-    checkXBounds(box: TextBox, container: DOMRect) {
-        if (box.BoxDims.left < 0) box.BoxDims.left = 0;
-        if ((box.BoxDims.left + box.BoxDims.width) > container.width) box.BoxDims.left = (container.width - box.BoxDims.width);
-
-        return box.BoxDims.left
-    }
-
-    checkYBounds(box: TextBox, container: DOMRect) {
-        if (box.BoxDims.top < 0) box.BoxDims.top = 0;
-        if ((box.BoxDims.top + box.BoxDims.height) > container.height) box.BoxDims.top = (container.height - box.BoxDims.height);
-
-        return box.BoxDims.top
-    }
-
-
-    //=======================================================================================================================
-    // This function removes a textbox from the PDF page by deleting it from the DOM tree.
-    //=======================================================================================================================
-    removeBoxFromPage(id: number) {
-        const compref = this.textCompMap.get(id)
-        const box = this.textboxes.find(b => b.id === id)
-        const pageOld = this.pdfViewerService.getPageWithNumber(box!.pageId)
-        pageOld?.removeTextBox(box!)
-
-        const index = this.pdfViewerService.dynamicContainer!.indexOf(compref!.hostView);
-        if (index !== -1) {
-            this.pdfViewerService.dynamicContainer!.remove(index); // this also destroys the component
+    /**
+     * Converts a BlockObject to an ImgBox
+     * @param obj => the BlockObject to convert.
+     * @returns 
+     */
+    public toTextBox(obj: BlockObject): TextBox {
+        // dummy dims
+        const dims = {
+            top: 0,
+            left: 0,
+            width: 0,
+            height: 0,
+            resizedHeight: 0,
+            resizedWidth: 0,
+            currentScale: 0,
+            posCreationScale: 0,
+            sizeCreationScale: 0,
         }
-    }
-
-
-    //=======================================================================================================================
-    // This function is responsible for updating the textbox position, when the textbox is being dragged around.
-    //=======================================================================================================================
-    public updateTextBoxPos1(textBox: TextBox, pos: { top: number, left: number }, pageNum: number) {
-        const savedBox = this.textboxes.find(b => b.id === textBox.id);
-        if (savedBox) {
-            let adjustedPageNum = pageNum
-
-            // TODO find the correct current page from the pos.top 
-            // this is not accurate enough.
-            adjustedPageNum = this.pdfViewerService.getPageNumberFromScrolltop(pos.top + this.pdfViewerService.currentScrollTop -
-                (this.pdfViewerService.standardMarginTop))
-
-
-            const page = this.pdfViewerService.getPageWithNumber(adjustedPageNum)
-            const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
-            // const canvas_layer = page?.htmlContainer?.querySelector(`page-${pageNum}`)
-
-            const rect = (text_layer as HTMLElement).getBoundingClientRect();
-            const rect2 = (page!.htmlContainer! as HTMLElement).getBoundingClientRect();
-
-
-            savedBox.BoxDims.top = (pos.top - rect.top);
-            savedBox.BoxDims.left = pos.left - rect.left;
-            savedBox.BoxDims.left = this.checkXBounds(savedBox, rect2)
-            savedBox.BoxDims.top = this.checkYBounds(savedBox, rect2)
-
-            savedBox.baseLeft = savedBox.BoxDims.left;
-            savedBox.baseTop = savedBox.BoxDims.top;
-            savedBox.BoxDims.posCreationScale = this.pdfViewerService.currentScale;
-
-            if (adjustedPageNum != pageNum) {
-
-                this.removeBoxFromPage(savedBox.id)
-
-                const oldBox: any = this.textboxes.find(b => b.id === savedBox.id)
-                const idx = this.textboxes.indexOf(oldBox);
-                this.textboxes.splice(idx, 1);
-
-                const ret = this.createTextBox(savedBox.BoxDims, savedBox.StyleState,
-                    adjustedPageNum, savedBox.BoxDims.currentScale,
-                    this.pdfViewerService.currentScrollTop)
-
-                const pageOld = this.pdfViewerService.getPageWithNumber(pageNum)
-                pageOld?.removeTextBox(savedBox)
-                page?.appendTextBox(savedBox)
-                text_layer.appendChild(ret.comp.location.nativeElement)
-            }
-            savedBox.pageId = adjustedPageNum;
-        }
-    }
-
-    //=======================================================================================================================
-    // This function removes the current focus box on ENTF => so the box that was most recently clicked.
-    //=======================================================================================================================
-    public removeTextBox(event: KeyboardEvent) {
-        if (event.key === "Delete") {
-            const box = this.textboxes[this.getIndexOfCurrentFocusBox()];
-            box.StyleState.isCollapsed = true;
-            this.removeBoxFromPage(box.id)
-            this.textboxes.splice(this.textboxes.indexOf(box!), 1)
-            this.currentFocusTextBoxId = -1;
-        }
-    }
-
-
-    //=======================================================================================================================
-    // Helper function to create the container where the textbox is being placed. This also registers all
-    // events for the textbox like editing, and moving.
-    //=======================================================================================================================
-    public createTextBoxContainer(editTextBoxComp: ComponentRef<CustomTextEditBox>, textBox: TextBox,
-        pageNum: number, scale: number, scrollTop: number) {
-
-        editTextBoxComp.instance.box = textBox;
-        editTextBoxComp.instance.textBoxEditClicked.subscribe((event: any) => this.onTextBoxEditClick(textBox.id, event))
-
-
-        // TODO find a way to add this function
-        // editTextBoxComp.instance.textBoxEditClicked.subscribe((event: any) => this.removeTextBox(textBox.id, event))
-
-        return editTextBoxComp
-    }
-
-    private getNextId<T extends { id: number }>(list: T[]): number {
-        if (list.length === 0) {
-            return 1;
-        }
-        return Math.max(...list.map(item => item.id)) + 1;
-    }
-
-    //=======================================================================================================================
-    // Helper function to create the actual textbox.
-    // @param => Box dims = top, left, width, height
-    //=======================================================================================================================
-    public createTextBox(box_dims: BoxDimensions, styleState: TextStyle, pageNum: number, scale: number,
-        scrollTop: number, rerender: Boolean = false, id: number = -1) {
-        // this.mouseY += (pageHeight * (this.pageNum - 1))
-        if (id == -1)
-            id = this.getNextId(this.textboxes)
-        const newTextBox = new TextBox(id, pageNum, box_dims, "Text", styleState)
-
-        const page = this.pdfViewerService.getPageWithNumber(pageNum)
-        const oldBox: any = this.textboxes.find(b => b.id === newTextBox.id)
-        if (oldBox) {
-            const idx = this.textboxes.indexOf(oldBox);
-            newTextBox.baseTop = oldBox.baseTop;
-            newTextBox.baseLeft = oldBox.baseLeft;
-            newTextBox.baseHeight = oldBox.baseHeight;
-            newTextBox.baseWidth = oldBox.baseWidth;
-            this.textboxes.splice(idx, 1, newTextBox);
-            page?.replaceTextBox(newTextBox, idx)
-        }
-
-        if (!rerender) {
-            this.textboxes.push(newTextBox);
-            newTextBox.baseTop = box_dims.top;
-            newTextBox.baseLeft = box_dims.left;
-            newTextBox.baseHeight = box_dims.height;
-            newTextBox.baseWidth = box_dims.width;
-
-            page?.appendTextBox(newTextBox)
-        }
-
-        let editTextBoxComp = this.pdfViewerService.dynamicContainer!.createComponent(CustomTextEditBox)
-        editTextBoxComp = this.createTextBoxContainer(editTextBoxComp, newTextBox, pageNum, scale, scrollTop);
-        this.setComprefSafely(newTextBox.id, editTextBoxComp)
-
-        if (!rerender) {
-            const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
-            text_layer?.appendChild(editTextBoxComp.location.nativeElement)
-        }
-
-
-        return { comp: editTextBoxComp, box: newTextBox }
-    }
-
-
-    setComprefSafely(id: number, editTextBoxComp: ComponentRef<CustomTextEditBox>) {
-        if (this.textCompMap.has(id)) {
-            const oldRef = this.textCompMap.get(id);
-            oldRef?.destroy(); // cleanup Angular component instance
-        }
-        this.textCompMap.set(id, editTextBoxComp)
+        const textBox = new TextBox(0, 0, dims, "Text", new TextStyle());
+        Object.assign(textBox, obj);
+        return textBox;
     }
 }

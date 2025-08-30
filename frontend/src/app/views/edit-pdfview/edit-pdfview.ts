@@ -72,7 +72,6 @@ export class EditPDFView {
 	//=======================================================================================================================
 	ngAfterViewInit() {
 		if (this.pdfViewerRef) this.textEditService.pdfViewerContainer = this.pdfViewerRef
-		if (this.toolbar) this.textEditService.setToolbar(this.toolbar);
 	}
 
 	//=======================================================================================================================
@@ -143,43 +142,61 @@ export class EditPDFView {
 	//=======================================================================================================================
 	// This function is responsible for placing the Textbox inside the PDF canvas.
 	//=======================================================================================================================
+	// public createTextBox(event: Event) {
+	// 	if (this.canCreateTextbox) {
+	// 		this.canCreateTextbox = false;
+	// 		const containerElement = event.target as HTMLElement;
+	// 		const pageNumber = parseInt(containerElement.id?.split('-')[1]);
+
+	// 		const page = this.pdfViewService.getPageWithNumber(pageNumber)
+	// 		const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
+
+	// 		const rect = (text_layer as HTMLElement).getBoundingClientRect();
+	// 		// const rect = (this.pdfViewerRef.nativeElement as HTMLElement).getBoundingClientRect();
+	// 		const top = (this.mouseY) - rect.top
+	// 		const left = (this.mouseX) - rect.left
+	// 		const width = 110
+	// 		const height = 30
+
+	// 		const box_dims = {
+	// 			top: top,
+	// 			left: left,
+	// 			width: width * this.pdfViewService.currentScale,
+	// 			height: height * this.pdfViewService.currentScale,
+	// 			resizedHeight: 0,
+	// 			resizedWidth: 0,
+	// 			currentScale: this.pdfViewService.currentScale,
+	// 			posCreationScale: this.pdfViewService.currentScale,
+	// 			sizeCreationScale: this.pdfViewService.currentScale
+	// 		}
+
+	// 		const styleState = new TextStyle()
+	// 		styleState.textFontSize = styleState.textBaseFontSize * this.pdfViewService.currentScale
+
+	// 		// this.mouseY += (this.pdfViewService.pageHeight * (this.currentPageNumber - 1))
+	// 		this.pdfViewService.setCodeResizeTimeout()
+	// 		const ret = this.textEditService.createTextBox(box_dims, styleState, pageNumber,
+	// 			this.pdfViewService.currentScale, this.pdfViewService.currentScrollTop)
+
+	// 		ret.comp.instance.positionChanged.subscribe((event: any) => this.entityManagerService.executeMove(ret.box, event, pageNumber))
+	// 	}
+	// }
+
 	public createTextBox(event: Event) {
 		if (this.canCreateTextbox) {
+
 			this.canCreateTextbox = false;
 			const containerElement = event.target as HTMLElement;
 			const pageNumber = parseInt(containerElement.id?.split('-')[1]);
-
 			const page = this.pdfViewService.getPageWithNumber(pageNumber)
-			const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
+			const entityParentContainer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
+			const entityParentRect = (entityParentContainer as HTMLElement).getBoundingClientRect();
 
-			const rect = (text_layer as HTMLElement).getBoundingClientRect();
-			// const rect = (this.pdfViewerRef.nativeElement as HTMLElement).getBoundingClientRect();
-			const top = (this.mouseY) - rect.top
-			const left = (this.mouseX) - rect.left
-			const width = 110
-			const height = 30
+			const blockObj = this.entityManagerService.createBlockObjectAndInitDims(pageNumber, this.mouseX, this.mouseY,
+				this.pdfViewService.currentScale, entityParentRect)
 
-			const box_dims = {
-				top: top,
-				left: left,
-				width: width * this.pdfViewService.currentScale,
-				height: height * this.pdfViewService.currentScale,
-				resizedHeight: 0,
-				resizedWidth: 0,
-				currentScale: this.pdfViewService.currentScale,
-				posCreationScale: this.pdfViewService.currentScale,
-				sizeCreationScale: this.pdfViewService.currentScale
-			}
+			this.entityManagerService.createTextBox(blockObj, blockObj.id, pageNumber)
 
-			const styleState = new TextStyle()
-			styleState.textFontSize = styleState.textBaseFontSize * this.pdfViewService.currentScale
-
-			// this.mouseY += (this.pdfViewService.pageHeight * (this.currentPageNumber - 1))
-			this.pdfViewService.setCodeResizeTimeout()
-			const ret = this.textEditService.createTextBox(box_dims, styleState, pageNumber,
-				this.pdfViewService.currentScale, this.pdfViewService.currentScrollTop)
-
-			ret.comp.instance.positionChanged.subscribe((event: any) => this.entityManagerService.executeMove(ret.box, event, pageNumber))
 		}
 	}
 }	

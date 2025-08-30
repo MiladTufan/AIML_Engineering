@@ -42,7 +42,6 @@ export class TextStyleBlock {
   currentFontSize: string = "11"
   currentFontStyle: string = "Paragraph"
 
-  private globalTextbox: TextBox | null = null
 
   constructor(public textEditService: TextEditService, public pdfViewerService: PDFViewerService) {
 
@@ -95,18 +94,13 @@ export class TextStyleBlock {
 
   availableStyles: string[] = ["Paragraph", "Heading H1", "Heading H2", "Heading H3"]
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['box']) {
-      const box = this.textEditService.textboxes.find(b => b.id === changes['box'].currentValue.id)
-      if(box)
-        this.globalTextbox = box
-      else
-        console.error("There is no associated TextBox for TextStyle!")
-    }
+  ngOnInit()
+  {
+    this.styleChanged.emit()
   }
 
   onColorSelect(color: string) {
-    this.globalTextbox!.StyleState.textColor = color;
+    this.box.StyleState.textColor = color;
     this.styleChanged.emit()
   }
 
@@ -120,8 +114,8 @@ export class TextStyleBlock {
       this.isFontDropDownOpen = !this.isFontDropDownOpen;
     const fontFamily = this.fontOptions.find(f => f.name == fontName)?.value
     this.currentFont = fontFamily!;
-    this.globalTextbox!.StyleState.textFontFamily = fontFamily!
-    this.globalTextbox!.StyleState.textFontName = fontName
+    this.box.StyleState.textFontFamily = fontFamily!
+    this.box.StyleState.textFontName = fontName
     this.styleChanged.emit()
   }
 
@@ -135,9 +129,9 @@ export class TextStyleBlock {
       this.currentFontSize = fontSize;
       if (toggleDropDown)
         this.isSizeDropDownOpen = !this.isSizeDropDownOpen
-      this.globalTextbox!.StyleState.textFontSize = fontSizeNumeric * this.pdfViewerService.currentScale
+      this.box.StyleState.textFontSize = fontSizeNumeric * this.pdfViewerService.currentScale
 
-      this.globalTextbox!.StyleState.textBaseFontSize = fontSizeNumeric
+      this.box.StyleState.textBaseFontSize = fontSizeNumeric
       this.styleChanged.emit()
     }
     catch {
@@ -160,9 +154,9 @@ export class TextStyleBlock {
       const currType = this.styleOptions.find(s => s.style === style)
       if (currType)
       {
-        this.globalTextbox!.text = this.stripHtmlTags(this.box.text)
-        this.globalTextbox!.text = `<${currType.value}>${this.box.text}</${currType.value}>`;
-        this.globalTextbox!.StyleState.textStyle = currType.style
+        this.box.text = this.stripHtmlTags(this.box.text)
+        this.box.text = `<${currType.value}>${this.box.text}</${currType.value}>`;
+        this.box.StyleState.textStyle = currType.style
         this.styleChanged.emit()
       }
   }
@@ -172,42 +166,42 @@ export class TextStyleBlock {
   //=============================================================================================================
   textAlignLeft($event: MouseEvent) {
     this.isLeftAlign = !this.isLeftAlign;
-    this.globalTextbox!.StyleState.textFormat.isLeftAlign = this.isLeftAlign;
+    this.box.StyleState.textFormat.isLeftAlign = this.isLeftAlign;
 
     if (this.isLeftAlign)
     {
       this.isRightAlign = false;
       this.isCenterAlign = false;
-      this.globalTextbox!.StyleState.textFormat.isRightAlign = false;
-      this.globalTextbox!.StyleState.textFormat.isCenterAlign = false;
+      this.box.StyleState.textFormat.isRightAlign = false;
+      this.box.StyleState.textFormat.isCenterAlign = false;
     }
     this.styleChanged.emit()
   }
 
   textAlignRight($event: MouseEvent) {
     this.isRightAlign = !this.isRightAlign;
-    this.globalTextbox!.StyleState.textFormat.isRightAlign = this.isRightAlign;
+    this.box.StyleState.textFormat.isRightAlign = this.isRightAlign;
 
     if (this.isRightAlign)
     {
       this.isLeftAlign = false;
       this.isCenterAlign = false;
-      this.globalTextbox!.StyleState.textFormat.isLeftAlign = false;
-      this.globalTextbox!.StyleState.textFormat.isCenterAlign = false;
+      this.box.StyleState.textFormat.isLeftAlign = false;
+      this.box.StyleState.textFormat.isCenterAlign = false;
     }
     this.styleChanged.emit()
   }
 
   textAlignCenter($event: MouseEvent) {
     this.isCenterAlign = !this.isCenterAlign;
-    this.globalTextbox!.StyleState.textFormat.isCenterAlign = this.isCenterAlign;
+    this.box.StyleState.textFormat.isCenterAlign = this.isCenterAlign;
 
     if (this.isCenterAlign)
     {
       this.isLeftAlign = false;
       this.isRightAlign = false;
-      this.globalTextbox!.StyleState.textFormat.isLeftAlign = false;
-      this.globalTextbox!.StyleState.textFormat.isRightAlign = false;
+      this.box.StyleState.textFormat.isLeftAlign = false;
+      this.box.StyleState.textFormat.isRightAlign = false;
     }
     this.styleChanged.emit()
   }
@@ -218,31 +212,31 @@ export class TextStyleBlock {
   //=============================================================================================================
   textFormatSubscript() {
     this.isFontSubScript = !this.isFontSubScript;
-    this.globalTextbox!.StyleState.textFormat.isSubscript = this.isFontSubScript;
+    this.box.StyleState.textFormat.isSubscript = this.isFontSubScript;
     this.styleChanged.emit()
   }
 
   textFormatSuperscript() {
     this.isFontSuperscript = !this.isFontSuperscript;
-    this.globalTextbox!.StyleState.textFormat.isSuperscript = this.isFontSuperscript;
+    this.box.StyleState.textFormat.isSuperscript = this.isFontSuperscript;
     this.styleChanged.emit()
   }
 
   textFormatItalic() {
     this.isFontItalic = !this.isFontItalic;
-    this.globalTextbox!.StyleState.textFormat.isItalic = this.isFontItalic;
+    this.box.StyleState.textFormat.isItalic = this.isFontItalic;
     this.styleChanged.emit()
   }
 
   textFormatBold() {
     this.isFontBold = !this.isFontBold;
-    this.globalTextbox!.StyleState.textFormat.isBold = this.isFontBold;
+    this.box.StyleState.textFormat.isBold = this.isFontBold;
     this.styleChanged.emit()
   }
 
   textFormatUnderline() {
     this.isFontUnderline = !this.isFontUnderline;
-    this.globalTextbox!.StyleState.textFormat.isUnderline = this.isFontUnderline;
+    this.box.StyleState.textFormat.isUnderline = this.isFontUnderline;
     this.styleChanged.emit()
   }
 }

@@ -22,6 +22,9 @@ export class Constants {
     public static ERROR_NO_PARENT_CONTAINER: string = "No Parent Container found!"
     public static ERROR_DROPTARGET_UNKNOWN: string = "Drop target for Dragging is unknown! Can not move!"
     public static ERROR_IMG_BOX_NULL: string = "Image Box is null in resizeObserver! Can not resize!"
+    public static ERROR_CANNOT_REMOVE_BOX: string = "Can not remove box! It does not exist in the first place!"
+
+    
 
     
 

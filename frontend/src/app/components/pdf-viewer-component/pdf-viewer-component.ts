@@ -270,19 +270,14 @@ export class PdfViewerComponent {
 		boxesForPage.forEach(box => {
 			if (box.pageId === pageNumber) {
 				const scaleParams = this.entityManagerService.rescaleObjOnRender(box, scale)
-
-				box.StyleState.textFontSize = box.StyleState.textBaseFontSize * scale;
-				//const [left, top] = box.left, box.top //viewport.convertToViewportPoint(box.left, box.top);
-
 				this.pdfViewerService.setCodeResizeTimeout()
 
-				const ret = this.textEditService.createTextBox(scaleParams.dims, box.StyleState, pageNumber,
-					scale, this.pdfViewerService.currentScrollTop, true, box.id)
+				const blockObj = this.entityManagerService.createBlockObject(pageNumber, scaleParams.dims, true)
+				const ret = this.entityManagerService.createTextBox(blockObj, box.id, pageNumber)
 
-				ret.comp.instance.positionChanged.subscribe((event: any) => this.entityManagerService.executeMove(ret.box, event, pageNumber))
 				ret.box.baseHeight = scaleParams.baseHeight
 				ret.box.baseWidth = scaleParams.baseWidth
-				textBoxLayer.appendChild(ret.comp.location.nativeElement)
+				textBoxLayer.appendChild(ret.parent.location.nativeElement)
 			}
 		})
 	}
@@ -300,15 +295,8 @@ export class PdfViewerComponent {
 				const scaleParams = this.entityManagerService.rescaleObjOnRender(box, scale)
 				this.pdfViewerService.setCodeResizeTimeout()
 
-				const blockObj = this.entityManagerService.createBlockObject(box.id, pageNumber, box.BoxDims, true)
-
-				const imgBox = this.imgBoxService.toImgBox(blockObj)
-				imgBox.src = box.src;
-				this.entityManagerService.addOrReplaceBlockObject(imgBox, box.id, true)
-
-				const ret = this.imgBoxService.placeImgBoxOntoCanvas(pageNumber, imgBox, true)
-
-				ret.parent.instance.positionChanged.subscribe((event: any) => this.entityManagerService.executeMove(imgBox, event, pageNumber))
+				const blockObj = this.entityManagerService.createBlockObject(pageNumber, scaleParams.dims, true)
+				const ret = this.entityManagerService.createImgBox(blockObj, box.id, pageNumber)
 
 				ret.box.baseHeight = scaleParams.baseHeight
 				ret.box.baseWidth = scaleParams.baseWidth

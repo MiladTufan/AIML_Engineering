@@ -1,14 +1,13 @@
 import { Component, Input, Output, EventEmitter, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { TextEditService } from '../../services/text-edit-service';
 import { CommonModule } from '@angular/common';
-import { TextBox } from '../../models/TextBox';
-import { PDFViewerService } from '../../services/pdfviewer-service';
 import { TextStyleBlock } from './text-style-block/text-style-block';
+import { EntityManagerService } from '../../services/entity-manager-service';
 
 @Component({
 	selector: 'app-custom-text-edit-box',
 	standalone: true,
-	imports: [CommonModule, TextStyleBlock],
+	imports: [CommonModule],
 	templateUrl: './custom-text-edit-box.html',
 	styleUrl: './custom-text-edit-box.css'
 })
@@ -38,66 +37,17 @@ export class CustomTextEditBox {
 	@Output() positionChanged = new EventEmitter<{ top: number; left: number }>();
 
 	//=================================================== Children =================================================
-	@ViewChild('movableDiv') movableDiv!: ElementRef;
 	@ViewChild('editableDiv') editableDiv!: ElementRef;
 	@ViewChild(TextStyleBlock) textStyleBlockComponent!: TextStyleBlock
 
 
-	constructor(public textEditService: TextEditService, private pdfViewerService: PDFViewerService) { }
+	constructor(public textEditService: TextEditService, private entityManagerService: EntityManagerService) { }
 	ngOnInit() {
 		console.log("init TextBoxComponent")
-		this.resizeObserver = new ResizeObserver(entries => {
-			for (const entry of entries) {
-				if (this.pdfViewerService.ignoreResizeTimeout) return;
-
-				const { width, height } = entry.target.getBoundingClientRect();
-				const box = this.textEditService.textboxes.find(b => b.id === this.box.id);
-
-				if (box) {
-					const page = this.pdfViewerService.getPageWithNumber(box.pageId)
-					const rect2 = (page!.htmlContainer! as HTMLElement).getBoundingClientRect();
-					box.BoxDims.resizedWidth = width
-					box.BoxDims.resizedHeight = height
-					const diff = Math.abs(box.BoxDims.left - rect2.width)
-
-					if (width > diff) {
-						box.BoxDims.resizedWidth = diff
-						box.BoxDims.width = diff
-					}
-					box.BoxDims.sizeCreationScale = this.pdfViewerService.currentScale;
-				}
-			}
-		});
 	}
 
 	roundedWidth(w: number) {
 		return Math.round(w);
-	}
-
-	ngAfterViewInit() {
-		this.resizeObserver.observe(this.movableDiv.nativeElement);
-		this.updateTextStyle()
-	}
-
-	getmovableDiv() {
-		return this.movableDiv;
-	}
-
-	onDragEnd(event: DragEvent) {
-		if (!event.clientX || !event.clientY) return;
-		this.mouseX = event.clientX - this.dragOffsetX
-		this.mouseY = event.clientY - this.dragOffsetY
-		this.isDragging = false;
-		this.positionChanged.emit({ top: this.mouseY, left: this.mouseX })
-	}
-
-	onDragStart(event: MouseEvent) {
-		const rect = (event.target as HTMLElement).getBoundingClientRect();
-
-		// Store the offset between mouse and top-left of box
-		this.dragOffsetX = event.clientX - rect.left;
-		this.dragOffsetY = event.clientY - rect.top;
-		this.isDragging = true;
 	}
 
 	onInput(event: Event) {
@@ -107,7 +57,6 @@ export class CustomTextEditBox {
 			savedBox.text = text;
 		}
 	}
-
 
 	expandColorPallet() {
 		const currentTextStyle = this.textEditService.getCurrentTextStyle()
@@ -121,7 +70,6 @@ export class CustomTextEditBox {
 		this.textEditService.getCurrentTextStyle().isCollapsed = true;
 	}
 
-
 	getTextAlignment() {
 		if (this.box.StyleState.textFormat.isCenterAlign)
 			return "center"
@@ -130,7 +78,6 @@ export class CustomTextEditBox {
 		else
 			return "left"
 	}
-
 
 	styleText(elem: HTMLElement) {
 		elem.style.textAlign = this.getTextAlignment();
@@ -143,6 +90,8 @@ export class CustomTextEditBox {
 
 		return elem
 	}
+
+
 
 	updateTextStyle() {
 
@@ -183,13 +132,12 @@ export class CustomTextEditBox {
 	}
 
 
-
 	@HostListener('document:click', ['$event'])
 	onDocumentClick(event: MouseEvent) {
 		try {
-			if (this.movableDiv == null) return;
+			if (this.editableDiv == null) return;
 
-			const clickedInsideTextBox = this.movableDiv.nativeElement.contains(event.target);
+			const clickedInsideTextBox = this.editableDiv.nativeElement.contains(event.target);
 			const eventTarget = (event.target as HTMLElement)
 
 			let clickInsideTextStyle = false;
@@ -199,7 +147,6 @@ export class CustomTextEditBox {
 				if (clickInsideTextStyle) break;
 				node = node.parentElement
 			}
-
 
 			if (!clickInsideTextStyle) {
 				this.currentlyEditing = clickedInsideTextBox;

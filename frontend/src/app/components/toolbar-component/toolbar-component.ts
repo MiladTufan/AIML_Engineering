@@ -59,7 +59,7 @@ export class ToolbarComponent {
 		const edits = new GlobalEdit([], [1, 2, 3])
 		for (let i = 1; i <= this.pdfViewerService.allRenderedPages.length; i++) {
 			const pageOld = this.pdfViewerService.getPageWithNumber(i)
-			const miniPage: MiniPage = new MiniPage(i, pageOld!.textboxes)
+			const miniPage: MiniPage = new MiniPage(i, pageOld!.blockObjects)
 			edits.pageEdits.push(miniPage)
 
 		}

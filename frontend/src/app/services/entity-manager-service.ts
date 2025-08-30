@@ -1,4 +1,4 @@
-import { Injectable, Type } from '@angular/core';
+import { ComponentRef, Injectable, Type } from '@angular/core';
 import { BlockObject, BoxDimensions } from '../models/BlockObject';
 import { PDFViewerService } from './pdfviewer-service';
 import { TextBox } from '../models/TextBox';
@@ -6,15 +6,52 @@ import { Constants } from '../models/constants/constants';
 import { Page } from '../models/Page';
 import { TextEditService } from './text-edit-service';
 import { ImgBox } from '../models/ImgBox';
+import { CommonBoxObject } from '../components/common-box-object/common-box-object';
+import { CustomTextEditBox } from '../components/custom-text-edit-box/custom-text-edit-box';
+import { TextStyleBlock } from '../components/custom-text-edit-box/text-style-block/text-style-block';
+import { fromEvent, Subscription } from 'rxjs';
+import { ImgBoxService } from './img-box-service';
+
+/**
+ * TODO Split this service into mulitple specific services for creating, moving, deleting boxes.
+ */
 
 @Injectable({
     providedIn: 'root'
 })
 export class EntityManagerService {
 
-    constructor(private pdfViewerService: PDFViewerService, private textEditService: TextEditService) { }
+    constructor(private pdfViewerService: PDFViewerService, private textEditService: TextEditService, private imgBoxService: ImgBoxService) {
+        this.keydownSubscription = fromEvent<KeyboardEvent>(window, 'keydown')
+            .subscribe(event => {
+                this.removeFocusBox(event)
+                this.currentFocusBoxId = -1;
+            });
+    }
 
+    /**
+     * private variables
+     */
+    private keydownSubscription?: Subscription;
+
+    /**
+     * Public variables
+     */
     public blockObjects: BlockObject[] = [];
+    public commonBoxCompMap = new Map<number, ComponentRef<CommonBoxObject>>();
+    public currentFocusBoxId: number = -1
+
+    /**
+     * NG
+     */
+    ngOnDestroy() {
+        this.keydownSubscription?.unsubscribe();
+    }
+
+
+    /**
+     * Methods
+     */
 
     /**
      * Finds and returns the parent container of the current object.
@@ -36,8 +73,8 @@ export class EntityManagerService {
         const width = (box.BoxDims.resizedWidth != 0) ? box.BoxDims.resizedWidth : box.BoxDims.width
 
         if (box.BoxDims.left < 0) box.BoxDims.left = 0;
-        
-        if ((box.BoxDims.left + width) > container.width) 
+
+        if ((box.BoxDims.left + width) > container.width)
             box.BoxDims.left = (container.width - width);
 
         return box.BoxDims.left
@@ -51,7 +88,7 @@ export class EntityManagerService {
         const height = (box.BoxDims.resizedHeight != 0) ? box.BoxDims.resizedHeight : box.BoxDims.height
         if (box.BoxDims.top < 0) box.BoxDims.top = 0;
 
-        if ((box.BoxDims.top + height) > container.height) 
+        if ((box.BoxDims.top + height) > container.height)
             box.BoxDims.top = (container.height - height);
 
         return box.BoxDims.top
@@ -77,14 +114,63 @@ export class EntityManagerService {
      */
     private deleteOldObj(obj: BlockObject, pageNum: number,) {
         if (obj instanceof TextBox) {
-            this.textEditService.removeBoxFromPage(obj.id)
-            const oldBox: any = this.textEditService.textboxes.find(b => b.id === obj.id)
-            const idx = this.textEditService.textboxes.indexOf(oldBox);
-            this.textEditService.textboxes.splice(idx, 1);
+            this.removeBoxFromPage(obj.id)
+            const oldBox: any = this.blockObjects.find(b => b.id === obj.id)
+            const idx = this.blockObjects.indexOf(oldBox);
+            this.blockObjects.splice(idx, 1);
 
             const pageOld = this.pdfViewerService.getPageWithNumber(pageNum)
-            pageOld?.removeTextBox(obj as TextBox)
+            pageOld?.removeBlockObject(obj)
         }
+    }
+
+
+    //=======================================================================================================================
+    // This function removes a BOX from the PDF page by deleting it from the DOM tree.
+    //=======================================================================================================================
+    private removeBoxFromPage(id: number) {
+        const compref = this.commonBoxCompMap.get(id)
+        const box = this.blockObjects.find(b => b.id === id)
+        const pageOld = this.pdfViewerService.getPageWithNumber(box!.pageId)
+        if (box)
+            pageOld?.removeBlockObject(box)
+        else
+            console.error(Constants.ERROR_CANNOT_REMOVE_BOX)
+
+        const index = this.pdfViewerService.dynamicContainer!.indexOf(compref!.hostView);
+        if (index !== -1) {
+            this.pdfViewerService.dynamicContainer!.remove(index); // this also destroys the component
+        }
+    }
+
+    /**
+     * This function removes the current focus box on ENTF => so the box that was most recently clicked.
+     * @param event => the Keyboard event to listen for.
+     */
+    public removeFocusBox(event: KeyboardEvent) {
+        if (event.key === "Delete") {
+            const box = this.blockObjects[this.getIndexOfCurrentFocusBox()];
+            if (box) {
+                this.removeBoxFromPage(box.id)
+                this.blockObjects.splice(this.blockObjects.indexOf(box!), 1)
+                this.currentFocusBoxId = -1;
+            }
+        }
+    }
+
+    /**
+     * Helper function to get the index of the current focus Box. The focus box is the box that has been
+     * clicked inside the most recently.
+     * @param id => optional id
+     * @returns 
+     */
+    public getIndexOfCurrentFocusBox(id: number = -99) {
+        const idSearch = id >= 0 ? id : this.currentFocusBoxId;
+        const box = this.blockObjects.find(b => b.id == idSearch)
+        let ret = -1;
+        if (box !== undefined)
+            ret = this.blockObjects.indexOf(box!)
+        return ret;
     }
 
     /**
@@ -101,19 +187,19 @@ export class EntityManagerService {
         adjustedPageNum: number, page: Page) {
         if (obj instanceof TextBox) {
             const textbox = obj as TextBox
-            const ret = this.textEditService.createTextBox(textbox.BoxDims, textbox.StyleState,
-                adjustedPageNum, textbox.BoxDims.currentScale,
-                this.pdfViewerService.currentScrollTop)
+            const blockObj = this.createBlockObject(adjustedPageNum, textbox.BoxDims, false)
+            const ret = this.createTextBox(blockObj, blockObj.id, adjustedPageNum)
 
-            page?.appendTextBox(textbox)
-            parentContainer.appendChild(ret.comp.location.nativeElement)
-            ret.comp.instance.positionChanged.subscribe((event: any) => this.executeMove(ret.box, event, page.pageNum))
+            page?.addBlockObject(textbox)
+            parentContainer.appendChild(ret.parent.location.nativeElement)
         }
     }
 
     /**
      * This function adds a BlockObject to this.blockObjects. If it already exists then it replaces it.
      * On Replace it also sets the baseBoxDims.
+     * NOTE: This function can cause a infinite loop of creation if used wrongly!!! 
+     * TODO make this safer
      * @param obj => obj to add
      * @param rerender => currently rerendering?
      */
@@ -126,6 +212,7 @@ export class EntityManagerService {
             newObj.baseLeft = oldBox.baseLeft;
             newObj.baseHeight = oldBox.baseHeight;
             newObj.baseWidth = oldBox.baseWidth;
+            newObj.id = oldObjId
             this.blockObjects.splice(idx, 1, newObj);
             page?.replaceBlockObject(newObj, idx)
         }
@@ -146,7 +233,7 @@ export class EntityManagerService {
         obj.baseHeight = boxDims.height;
         obj.baseWidth = boxDims.width;
     }
-    
+
     /**
      * Calculates the initial Box Dimensions based on the parameters given.
      * @param mouseX => current X coordinate of the mouse.
@@ -156,7 +243,7 @@ export class EntityManagerService {
      * @returns 
      */
     private calculateInitialBoxDims(mouseX: number, mouseY: number, scale: number, entityParentRect: DOMRect,
-                                    width: number = 110, height: number = 30,): BoxDimensions {
+        width: number = 110, height: number = 30,): BoxDimensions {
         const top = (mouseY) - entityParentRect.top
         const left = (mouseX) - entityParentRect.left
 
@@ -226,7 +313,6 @@ export class EntityManagerService {
             newBaseHeight = obj.BoxDims.resizedHeight;
         }
 
-
         const finalWidth = newBaseWidth * (scale / obj.BoxDims.sizeCreationScale)
         const finalHeight = newBaseHeight * (scale / obj.BoxDims.sizeCreationScale)
 
@@ -258,6 +344,27 @@ export class EntityManagerService {
         }
     }
 
+    /**
+     * Creates a BlockObject, adds it to this.blockObjects and also sets it baseCoords.
+     * @param id => new ID of the BlockObject
+     * @param pageNumber => pageId of the BlockObject
+     * @param boxDims => new Dimensions
+     * @param rerender => currently rerendering?
+     * @returns 
+     */
+    public createBlockObjectAndInitDims(pageNumber: number, mouseX: number, mouseY: number, scale: number,
+        entityParentRect: DOMRect, width: number = 110, height: number = 30, rerender: Boolean = false) {
+        const uniqueId = this.getUniqueId(this.blockObjects)
+        const boxDims = this.calculateInitialBoxDims(mouseX, mouseY, scale, entityParentRect, width, height)
+
+        const blockObj = new BlockObject(uniqueId, pageNumber, boxDims)
+
+
+        if (!rerender)
+            this.setObjCoords(blockObj, boxDims)
+
+        return blockObj
+    }
 
     /**
      * Creates a BlockObject, adds it to this.blockObjects and also sets it baseCoords.
@@ -267,30 +374,7 @@ export class EntityManagerService {
      * @param rerender => currently rerendering?
      * @returns 
      */
-    public createBlockObjectAndInitDims(pageNumber: number, mouseX: number, mouseY: number, scale: number, 
-                             entityParentRect: DOMRect, width: number = 110, height: number = 30, rerender: Boolean = false) {
-        const uniqueId = this.getUniqueId(this.blockObjects)
-        const boxDims = this.calculateInitialBoxDims(mouseX, mouseY, scale, entityParentRect, width, height)
-
-        const blockObj = new BlockObject(uniqueId, pageNumber, boxDims)
-       
-
-        if (!rerender)
-            this.setObjCoords(blockObj, boxDims)
-
-        return blockObj
-    }
-
-
-        /**
-     * Creates a BlockObject, adds it to this.blockObjects and also sets it baseCoords.
-     * @param id => new ID of the BlockObject
-     * @param pageNumber => pageId of the BlockObject
-     * @param boxDims => new Dimensions
-     * @param rerender => currently rerendering?
-     * @returns 
-     */
-    public createBlockObject(oldId: number, pageNumber: number, boxDims: BoxDimensions, rerender: Boolean = false) {
+    public createBlockObject(pageNumber: number, boxDims: BoxDimensions, rerender: Boolean = false) {
         const uniqueId = this.getUniqueId(this.blockObjects)
         const blockObj = new BlockObject(uniqueId, pageNumber, boxDims)
         //this.addOrReplaceBlockObject(blockObj, oldId, rerender)
@@ -299,5 +383,109 @@ export class EntityManagerService {
             this.setObjCoords(blockObj, boxDims)
 
         return blockObj
+    }
+
+    /**
+     * creates a TextBox and places it onto the canvas.
+     * @param blockObj => the blockObject to create the TextBox out of.
+     * @param pageNumber => the page where the TextBox should be created in.
+     * @returns  child: textBoxContainer, parent: commonBoxContainer, box: textBox
+     */
+    public createTextBox(blockObj: BlockObject, oldBoxId: number, pageNumber: number) {
+        const textBox = this.textEditService.toTextBox(blockObj)
+        textBox.StyleState.textFontSize = textBox.StyleState.textBaseFontSize * this.pdfViewerService.currentScale
+
+        this.addOrReplaceBlockObject(textBox, oldBoxId, false)
+
+        const ret = this.placeTextBoxOntoCanvas(pageNumber, textBox)
+        this.setComprefSafely(ret.box.id, ret.parent)
+        return ret
+    }
+
+    
+    /**
+     * creates a TextBox and places it onto the canvas.
+     * @param blockObj => the blockObject to create the TextBox out of.
+     * @param pageNumber => the page where the TextBox should be created in.
+     * @returns  child: textBoxContainer, parent: commonBoxContainer, box: textBox
+     */
+    public createImgBox(blockObj: BlockObject, oldBoxId: number, pageNumber: number) {
+        const imgBox = this.imgBoxService.toImgBox(blockObj)
+
+        this.addOrReplaceBlockObject(imgBox, oldBoxId, false)
+
+        const ret = this.imgBoxService.placeImgBoxOntoCanvas(pageNumber, imgBox)
+        ret.parent.instance.positionChanged.subscribe((event: any) => this.executeMove(imgBox, event, pageNumber))
+        
+        this.setComprefSafely(ret.box.id, ret.parent)
+        return ret
+    }
+
+    /**
+     * Click function that is called when someone clicks inside a textbox. This functions is called when the
+     * textBoxClicked event is emitted from the CustomTextEditBox. 
+     * TODO: This function needs to be moved to TextEdtiService logic.
+     * @param box => the box that was clicked
+     * @param editState => the editState => e.g. editing or not
+     */
+    onTextBoxEditClick(box: TextBox, editState: Boolean) {
+        if (box)
+            box.StyleState.isCollapsed = !editState;
+
+        if (editState)
+            this.currentFocusBoxId = box.id;
+    }
+
+    /**
+     * Please create an BlockObject with this.entityManagerService.createBlockObject adn then cast it to ImgBox and pass it here.
+     * This function will create the Text HTML container and place it on the pageNumber specified by @pageNumber .
+     * @param pageNumber => the page where the img should be placed in.
+     * @param img => the img
+     */
+    public placeTextBoxOntoCanvas(pageNumber: number, textBox: TextBox, rerender: Boolean = false) {
+        let commonBoxContainer = this.pdfViewerService.dynamicContainer!.createComponent(CommonBoxObject)
+        let textBoxContainer = commonBoxContainer.instance.childContainer.createComponent(CustomTextEditBox)
+        let textStyleBlock = commonBoxContainer.instance.childContainerAddOn.createComponent(TextStyleBlock)
+
+        textStyleBlock.instance.translateX = textBox.BoxDims.left + textBox.BoxDims.width + 10;
+        textStyleBlock.instance.translateY = textBox.BoxDims.left + textBox.BoxDims.width + 10;
+        textStyleBlock.instance.box = textBox;
+
+        textStyleBlock.instance.styleChanged.subscribe((event: any) => textBoxContainer.instance.updateTextStyle())
+        textBoxContainer.instance.textBoxEditClicked.subscribe((event: any) => this.onTextBoxEditClick(textBox, event))
+        commonBoxContainer.instance.positionChanged.subscribe((event: any) => this.executeMove(textBox, event, pageNumber))
+
+        textBoxContainer.instance.box = textBox;
+        commonBoxContainer.instance.boxBase = (textBox as BlockObject);
+
+        // on rerender the Page has still old overlay img layer [ONLY after render the correct overlay img layer is set!!]
+        if (!rerender) {
+            const page = this.pdfViewerService.getPageWithNumber(pageNumber)
+            const textLayer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
+            textLayer?.appendChild(commonBoxContainer.location.nativeElement)
+        }
+
+        return { child: textBoxContainer, parent: commonBoxContainer, box: textBox }
+    }
+
+    /**
+     * saves the ComponentRef of a CommonBoxObject for later use.
+     * @param id => id of the box component (TextBox id or ImgBox id)
+     * @param commonBoxComp => The componentRef to save
+     */
+    setComprefSafely(id: number, commonBoxComp: ComponentRef<CommonBoxObject>) {
+        if (this.commonBoxCompMap.has(id)) {
+            const oldRef = this.commonBoxCompMap.get(id);
+            oldRef?.destroy();
+        }
+        this.commonBoxCompMap.set(id, commonBoxComp)
+    }
+
+    /**
+    * get the ComponentRef of a CommonBoxObject for later use.
+    * @param id => id of the box component (TextBox id or ImgBox id)
+    */
+    getCompref(id: number) {
+        return this.commonBoxCompMap.get(id)
     }
 }

@@ -21,6 +21,7 @@ export class CommonBoxObject {
   private resizeObserver!: ResizeObserver;
 
   @ViewChild('childContainer', { read: ViewContainerRef, static: true }) childContainer!: ViewContainerRef;
+  @ViewChild('childContainerAddOn', { read: ViewContainerRef, static: true }) childContainerAddOn!: ViewContainerRef;
   @ViewChild('movableDiv') movableDiv!: ElementRef;
 
   @Input() boxBase: any

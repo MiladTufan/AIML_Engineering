@@ -15,7 +15,7 @@ export class ImgBoxService {
   public pdfViewerService = inject(PDFViewerService)
 
   /**
-   * Please create an BlockObject with this.entityManagerService.createBlockObject adn then cast it so ImgBox and pass it here.
+   * Please create an BlockObject with this.entityManagerService.createBlockObject adn then cast it to ImgBox and pass it here.
    * This function will create the ImgBox HTML container and place it on the pageNumber specified by @pageNumber .
    * @param pageNumber => the page where the img should be placed in.
    * @param img => the img

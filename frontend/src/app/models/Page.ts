@@ -5,7 +5,6 @@ import { TextBox } from "./TextBox";
 export class Page {
     private _pageNum: number = 0;
     private _viewport: any;
-    private _textboxes: TextBox[] = [];
     private _blockObjects: BlockObject[] = [];
     private _height: number = 0;
     private _width: number = 0;
@@ -30,7 +29,6 @@ export class Page {
     ) {
         this._pageNum = pageNum;
         this._viewport = viewport;
-        this._textboxes = textboxes;
         this._height = height;
         this._width = width;
         this._rotation = rotation;
@@ -48,10 +46,6 @@ export class Page {
     get viewport(): any { return this._viewport; }
     set viewport(value: any) { this._viewport = value; }
 
-    get textboxes(): any[] { return this._textboxes; }
-    set textboxes(value: any[]) { this._textboxes = value; }
-
-    
     get blockObjects(): any[] { return this._blockObjects; }
     set blockObjects(value: any[]) { this._blockObjects = value; }
 
@@ -77,22 +71,19 @@ export class Page {
     get translateY(): any { return this._translateY; }
     set translateY(value: any) { this._translateY = value; }
 
-    appendTextBox(textBox: TextBox) {
-        this.textboxes.push(textBox)
-    }
 
-    replaceTextBox(nexTextBox: TextBox, idx: number) {
-        this.textboxes.splice(idx, 1, nexTextBox);
+    addBlockObject(newObj: BlockObject) {
+        this.blockObjects.push(newObj)
     }
 
     replaceBlockObject(obj: BlockObject, idx: number) {
         this.blockObjects.splice(idx, 1, obj);
     }
 
-    removeTextBox(textBoxToRemove: TextBox) {
-        const index = this.textboxes.indexOf(textBoxToRemove);
+    removeBlockObject(objToRemove: BlockObject) {
+        const index = this.blockObjects.indexOf(objToRemove);
         if (index > -1) {
-            this.textboxes.splice(index, 1);
+            this.blockObjects.splice(index, 1);
         }
     }
 }
