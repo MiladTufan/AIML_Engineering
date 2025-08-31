@@ -1,23 +1,19 @@
-import { Component, ElementRef, Input, ViewChild, ViewContainerRef, HostListener, Renderer2 } from '@angular/core';
-
+import { Component, ElementRef,  ViewChild, ViewContainerRef, HostListener } from '@angular/core';
 import * as pdfjsLib from "pdfjs-dist";
-import { PDFFileService } from '../../services/pdffile-service';
-import { PDFViewerService } from '../../services/pdfviewer-service';
-import { BehaviorSubject, Subscription } from 'rxjs';
-import { TextEditService } from '../../services/text-edit-service';
-import { Page } from '../../models/Page';
-import { Constants } from '../../models/constants/constants';
+import { Subscription } from 'rxjs';
 import { debounceTime, Subject } from 'rxjs';
-
-import { AlertService } from '../../services/alert-service';
-import { TextBox } from '../../models/TextBox';
-import { PageInfoComponent } from '../page-info-component/page-info-component';
-import { SessionService } from '../../services/communication/session-service';
-import { MiniPage } from '../../models/globalEdit';
 import { CommonModule } from '@angular/common';
-import { EntityManagerService } from '../../services/entity-manager-service';
-import { ImgBox } from '../../models/ImgBox';
-import { ImgBoxService } from '../../services/img-box-service';
+import { SessionService } from '../../../services/communication/session-service';
+import { ImgBoxService } from '../../../services/box-services/img-box-service';
+import { TextEditService } from '../../../services/box-services/text-edit-service';
+import { EntityManagerService } from '../../../services/box-services/entity-manager-service';
+import { MiniPage } from '../../../models/globalEdit';
+import { TextBox } from '../../../models/box-models/TextBox';
+import { ImgBox } from '../../../models/box-models/ImgBox';
+import { Page } from '../../../models/Page';
+import { PDFViewerService } from '../../../services/pdf-services/pdfviewer-service';
+import { PDFFileService } from '../../../services/pdf-services/pdffile-service';
+import { BoxCreationService } from '../../../services/box-services/box-creation-service';
 (pdfjsLib as any).GlobalWorkerOptions.workerSrc = "assets/pdf.worker.min.mjs";
 
 
@@ -31,7 +27,6 @@ import { ImgBoxService } from '../../services/img-box-service';
 	styleUrl: './pdf-viewer-component.css'
 })
 export class PdfViewerComponent {
-
 
 	//=================================================== Private variables =================================================
 	private pdfDocument: any;
@@ -63,7 +58,7 @@ export class PdfViewerComponent {
 
 	//==================================================== Constructor ======================================================
 	constructor(private fileService: PDFFileService, private sessionService: SessionService,
-		private entityManagerService: EntityManagerService, private imgBoxService: ImgBoxService,
+		private entityManagerService: EntityManagerService, private boxCreationService: BoxCreationService,
 		private pdfViewerService: PDFViewerService, private textEditService: TextEditService) {
 		this.renderTrigger.pipe(debounceTime(10)).subscribe((finalScale) => {
 			Promise.all(
@@ -272,8 +267,8 @@ export class PdfViewerComponent {
 				const scaleParams = this.entityManagerService.rescaleObjOnRender(box, scale)
 				this.pdfViewerService.setCodeResizeTimeout()
 
-				const blockObj = this.entityManagerService.createBlockObject(pageNumber, scaleParams.dims, true)
-				const ret = this.entityManagerService.createTextBox(blockObj, box.id, pageNumber)
+				const blockObj = this.boxCreationService.createBlockObject(pageNumber, scaleParams.dims, true)
+				const ret = this.boxCreationService.createTextBox(blockObj, box.id, pageNumber)
 
 				ret.box.baseHeight = scaleParams.baseHeight
 				ret.box.baseWidth = scaleParams.baseWidth
@@ -295,8 +290,8 @@ export class PdfViewerComponent {
 				const scaleParams = this.entityManagerService.rescaleObjOnRender(box, scale)
 				this.pdfViewerService.setCodeResizeTimeout()
 
-				const blockObj = this.entityManagerService.createBlockObject(pageNumber, scaleParams.dims, true)
-				const ret = this.entityManagerService.createImgBox(blockObj, box.id, pageNumber)
+				const blockObj = this.boxCreationService.createBlockObject(pageNumber, scaleParams.dims, true)
+				const ret = this.boxCreationService.createImgBox(blockObj, box.id, pageNumber)
 
 				ret.box.baseHeight = scaleParams.baseHeight
 				ret.box.baseWidth = scaleParams.baseWidth

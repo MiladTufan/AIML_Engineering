@@ -2,10 +2,10 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Constants } from '../../models/constants/constants';
-import { PDFFileService } from '../../services/pdffile-service';
-import { AlertService } from '../../services/alert-service';
 import { AlertComponent } from '../../shared/alert/alert';
 import { SessionService } from '../../services/communication/session-service';
+import { PDFFileService } from '../../services/pdf-services/pdffile-service';
+import { AlertService } from '../../shared/alert/alert-service';
 
 @Component({
 	selector: 'app-upload-pdfview',

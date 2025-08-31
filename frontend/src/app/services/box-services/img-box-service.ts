@@ -1,11 +1,11 @@
 import { ComponentRef, inject, Injectable } from '@angular/core';
-import { ImgBox } from '../models/ImgBox';
-import { CustomImgBox } from '../components/custom-img-box/custom-img-box';
-import { PDFViewerService } from './pdfviewer-service';
-import { Constants } from '../models/constants/constants';
-import { BlockObject } from '../models/BlockObject';
-import { ImgStyle } from '../models/TextStyle';
-import { CommonBoxObject } from '../components/common-box-object/common-box-object';
+import { ImgBox } from '../../models/box-models/ImgBox';
+import { Constants } from '../../models/constants/constants';
+import { BlockObject } from '../../models/box-models/BlockObject';
+import { ImgStyle } from '../../models/box-models/TextStyle';
+import { CommonBoxObject } from '../../components/box-components/common-box-object/common-box-object';
+import { CustomImgBox } from '../../components/box-components/custom-img-box/custom-img-box';
+import { PDFViewerService } from '../pdf-services/pdfviewer-service';
 
 @Injectable({
   providedIn: 'root'

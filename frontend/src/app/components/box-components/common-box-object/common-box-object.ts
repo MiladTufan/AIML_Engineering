@@ -1,8 +1,8 @@
 import { Component, ContentChild, ElementRef, EventEmitter, forwardRef, Input, Output, ViewChild, ViewContainerRef } from '@angular/core';
-import { Constants } from '../../models/constants/constants';
 import { CommonModule } from '@angular/common';
-import { EntityManagerService } from '../../services/entity-manager-service';
-import { PDFViewerService } from '../../services/pdfviewer-service';
+import { EntityManagerService } from '../../../services/box-services/entity-manager-service';
+import { Constants } from '../../../models/constants/constants';
+import { PDFViewerService } from '../../../services/pdf-services/pdfviewer-service';
 
 @Component({
   selector: 'app-common-box-object',

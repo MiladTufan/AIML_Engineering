@@ -1,8 +1,8 @@
 import { Component, Input, Output, EventEmitter, ViewChild, ElementRef, HostListener } from '@angular/core';
-import { TextEditService } from '../../services/text-edit-service';
 import { CommonModule } from '@angular/common';
-import { TextStyleBlock } from './text-style-block/text-style-block';
-import { EntityManagerService } from '../../services/entity-manager-service';
+import { TextStyleBlock } from '../../shared/text-style-block/text-style-block';
+import { TextEditService } from '../../../services/box-services/text-edit-service';
+import { EntityManagerService } from '../../../services/box-services/entity-manager-service';
 
 @Component({
 	selector: 'app-custom-text-edit-box',

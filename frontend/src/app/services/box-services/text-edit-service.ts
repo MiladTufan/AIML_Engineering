@@ -1,9 +1,9 @@
 import { ComponentRef, ElementRef, Injectable, OnDestroy, ViewContainerRef, inject } from '@angular/core';
 import { fromEvent, Subscription } from 'rxjs';
-import { BoxDimensions, TextBox } from '../models/TextBox';
-import { PDFViewerService } from './pdfviewer-service';
-import { TextStyle } from '../models/TextStyle';
-import { BlockObject } from '../models/BlockObject';
+import { BoxDimensions, TextBox } from '../../models/box-models/TextBox';
+import { TextStyle } from '../../models/box-models/TextStyle';
+import { BlockObject } from '../../models/box-models/BlockObject';
+import { PDFViewerService } from '../pdf-services/pdfviewer-service';
 
 
 //=======================================================================================================================

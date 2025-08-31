@@ -1,7 +1,7 @@
 import { Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
-import { ImgBox } from '../../models/ImgBox';
 import { CommonModule } from '@angular/common';
-import { BlockObject } from '../../models/BlockObject';
+import { BlockObject } from '../../../models/box-models/BlockObject';
+import { ImgBox } from '../../../models/box-models/ImgBox';
 
 @Component({
   selector: 'app-custom-img-box',

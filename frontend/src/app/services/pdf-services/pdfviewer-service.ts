@@ -1,7 +1,7 @@
 import { ElementRef, Injectable, ViewContainerRef } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { Page } from '../models/Page';
-import { PageInfoComponent } from '../components/page-info-component/page-info-component';
+import { Page } from '../../models/Page';
+import { PageInfoComponent } from '../../components/pdf-components/page-info-component/page-info-component';
 
 @Injectable({
 	providedIn: 'root'

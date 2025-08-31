@@ -1,6 +1,6 @@
 
-import { BlockObject } from "./BlockObject";
-import { TextBox } from "./TextBox";
+import { BlockObject } from "./box-models/BlockObject";
+import { TextBox } from "./box-models/TextBox";
 
 export class Page {
     private _pageNum: number = 0;

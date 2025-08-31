@@ -1,15 +1,15 @@
-import { PdfViewerComponent } from '../../components/pdf-viewer-component/pdf-viewer-component';
-import { Component, ComponentRef, ElementRef, HostListener, Renderer2, signal, ViewChild, ViewContainerRef } from '@angular/core';
-import { ToolbarComponent } from '../../components/toolbar-component/toolbar-component';
-import { PDFViewerService } from '../../services/pdfviewer-service';
-import { TextEditService } from '../../services/text-edit-service';
+import { Component, ComponentRef, ElementRef, HostListener, inject, Renderer2, signal, ViewChild, ViewContainerRef } from '@angular/core';
+import { TextEditService } from '../../services/box-services/text-edit-service';
 import { Subscription } from 'rxjs';
 import { Constants } from '../../models/constants/constants';
-import { EntityManagerService } from '../../services/entity-manager-service';
-import { TextStyle } from '../../models/TextStyle';
-import { ImgBoxService } from '../../services/img-box-service';
-import { PDFFileService } from '../../services/pdffile-service';
+import { EntityManagerService } from '../../services/box-services/entity-manager-service';
+import { ImgBoxService } from '../../services/box-services/img-box-service';
 import { AbortException } from 'pdfjs-dist';
+import { ToolbarComponent } from '../../components/pdf-components/toolbar-component/toolbar-component';
+import { PdfViewerComponent } from '../../components/pdf-components/pdf-viewer-component/pdf-viewer-component';
+import { PDFViewerService } from '../../services/pdf-services/pdfviewer-service';
+import { PDFFileService } from '../../services/pdf-services/pdffile-service';
+import { BoxCreationService } from '../../services/box-services/box-creation-service';
 
 
 @Component({
@@ -39,10 +39,15 @@ export class EditPDFView {
 	@ViewChild('dynamicContainer', { read: ViewContainerRef }) dynamicContainer!: ViewContainerRef;
 	@ViewChild(ToolbarComponent) toolbar!: ToolbarComponent;
 
+	private pdfViewService: PDFViewerService = inject(PDFViewerService)
+	private entityManagerService: EntityManagerService = inject(EntityManagerService)
+	private pdfFileService: PDFFileService = inject(PDFFileService)
+	private textEditService: TextEditService = inject(TextEditService)
+	private imgBoxService: ImgBoxService = inject(ImgBoxService)
+	private boxCreationService: BoxCreationService = inject(BoxCreationService)
+
 	//=================================================== Constructor =======================================================
-	constructor(private pdfViewService: PDFViewerService, private entityManagerService: EntityManagerService, private pdfFileService: PDFFileService,
-		private textEditService: TextEditService, private viewContainerRef: ViewContainerRef, private imgBoxService: ImgBoxService,
-	) { }
+	constructor(private viewContainerRef: ViewContainerRef) { }
 
 	// ================================================== Listener functions ================================================
 
@@ -118,7 +123,7 @@ export class EditPDFView {
 					console.log("Original width:", dim.width);
 					console.log("Original height:", dim.height);
 
-					const blockObj = this.entityManagerService.createBlockObjectAndInitDims(pageNumber, this.mouseX, this.mouseY,
+					const blockObj = this.boxCreationService.createBlockObjectAndInitDims(pageNumber, this.mouseX, this.mouseY,
 						this.pdfViewService.currentScale, entityParentRect, dim.width, dim.height, false)
 
 					const imgBox = this.imgBoxService.toImgBox(blockObj)
@@ -192,10 +197,10 @@ export class EditPDFView {
 			const entityParentContainer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
 			const entityParentRect = (entityParentContainer as HTMLElement).getBoundingClientRect();
 
-			const blockObj = this.entityManagerService.createBlockObjectAndInitDims(pageNumber, this.mouseX, this.mouseY,
+			const blockObj = this.boxCreationService.createBlockObjectAndInitDims(pageNumber, this.mouseX, this.mouseY,
 				this.pdfViewService.currentScale, entityParentRect)
 
-			this.entityManagerService.createTextBox(blockObj, blockObj.id, pageNumber)
+			this.boxCreationService.createTextBox(blockObj, blockObj.id, pageNumber)
 
 		}
 	}

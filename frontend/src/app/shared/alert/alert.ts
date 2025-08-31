@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { Alert, AlertService } from '../../services/alert-service';
 import { CommonModule } from '@angular/common';
+import { Alert, AlertService } from './alert-service';
 
 
 @Component({

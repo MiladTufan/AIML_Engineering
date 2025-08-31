@@ -1,14 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, Output, EventEmitter, ViewChild, Input } from '@angular/core';
-import { Constants } from '../../models/constants/constants';
-import { TextEditService } from '../../services/text-edit-service';
-import { PDFViewerService } from '../../services/pdfviewer-service';
 import { FormsModule, MinLengthValidator } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { DownloadService } from '../../services/communication/download-service';
-import { GlobalEdit, MiniPage } from '../../models/globalEdit';
-import { SessionService } from '../../services/communication/session-service';
-import { TextStyleBlock } from '../custom-text-edit-box/text-style-block/text-style-block';
+import { TextEditService } from '../../../services/box-services/text-edit-service';
+import { SessionService } from '../../../services/communication/session-service';
+import { DownloadService } from '../../../services/communication/download-service';
+import { TextStyleBlock } from '../../shared/text-style-block/text-style-block';
+import { GlobalEdit, MiniPage } from '../../../models/globalEdit';
+import { PDFViewerService } from '../../../services/pdf-services/pdfviewer-service';
+
 
 @Component({
 	selector: 'app-toolbar-component',

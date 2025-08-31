@@ -14,6 +14,9 @@ export class Constants {
 
     // Events
     public static EVENT_POSITION_CHANGED: string = "positionChanged"
+    public static EVENT_ASSIGN_AND_CREATE_NEW_OBJ: string = "assignAndCreateNewObj"
+    public static EVENT_ENTITY_MANAGER_EMIT: string = "entityManagerService"
+    
 
     
     // ERROR messages

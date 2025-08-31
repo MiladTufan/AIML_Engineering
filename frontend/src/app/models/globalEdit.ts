@@ -1,4 +1,4 @@
-import { BlockObject } from "./BlockObject";
+import { BlockObject } from "./box-models/BlockObject";
 
 
 

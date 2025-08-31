@@ -1,10 +1,9 @@
 import { Component, EventEmitter, Input, Output, SimpleChanges } from '@angular/core';
 import { DropDownMenuComponent } from '../drop-down-menu-component/drop-down-menu-component';
-import { TextEditService } from '../../../services/text-edit-service';
-import { PDFViewerService } from '../../../services/pdfviewer-service';
 import { CommonModule } from '@angular/common';
 import { SlideInOutToolbarExtension } from '../../../animations/animations';
-import { TextBox } from '../../../models/TextBox';
+import { TextEditService } from '../../../services/box-services/text-edit-service';
+import { PDFViewerService } from '../../../services/pdf-services/pdfviewer-service';
 
 @Component({
   selector: 'app-text-style-block',
