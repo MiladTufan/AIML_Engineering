@@ -90,7 +90,7 @@ body {
 
 
 .toolbarBtnStyle {
-  @apply flex items-center rounded-md text-sm font-medium text-gray-800  hover:bg-white/100 backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer font-standard
+  @apply flex items-center rounded-md text-sm font-medium text-gray-800  backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer font-standard
 }
 
 .dropdownBtnStyle {
@@ -111,9 +111,9 @@ body {
 
 
 .toolbarBtnStyleCornerLeft {
-  @apply flex items-center text-sm font-medium text-gray-800 bg-transparent hover:bg-white/100 backdrop-blur-sm h-12 transition rounded-t-md rounded-r-md rounded-l-2xl duration-200 ease-in-out cursor-pointer font-standard
+  @apply flex items-center text-sm font-medium text-gray-800 bg-transparent hover:bg-gray-200/100 backdrop-blur-sm h-12 transition rounded-t-md rounded-r-md rounded-l-2xl duration-200 ease-in-out cursor-pointer font-standard
 }
 
 .toolbarBtnStyleCornerRight {
-  @apply flex items-center text-sm font-medium text-gray-800 bg-transparent hover:bg-white/100 backdrop-blur-sm h-12 transition rounded-r-2xl rounded-l-md duration-200 ease-in-out cursor-pointer font-standard
+  @apply flex items-center text-sm font-medium text-gray-800 bg-transparent hover:bg-gray-200/100 backdrop-blur-sm h-12 transition rounded-r-2xl rounded-l-md duration-200 ease-in-out cursor-pointer font-standard
 }

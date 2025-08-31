@@ -55,6 +55,45 @@ export class BoxCreationService {
     }
   }
 
+      /**
+     * sets the BlockObjects baseBoxDims at the time of creation.
+     * @param obj => BlockObject where baseBoxDims are set
+     * @param boxDims => new BoxDims
+     */
+    public setObjCoords(obj: BlockObject, boxDims: BoxDimensions) {
+        obj.baseTop = boxDims.top;
+        obj.baseLeft = boxDims.left;
+        obj.baseHeight = boxDims.height;
+        obj.baseWidth = boxDims.width;
+    }
+
+    /**
+     * Calculates the initial Box Dimensions based on the parameters given.
+     * @param mouseX => current X coordinate of the mouse.
+     * @param mouseY => current Y coordinate of the mouse.
+     * @param scale => current scale of the PDF
+     * @param entityParentRect => the entity Parent rect => e.g. TextBoxLayer or ImgBoxLayer
+     * @returns 
+     */
+    public calculateInitialBoxDims(mouseX: number, mouseY: number, scale: number, entityParentRect: DOMRect,
+        width: number = 110, height: number = 30,): BoxDimensions {
+        const top = (mouseY) - entityParentRect.top
+        const left = (mouseX) - entityParentRect.left
+
+        const boxDims = {
+            top: top,
+            left: left,
+            width: width * scale,
+            height: height * scale,
+            resizedHeight: 0,
+            resizedWidth: 0,
+            currentScale: scale,
+            posCreationScale: scale,
+            sizeCreationScale: scale
+        }
+        return boxDims
+    }
+
 
   /**
    * Creates a BlockObject, adds it to this.blockObjects and also sets it baseCoords.
@@ -67,13 +106,13 @@ export class BoxCreationService {
   public createBlockObjectAndInitDims(pageNumber: number, mouseX: number, mouseY: number, scale: number,
     entityParentRect: DOMRect, width: number = 110, height: number = 30, rerender: Boolean = false) {
     const uniqueId = this.entityManagerService.getUniqueId(this.entityManagerService.blockObjects)
-    const boxDims = this.entityManagerService.calculateInitialBoxDims(mouseX, mouseY, scale, entityParentRect, width, height)
+    const boxDims = this.calculateInitialBoxDims(mouseX, mouseY, scale, entityParentRect, width, height)
 
     const blockObj = new BlockObject(uniqueId, pageNumber, boxDims)
 
 
     if (!rerender)
-      this.entityManagerService.setObjCoords(blockObj, boxDims)
+      this.setObjCoords(blockObj, boxDims)
 
     return blockObj
   }
@@ -93,7 +132,7 @@ export class BoxCreationService {
     //this.addOrReplaceBlockObject(blockObj, oldId, rerender)
 
     if (!rerender)
-      this.entityManagerService.setObjCoords(blockObj, boxDims)
+      this.setObjCoords(blockObj, boxDims)
 
     return blockObj
   }
@@ -124,8 +163,9 @@ export class BoxCreationService {
    * @param pageNumber => the page where the TextBox should be created in.
    * @returns  child: textBoxContainer, parent: commonBoxContainer, box: textBox
    */
-  public createImgBox(blockObj: BlockObject, oldBoxId: number, pageNumber: number) {
+  public createImgBox(blockObj: BlockObject, oldBoxId: number, pageNumber: number, src: string) {
     const imgBox = this.imgBoxService.toImgBox(blockObj)
+    imgBox.src = src
 
     this.entityManagerService.addOrReplaceBlockObject(imgBox, oldBoxId, false)
 

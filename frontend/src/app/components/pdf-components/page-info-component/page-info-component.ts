@@ -7,21 +7,23 @@ import { Component, Input } from '@angular/core';
   styleUrl: './page-info-component.css'
 })
 export class PageInfoComponent {
-    @Input() pageNumber: number = 1;
-    @Input() width: number = 60;
-    @Input() fontSize: number = 32;
-    @Input() borderRadius: number = 9;
+
+  @Input() pageNumber: number = 1;
+  @Input() width: number = 60;
+  @Input() fontSize: number = 32;
+  @Input() borderRadius: number = 9;
 
 
 
 
-    ShowInfo(event: Event)
-    {
+  ShowInfo(event: Event) {
 
-    }
+  }
 
-    DeletePage(event: Event)
-    {
-      
-    }
+  DeletePage(event: Event) {
+
+  }
+
+  MovePage(event: Event) {
+  }
 }

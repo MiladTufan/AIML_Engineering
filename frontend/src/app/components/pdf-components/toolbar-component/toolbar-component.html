@@ -1,9 +1,9 @@
 <div class="w-[90%] max-w-[1600px] h-14 flex items-center justify-start text-center
          absolute top-[2%] left-1/2 transform -translate-x-1/2
-         z-50 rounded-2xl translucentStyle">
+         z-50 rounded-lg translucentStyle">
 
     <!-- Insert TextBoxCreate Button -->
-    <button class="toolbarBtnStyleCornerLeft px-4 py-1 bg-red-600 
+    <button class="toolbarBtnStyle ml-1 p-3 hover:bg-gray-200/100 
                    rounded-t-sm rounded-r-sm rounded-b-md rounded-l-lg" 
                    #TextButtonContainer title="Enter Text" (click)="OnTextBtnClicked($event)">
 
@@ -20,7 +20,7 @@
     <div class="w-[2px] h-[80%] bg-[var(--btn_border_color)] mx-[5px]"></div>
 
     <!-- Insert Img Button -->
-    <button class="toolbarBtnStyle px-3 py-2" title="Paste Image" (click)="OnInsertImageBtnClicked($event)">
+    <button class="toolbarBtnStyle p-3 hover:bg-gray-200/100 " title="Paste Image" (click)="OnInsertImageBtnClicked($event)">
         <img class="flex w-[22px] h-[22px]" src="/assets/icons/paste_image.svg">
     </button>
 
@@ -34,8 +34,9 @@
     <div class="w-[2px] h-[80%] bg-[var(--btn_border_color)] mx-[5px]"></div>
 
     <!-- Insert Download Button -->
-    <button class="toolbarBtnStyleCornerRight px-3 py-2 ml-auto" title="Download File" (click)="OnDownloadBtnClicked($event)">
-        <img class="flex w-[30px] h-[30px]" src="/assets/icons/downloadIcon.svg">
+    <button class="toolbarBtnStyle p-2 ml-auto mr-1 hover:bg-green-500/100" title="Download File" (click)="OnDownloadBtnClicked($event)">
+        <img class="w-[30px] h-[30px] block hover:opacity-0" src="/assets/icons/downloadIcon.svg">
+        <img src="/assets/icons/downloadIconWhite.svg" alt="Download PDF Icon" class="w-[30px] h-[30px] absolute  opacity-0 hover:opacity-100 hover:scale-120  transform transition-transform duration-500">
     </button>
 </div>
 

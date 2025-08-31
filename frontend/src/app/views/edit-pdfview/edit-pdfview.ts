@@ -126,16 +126,15 @@ export class EditPDFView {
 					const blockObj = this.boxCreationService.createBlockObjectAndInitDims(pageNumber, this.mouseX, this.mouseY,
 						this.pdfViewService.currentScale, entityParentRect, dim.width, dim.height, false)
 
-					const imgBox = this.imgBoxService.toImgBox(blockObj)
-					imgBox.src = URL.createObjectURL(imgFile);
-					this.entityManagerService.addOrReplaceBlockObject(imgBox, imgBox.id, false)
+					const ret = this.boxCreationService.createImgBox(blockObj, blockObj.id, pageNumber, URL.createObjectURL(imgFile))
 
-					const ret = this.imgBoxService.placeImgBoxOntoCanvas(pageNumber, imgBox)
+					// const imgBox = this.imgBoxService.toImgBox(blockObj)
+					// imgBox.src = URL.createObjectURL(imgFile);
+					// this.entityManagerService.addOrReplaceBlockObject(imgBox, imgBox.id, false)
 
-					ret.parent.instance.positionChanged.subscribe((event: any) => this.entityManagerService.executeMove(imgBox, event, pageNumber))
-					// ret.comp.instance.positionChangedBox )
-					// this.eventBusService.on<{ top: number; left: number; clickedPageNum: number; }>
-					// 						(Constants.EVENT_POSITION_CHANGED, ret.box.id.toString()).subscribe(coords => this.entityManagerService.executeMove(ret.box, coords, pageNumber))
+					// const ret = this.imgBoxService.placeImgBoxOntoCanvas(pageNumber, imgBox)
+
+					// ret.parent.instance.positionChanged.subscribe((event: any) => this.entityManagerService.executeMove(imgBox, event, pageNumber))
 				})
 				return;
 			}

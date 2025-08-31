@@ -37,22 +37,6 @@ export class ImgBoxService {
     return { child: imgBoxContainer, parent: commonBoxContainer, box: imgBox }
   }
 
-  //=======================================================================================================================
-  // Helper function to create the container where the textbox is being placed. This also registers all
-  // events for the textbox like editing, and moving.
-  //=======================================================================================================================
-  private createImgBoxContainer(editTextBoxComp: ComponentRef<CustomImgBox>, imgbox: ImgBox) {
-
-
-    // editTextBoxComp.instance.textBoxEditClicked.subscribe((event: any) => this.onTextBoxEditClick(textBox.id, event))
-
-
-    // TODO find a way to add this function
-    // editTextBoxComp.instance.textBoxEditClicked.subscribe((event: any) => this.removeTextBox(textBox.id, event))
-
-    return editTextBoxComp
-  }
-
   /**
    * gets the Dimensions of an image.
    * @param file => the image to get the dimensions for.

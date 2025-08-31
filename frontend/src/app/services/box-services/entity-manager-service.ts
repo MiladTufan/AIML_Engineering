@@ -58,7 +58,7 @@ export class EntityManagerService {
      * Finds and returns the parent container of the current object.
      * Useful for checking boundaries or removing the object from its context.
      */
-    private getParentContainer(obj: BlockObject, page: Page): HTMLElement | null {
+    public getParentContainer(obj: BlockObject, page: Page): HTMLElement | null {
         if (obj instanceof TextBox)
             return page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
         if (obj instanceof ImgBox)
@@ -148,7 +148,7 @@ export class EntityManagerService {
      * This function removes the current focus box on ENTF => so the box that was most recently clicked.
      * @param event => the Keyboard event to listen for.
      */
-    public removeFocusBox(event: KeyboardEvent) {
+    private removeFocusBox(event: KeyboardEvent) {
         if (event.key === "Delete") {
             const box = this.blockObjects[this.getIndexOfCurrentFocusBox()];
             if (box) {
@@ -165,7 +165,7 @@ export class EntityManagerService {
      * @param id => optional id
      * @returns 
      */
-    public getIndexOfCurrentFocusBox(id: number = -99) {
+    private getIndexOfCurrentFocusBox(id: number = -99) {
         const idSearch = id >= 0 ? id : this.currentFocusBoxId;
         const box = this.blockObjects.find(b => b.id == idSearch)
         let ret = -1;
@@ -173,8 +173,6 @@ export class EntityManagerService {
             ret = this.blockObjects.indexOf(box!)
         return ret;
     }
-
-
 
     /**
      * This function adds a BlockObject to this.blockObjects. If it already exists then it replaces it.
@@ -189,11 +187,14 @@ export class EntityManagerService {
         const oldBox: any = this.blockObjects.find(b => b.id === oldObjId)
         if (oldBox) {
             const idx = this.blockObjects.indexOf(oldBox);
+            console.log("new obj:", newObj)
+            console.log("old obj:", oldBox)
             newObj.baseTop = oldBox.baseTop;
             newObj.baseLeft = oldBox.baseLeft;
             newObj.baseHeight = oldBox.baseHeight;
             newObj.baseWidth = oldBox.baseWidth;
             newObj.id = oldObjId
+
             this.blockObjects.splice(idx, 1, newObj);
             page?.replaceBlockObject(newObj, idx)
         }
@@ -201,45 +202,6 @@ export class EntityManagerService {
             this.blockObjects.push(newObj)
             page?.blockObjects.push(newObj)
         }
-    }
-
-    /**
-     * sets the BlockObjects baseBoxDims at the time of creation.
-     * @param obj => BlockObject where baseBoxDims are set
-     * @param boxDims => new BoxDims
-     */
-    public setObjCoords(obj: BlockObject, boxDims: BoxDimensions) {
-        obj.baseTop = boxDims.top;
-        obj.baseLeft = boxDims.left;
-        obj.baseHeight = boxDims.height;
-        obj.baseWidth = boxDims.width;
-    }
-
-    /**
-     * Calculates the initial Box Dimensions based on the parameters given.
-     * @param mouseX => current X coordinate of the mouse.
-     * @param mouseY => current Y coordinate of the mouse.
-     * @param scale => current scale of the PDF
-     * @param entityParentRect => the entity Parent rect => e.g. TextBoxLayer or ImgBoxLayer
-     * @returns 
-     */
-    public calculateInitialBoxDims(mouseX: number, mouseY: number, scale: number, entityParentRect: DOMRect,
-        width: number = 110, height: number = 30,): BoxDimensions {
-        const top = (mouseY) - entityParentRect.top
-        const left = (mouseX) - entityParentRect.left
-
-        const boxDims = {
-            top: top,
-            left: left,
-            width: width * scale,
-            height: height * scale,
-            resizedHeight: 0,
-            resizedWidth: 0,
-            currentScale: scale,
-            posCreationScale: scale,
-            sizeCreationScale: scale
-        }
-        return boxDims
     }
 
     /**
@@ -274,11 +236,11 @@ export class EntityManagerService {
             const creationPayLoad = {
                 obj: obj,
                 parentContainer: parentContainer,
-                pageNumber: pos.clickedPageNum, 
+                pageNumber: pos.clickedPageNum,
                 page: page!
             }
             this.eventBusService.emit(Constants.EVENT_ENTITY_MANAGER_EMIT, creationPayLoad)
-            this.eventBusService.emit(Constants.EVENT_ASSIGN_AND_CREATE_NEW_OBJ,  creationPayLoad, obj.id.toString(),)
+            this.eventBusService.emit(Constants.EVENT_ASSIGN_AND_CREATE_NEW_OBJ, creationPayLoad, obj.id.toString(),)
             //this.assignAndCreateNewObj(obj, parentContainer, pos.clickedPageNum, page!)
         }
 
@@ -347,8 +309,6 @@ export class EntityManagerService {
         if (editState)
             this.currentFocusBoxId = box.id;
     }
-
-
 
     /**
      * saves the ComponentRef of a CommonBoxObject for later use.
