@@ -5,6 +5,8 @@ export class Constants {
     // routes
     public static EDIT_PDF_VIEW: string = "edit-pdf-view";
     public static CREDITS_VIEW: string = "credits-view";
+    public static DELETE_VIEW: string = "delete-view";
+    public static ORGANIZE_VIEW: string = "organize-view";
 
     // overlay constants
     public static OVERLAY_TEXT: string = ".text-box-layer";
