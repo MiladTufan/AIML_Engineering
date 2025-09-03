@@ -11,6 +11,7 @@ import { TextEditService } from './text-edit-service';
 import { ImgBoxService } from './img-box-service';
 import { EntityManagerService } from './entity-manager-service';
 import { EventBusService } from '../communication/event-bus-service';
+import { DynamicContainerRegistry } from '../shared/dynamic-container-registry';
 
 @Injectable({
   providedIn: 'root'
@@ -22,6 +23,7 @@ export class BoxCreationService {
   private imgBoxService: ImgBoxService = inject(ImgBoxService)
   private entityManagerService: EntityManagerService = inject(EntityManagerService)
   private eventBusService: EventBusService = inject(EventBusService)
+  private dynamicContainerRegistry: DynamicContainerRegistry = inject(DynamicContainerRegistry)
 
 
 
@@ -183,7 +185,7 @@ export class BoxCreationService {
  * @param img => the img
  */
   public placeTextBoxOntoCanvas(pageNumber: number, textBox: TextBox, rerender: Boolean = false) {
-    let commonBoxContainer = this.pdfViewerService.dynamicContainer!.createComponent(CommonBoxObject)
+    let commonBoxContainer = this.dynamicContainerRegistry.dynamicBoxContainer!.createComponent(CommonBoxObject)
     let textBoxContainer = commonBoxContainer.instance.childContainer.createComponent(CustomTextEditBox)
     let textStyleBlock = commonBoxContainer.instance.childContainerAddOn.createComponent(TextStyleBlock)
 

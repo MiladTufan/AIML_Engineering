@@ -1,4 +1,4 @@
-import { ComponentRef, Injectable, Type } from '@angular/core';
+import { ComponentRef, inject, Injectable, Type } from '@angular/core';
 import { BlockObject, BoxDimensions } from '../../models/box-models/BlockObject';
 import { TextBox } from '../../models/box-models/TextBox';
 import { Constants } from '../../models/constants/constants';
@@ -12,6 +12,7 @@ import { CustomTextEditBox } from '../../components/box-components/custom-text-e
 import { TextStyleBlock } from '../../components/shared/text-style-block/text-style-block';
 import { PDFViewerService } from '../pdf-services/pdfviewer-service';
 import { EventBusService } from '../communication/event-bus-service';
+import { DynamicContainerRegistry } from '../shared/dynamic-container-registry';
 
 /**
  * TODO Split this service into mulitple specific services for creating, moving, deleting boxes.
@@ -22,7 +23,11 @@ import { EventBusService } from '../communication/event-bus-service';
 })
 export class EntityManagerService {
 
-    constructor(private pdfViewerService: PDFViewerService, private eventBusService: EventBusService) {
+    private dynamicContainerRegistry: DynamicContainerRegistry = inject(DynamicContainerRegistry)
+    private eventBusService: EventBusService = inject(EventBusService)
+    private pdfViewerService: PDFViewerService = inject(PDFViewerService)
+
+    constructor() {
         this.keydownSubscription = fromEvent<KeyboardEvent>(window, 'keydown')
             .subscribe(event => {
                 this.removeFocusBox(event)
@@ -138,9 +143,9 @@ export class EntityManagerService {
         else
             console.error(Constants.ERROR_CANNOT_REMOVE_BOX)
 
-        const index = this.pdfViewerService.dynamicContainer!.indexOf(compref!.hostView);
+        const index = this.dynamicContainerRegistry.dynamicBoxContainer!.indexOf(compref!.hostView);
         if (index !== -1) {
-            this.pdfViewerService.dynamicContainer!.remove(index); // this also destroys the component
+            this.dynamicContainerRegistry.dynamicBoxContainer!.remove(index); // this also destroys the component
         }
     }
 

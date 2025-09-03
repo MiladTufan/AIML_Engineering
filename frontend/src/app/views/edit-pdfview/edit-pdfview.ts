@@ -35,12 +35,9 @@ export class EditPDFView {
 	private pageNumberSub!: Subscription;
 
 	//==================================================== Children =========================================================
-	@ViewChild('pdfViewer', { read: ElementRef }) pdfViewerRef!: ElementRef;
-	@ViewChild('dynamicContainer', { read: ViewContainerRef }) dynamicContainer!: ViewContainerRef;
 	@ViewChild(ToolbarComponent) toolbar!: ToolbarComponent;
 
 	private pdfViewService: PDFViewerService = inject(PDFViewerService)
-	private entityManagerService: EntityManagerService = inject(EntityManagerService)
 	private pdfFileService: PDFFileService = inject(PDFFileService)
 	private textEditService: TextEditService = inject(TextEditService)
 	private imgBoxService: ImgBoxService = inject(ImgBoxService)
@@ -65,18 +62,9 @@ export class EditPDFView {
 	// Is run when the View is initialized. Initializes the dynamic Container used to add dynamic elements likes textboxes.
 	//=======================================================================================================================
 	async ngOnInit() {
-		if (this.dynamicContainer) this.textEditService.dynamicContainer = this.viewContainerRef
-
 		this.pageNumberSub = this.pdfViewService.currentPage$.subscribe(val => {
 			this.currentPageNumber = val;
 		});
-	}
-
-	//=======================================================================================================================
-	// Is run after the View is initialized. 
-	//=======================================================================================================================
-	ngAfterViewInit() {
-		if (this.pdfViewerRef) this.textEditService.pdfViewerContainer = this.pdfViewerRef
 	}
 
 	//=======================================================================================================================
@@ -128,9 +116,6 @@ export class EditPDFView {
 
 					const ret = this.boxCreationService.createImgBox(blockObj, blockObj.id, pageNumber, URL.createObjectURL(imgFile))
 
-					// const imgBox = this.imgBoxService.toImgBox(blockObj)
-					// imgBox.src = URL.createObjectURL(imgFile);
-					// this.entityManagerService.addOrReplaceBlockObject(imgBox, imgBox.id, false)
 
 					// const ret = this.imgBoxService.placeImgBoxOntoCanvas(pageNumber, imgBox)
 

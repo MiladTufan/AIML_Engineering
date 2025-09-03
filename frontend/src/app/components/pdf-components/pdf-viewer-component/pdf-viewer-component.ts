@@ -1,4 +1,4 @@
-import { Component, ElementRef,  ViewChild, ViewContainerRef, HostListener } from '@angular/core';
+import { Component, ElementRef,  ViewChild, ViewContainerRef, HostListener, inject } from '@angular/core';
 import * as pdfjsLib from "pdfjs-dist";
 import { Subscription } from 'rxjs';
 import { debounceTime, Subject } from 'rxjs';
@@ -14,6 +14,7 @@ import { Page } from '../../../models/Page';
 import { PDFViewerService } from '../../../services/pdf-services/pdfviewer-service';
 import { PDFFileService } from '../../../services/pdf-services/pdffile-service';
 import { BoxCreationService } from '../../../services/box-services/box-creation-service';
+import { DynamicContainerRegistry } from '../../../services/shared/dynamic-container-registry';
 (pdfjsLib as any).GlobalWorkerOptions.workerSrc = "assets/pdf.worker.min.mjs";
 
 
@@ -55,22 +56,28 @@ export class PdfViewerComponent {
 	@ViewChild("mousePointer", { static: true }) follower!: ElementRef<HTMLDivElement>;
 	@ViewChild('dynamicContainer', { read: ViewContainerRef }) dynamicContainer!: ViewContainerRef;
 
+	private fileService: PDFFileService = inject(PDFFileService)
+	private sessionService: SessionService = inject(SessionService)
+	private entityManagerService: EntityManagerService = inject(EntityManagerService)
+	private boxCreationService: BoxCreationService = inject(BoxCreationService)
+	private pdfViewerService: PDFViewerService = inject(PDFViewerService)
+	private textEditService: TextEditService = inject(TextEditService)
+	private dynamicContainerRegistry: DynamicContainerRegistry = inject(DynamicContainerRegistry)
 
 	//==================================================== Constructor ======================================================
-	constructor(private fileService: PDFFileService, private sessionService: SessionService,
-		private entityManagerService: EntityManagerService, private boxCreationService: BoxCreationService,
-		private pdfViewerService: PDFViewerService, private textEditService: TextEditService) {
-		this.renderTrigger.pipe(debounceTime(10)).subscribe((finalScale) => {
-			Promise.all(
-				Array.from(this.renderQueue).map(pageNumber => {
-					console.log("Re rendering page on zoom: ", pageNumber, " scale: ", finalScale)
-					this.renderPage(pageNumber, false, finalScale)
+	constructor() 
+		{
+			this.renderTrigger.pipe(debounceTime(10)).subscribe((finalScale) => {
+				Promise.all(
+					Array.from(this.renderQueue).map(pageNumber => {
+						console.log("Re rendering page on zoom: ", pageNumber, " scale: ", finalScale)
+						this.renderPage(pageNumber, false, finalScale)
+					})
+				).then(() => {
+					this.renderQueue.clear()
 				})
-			).then(() => {
-				this.renderQueue.clear()
-			})
-		});
-	}
+			});
+		}
 
 
 	/**
@@ -93,7 +100,7 @@ export class PdfViewerComponent {
 	 * Useful for DOM-dependent logic and interacting with ViewChild elements.
 	 */
 	ngAfterViewInit() {
-		if (this.dynamicContainer) this.pdfViewerService.setDynamicContainerRef(this.dynamicContainer)
+		if (this.dynamicContainer) this.dynamicContainerRegistry.dynamicBoxContainer = this.dynamicContainer
 	}
 
 	/**
@@ -111,7 +118,7 @@ export class PdfViewerComponent {
 	initializeScrollEvent() {
 		if (this.pdfContainer) {
 			this.pdfViewerService.setPDFScrollContainer(this.pdfContainer);
-			this.pdfViewerService.dynamicContainer = this.dynamicContainer;
+			this.dynamicContainerRegistry.dynamicBoxContainer = this.dynamicContainer;
 
 			this.pdfContainer.nativeElement.addEventListener('scroll', (event) => {
 				this.pdfViewerService.currentScrollTop = this.pdfContainer.nativeElement.scrollTop;

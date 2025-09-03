@@ -15,10 +15,7 @@ import { PDFViewerService } from '../pdf-services/pdfviewer-service';
 })
 export class TextEditService {
     public textboxes: TextBox[] = [];
-    
     public currentFocusTextBoxId: number = 0;
-    public pdfViewerContainer: ElementRef | null = null;
-    public dynamicContainer: ViewContainerRef | null = null;
     public pdfViewerService = inject(PDFViewerService)
 
 

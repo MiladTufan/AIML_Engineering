@@ -1,7 +1,8 @@
-import { ElementRef, Injectable, ViewContainerRef } from '@angular/core';
+import { ElementRef, inject, Injectable, ViewContainerRef } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { Page } from '../../models/Page';
 import { PageInfoComponent } from '../../components/pdf-components/page-info-component/page-info-component';
+import { DynamicContainerRegistry } from '../shared/dynamic-container-registry';
 
 @Injectable({
 	providedIn: 'root'
@@ -15,7 +16,6 @@ export class PDFViewerService {
 	public currentScrollTop: number = 0;
 	public pageHeight: number = 0;
 	public PDFScrollContainer: ElementRef | null = null;
-	public dynamicContainer: ViewContainerRef | null = null;
 	public currentScale: number = 1.0;
 	public currentBaseMarginScale: number = 1.0;
 	public allPageContainers: any
@@ -24,6 +24,8 @@ export class PDFViewerService {
 
 
 	public currentPage$ = this._currentPage.asObservable();
+
+	private dynamicContainerRegistry: DynamicContainerRegistry = inject(DynamicContainerRegistry)
 
 
 	//=======================================================================================================================
@@ -52,13 +54,6 @@ export class PDFViewerService {
 	//=======================================================================================================================
 	setPDFScrollContainer(scrollContainer: ElementRef) {
 		this.PDFScrollContainer = scrollContainer;
-	}
-
-	//=======================================================================================================================
-	// Set the dynamic container which is used to instantiate the dynamic objects like textboxes on to the pdf.
-	//=======================================================================================================================
-	setDynamicContainerRef(vcr: ViewContainerRef) {
-		this.dynamicContainer = vcr;
 	}
 
 	//=======================================================================================================================
@@ -197,7 +192,7 @@ export class PDFViewerService {
 		let pageContainer = document.createElement("div");
 		const canvasContainer = document.createElement("div");
 
-		const pageInfo = this.dynamicContainer?.createComponent(PageInfoComponent);
+		const pageInfo = this.dynamicContainerRegistry.dynamicBoxContainer?.createComponent(PageInfoComponent);
 		pageInfo!.instance.pageNumber = pageNumber;
 		pageInfo!.instance.width = 30 * scale;
 		pageInfo!.instance.fontSize = 16 * scale;

@@ -6,12 +6,14 @@ import { ImgStyle } from '../../models/box-models/TextStyle';
 import { CommonBoxObject } from '../../components/box-components/common-box-object/common-box-object';
 import { CustomImgBox } from '../../components/box-components/custom-img-box/custom-img-box';
 import { PDFViewerService } from '../pdf-services/pdfviewer-service';
+import { DynamicContainerRegistry } from '../shared/dynamic-container-registry';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ImgBoxService {
   public imgboxes: ImgBox[] = [];
+  public dynamicContainerRegistry = inject(DynamicContainerRegistry)
   public pdfViewerService = inject(PDFViewerService)
 
   /**
@@ -21,7 +23,7 @@ export class ImgBoxService {
    * @param img => the img
    */
   public placeImgBoxOntoCanvas(pageNumber: number, imgBox: ImgBox, rerender: Boolean = false) {
-    let commonBoxContainer = this.pdfViewerService.dynamicContainer!.createComponent(CommonBoxObject)
+    let commonBoxContainer = this.dynamicContainerRegistry.dynamicBoxContainer!.createComponent(CommonBoxObject)
     let imgBoxContainer = commonBoxContainer.instance.childContainer.createComponent(CustomImgBox)
 
     imgBoxContainer.instance.imgBox = imgBox;
