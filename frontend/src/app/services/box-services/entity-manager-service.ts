@@ -25,7 +25,7 @@ export class EntityManagerService {
 
     private dynamicContainerRegistry: DynamicContainerRegistry = inject(DynamicContainerRegistry)
     private eventBusService: EventBusService = inject(EventBusService)
-    private pdfViewerService: PDFViewerService = inject(PDFViewerService)
+    public pdfViewerService: PDFViewerService = inject(PDFViewerService)
 
     constructor() {
         this.keydownSubscription = fromEvent<KeyboardEvent>(window, 'keydown')
@@ -59,17 +59,6 @@ export class EntityManagerService {
      * Methods
      */
 
-    /**
-     * Finds and returns the parent container of the current object.
-     * Useful for checking boundaries or removing the object from its context.
-     */
-    public getParentContainer(obj: BlockObject, page: Page): HTMLElement | null {
-        if (obj instanceof TextBox)
-            return page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
-        if (obj instanceof ImgBox)
-            return page?.htmlContainer?.querySelector(Constants.OVERLAY_IMG)
-        return null
-    }
 
     /**
      * Checks whether the object’s X position is within allowed bounds.
@@ -119,15 +108,13 @@ export class EntityManagerService {
      * Calls the remove logic for each Object type, e.g. TextBox
      */
     private deleteOldObj(obj: BlockObject, pageNum: number,) {
-        if (obj instanceof TextBox) {
-            this.removeBoxFromPage(obj.id)
-            const oldBox: any = this.blockObjects.find(b => b.id === obj.id)
-            const idx = this.blockObjects.indexOf(oldBox);
-            this.blockObjects.splice(idx, 1);
+        this.removeBoxFromPage(obj.id)
+        const oldBox: any = this.blockObjects.find(b => b.id === obj.id)
+        const idx = this.blockObjects.indexOf(oldBox);
+        this.blockObjects.splice(idx, 1);
 
-            const pageOld = this.pdfViewerService.getPageWithNumber(pageNum)
-            pageOld?.removeBlockObject(obj)
-        }
+        const pageOld = this.pdfViewerService.getPageWithNumber(pageNum)
+        pageOld?.removeBlockObject(obj)
     }
 
 
@@ -179,6 +166,19 @@ export class EntityManagerService {
         return ret;
     }
 
+
+    /**
+     * Finds and returns the parent container of the current object.
+     * Useful for checking boundaries or removing the object from its context.
+     */
+    private getParentContainer(obj: BlockObject, page: Page): HTMLElement | null {
+        if (obj instanceof TextBox)
+            return page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
+        if (obj instanceof ImgBox)
+            return page?.htmlContainer?.querySelector(Constants.OVERLAY_IMG)
+        return null
+    }
+
     /**
      * This function adds a BlockObject to this.blockObjects. If it already exists then it replaces it.
      * On Replace it also sets the baseBoxDims.
@@ -189,15 +189,22 @@ export class EntityManagerService {
      */
     public addOrReplaceBlockObject(newObj: BlockObject, oldObjId: number, rerender: Boolean) {
         const page = this.pdfViewerService.getPageWithNumber(newObj.pageId)
-        const oldBox: any = this.blockObjects.find(b => b.id === oldObjId)
+        const oldBox: BlockObject = this.blockObjects.find(b => b.id === oldObjId)!
+
         if (oldBox) {
             const idx = this.blockObjects.indexOf(oldBox);
-            console.log("new obj:", newObj)
-            console.log("old obj:", oldBox)
             newObj.baseTop = oldBox.baseTop;
             newObj.baseLeft = oldBox.baseLeft;
-            newObj.baseHeight = oldBox.baseHeight;
-            newObj.baseWidth = oldBox.baseWidth;
+            if (oldBox.BoxDims.resizedWidth === 0 && oldBox.BoxDims.resizedHeight === 0) {
+                newObj.baseHeight = oldBox.baseHeight;
+                newObj.baseWidth = oldBox.baseWidth;
+            }
+            else
+            {
+                newObj.baseHeight = oldBox.BoxDims.resizedHeight;
+                newObj.baseWidth = oldBox.BoxDims.resizedWidth ;
+            }
+
             newObj.id = oldObjId
 
             this.blockObjects.splice(idx, 1, newObj);
@@ -224,11 +231,14 @@ export class EntityManagerService {
      * @returns => {error: string, success: Boolean}
      */
     public executeMove(obj: BlockObject, pos: { top: number, left: number, clickedPageNum: number }, pageNum: number) {
-        console.log("Calling execute move!")
+        let moveToAnotherPage = false
         const page = this.pdfViewerService.getPageWithNumber(pos.clickedPageNum)
         const parentContainer = this.getParentContainer(obj, page!)
         if (parentContainer == null)
-            return { error: Constants.ERROR_NO_PARENT_CONTAINER, success: true }
+            return {
+                error: Constants.ERROR_NO_PARENT_CONTAINER, success: false,
+                obj: obj, moveToAnotherPage: moveToAnotherPage, parentContainer: parentContainer
+            }
 
         const entityParentRect = (parentContainer as HTMLElement).getBoundingClientRect();
         const pageContainerRect = (page!.htmlContainer! as HTMLElement).getBoundingClientRect();
@@ -237,19 +247,28 @@ export class EntityManagerService {
         // handle obj move from one page to another.
         // We have to delete the object on one page and recreate on the other page.
         if (pos.clickedPageNum != pageNum) {
-            this.deleteOldObj(obj, pageNum)
+            moveToAnotherPage = true
+            
             const creationPayLoad = {
                 obj: obj,
                 parentContainer: parentContainer,
                 pageNumber: pos.clickedPageNum,
                 page: page!
             }
+            const key = this.eventBusService.constructKey(Constants.EVENT_ASSIGN_AND_CREATE_NEW_OBJ, obj.id.toString())
+            if (this.eventBusService.getEventSubjets().has(key))
+                this.eventBusService.removeKey(Constants.EVENT_ASSIGN_AND_CREATE_NEW_OBJ, obj.id.toString())
+
             this.eventBusService.emit(Constants.EVENT_ENTITY_MANAGER_EMIT, creationPayLoad)
             this.eventBusService.emit(Constants.EVENT_ASSIGN_AND_CREATE_NEW_OBJ, creationPayLoad, obj.id.toString(),)
             //this.assignAndCreateNewObj(obj, parentContainer, pos.clickedPageNum, page!)
+            this.deleteOldObj(obj, pageNum)
         }
 
-        return { error: "", success: true }
+        return {
+            error: "", success: true,
+            obj: obj, moveToAnotherPage: moveToAnotherPage, parentContainer: parentContainer
+        }
     }
 
     /**
@@ -307,7 +326,7 @@ export class EntityManagerService {
      * @param box => the box that was clicked
      * @param editState => the editState => e.g. editing or not
      */
-    onTextBoxEditClick(box: TextBox, editState: Boolean) {
+    public onTextBoxEditClick(box: TextBox, editState: Boolean) {
         if (box)
             box.StyleState.isCollapsed = !editState;
 
@@ -320,7 +339,7 @@ export class EntityManagerService {
      * @param id => id of the box component (TextBox id or ImgBox id)
      * @param commonBoxComp => The componentRef to save
      */
-    setComprefSafely(id: number, commonBoxComp: ComponentRef<CommonBoxObject>) {
+    public setComprefSafely(id: number, commonBoxComp: ComponentRef<CommonBoxObject>) {
         if (this.commonBoxCompMap.has(id)) {
             const oldRef = this.commonBoxCompMap.get(id);
             oldRef?.destroy();
@@ -332,7 +351,7 @@ export class EntityManagerService {
     * get the ComponentRef of a CommonBoxObject for later use.
     * @param id => id of the box component (TextBox id or ImgBox id)
     */
-    getCompref(id: number) {
+    public getCompref(id: number) {
         return this.commonBoxCompMap.get(id)
     }
 }

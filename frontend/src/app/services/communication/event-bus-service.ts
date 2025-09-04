@@ -8,8 +8,21 @@ import { Subject, Observable } from 'rxjs';
 export class EventBusService {
   private subjects: Map<string, Subject<any>> = new Map();
 
-  private constructKey(eventName: string, scope: string) {
+  
+  public constructKey(eventName: string, scope: string) {
     return `${eventName}:${scope}`
+  }
+
+  // Exposed this only for jasmine testing purposes
+  public getEventSubjets() {
+    return this.subjects;
+  }
+
+  public removeKey(eventName: string, scope: string)
+  {
+    const key = this.constructKey(eventName, scope)
+    if(this.subjects.has(key))
+      this.subjects.delete(key)
   }
 
   // Emit an event into a channel
@@ -33,8 +46,10 @@ export class EventBusService {
       key = this.constructKey(eventName, scope)
     else
       key = eventName
+
     if (!this.subjects.has(key)) {
       this.subjects.set(key, new Subject<T>());
+      
     }
     return this.subjects.get(key)!.asObservable();
   }
