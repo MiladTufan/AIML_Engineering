@@ -79,6 +79,12 @@ export class ImgBoxService {
 
     Object.assign(img, obj);
 
+    if (img.BoxDims.resizedHeight !== 0 && img.BoxDims.resizedWidth !== 0) {
+      img.BoxDims.width = img.BoxDims.resizedWidth
+      img.BoxDims.height = img.BoxDims.resizedHeight
+    }
+
+
     img.src = "Default Src";
 
     return img;

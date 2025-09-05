@@ -275,7 +275,7 @@ export class PdfViewerComponent {
 				this.pdfViewerService.setCodeResizeTimeout()
 
 				const blockObj = this.boxCreationService.createBlockObject(pageNumber, scaleParams.dims, true)
-				const ret = this.boxCreationService.createTextBox(blockObj, box.id, pageNumber)
+				const ret = this.boxCreationService.createTextBox(blockObj, box, pageNumber)
 
 				ret.box.baseHeight = scaleParams.baseHeight
 				ret.box.baseWidth = scaleParams.baseWidth
@@ -298,7 +298,7 @@ export class PdfViewerComponent {
 				this.pdfViewerService.setCodeResizeTimeout()
 
 				const blockObj = this.boxCreationService.createBlockObject(pageNumber, scaleParams.dims, true)
-				const ret = this.boxCreationService.createImgBox(blockObj, box.id, pageNumber, box.src)
+				const ret = this.boxCreationService.createImgBox(blockObj, box, pageNumber, box.src)
 
 				ret.box.baseHeight = scaleParams.baseHeight
 				ret.box.baseWidth = scaleParams.baseWidth

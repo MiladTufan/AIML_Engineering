@@ -52,14 +52,14 @@ export class BoxCreationService {
 		const blockObj = this.createBlockObject(adjustedPageNum, obj.BoxDims, false)
 		if (obj instanceof TextBox) {
 			const textbox = obj as TextBox
-			const ret = this.createTextBox(blockObj, obj.id, adjustedPageNum)
+			const ret = this.createTextBox(blockObj, obj, adjustedPageNum)
 
 			page?.addBlockObject(textbox)
 			parentContainer.appendChild(ret.parent.location.nativeElement)
 		}
 		else if (obj instanceof ImgBox) {
 			const imgBox = obj as ImgBox
-			const ret = this.createImgBox(blockObj, obj.id, adjustedPageNum, imgBox.src)
+			const ret = this.createImgBox(blockObj, obj, adjustedPageNum, imgBox.src)
 			page?.addBlockObject(imgBox)
 			parentContainer.appendChild(ret.parent.location.nativeElement)
 		}
@@ -88,8 +88,10 @@ export class BoxCreationService {
 		let textBoxContainer = commonBoxContainer.instance.childContainer.createComponent(CustomTextEditBox)
 		let textStyleBlock = commonBoxContainer.instance.childContainerAddOn.createComponent(TextStyleBlock)
 
+		commonBoxContainer.instance.childRefAddOn = textStyleBlock
+
 		textStyleBlock.instance.translateX = textBox.BoxDims.left + textBox.BoxDims.width + 10;
-		textStyleBlock.instance.translateY = textBox.BoxDims.left + textBox.BoxDims.width + 10;
+		textStyleBlock.instance.translateY = textBox.BoxDims.top + 10;
 		textStyleBlock.instance.box = textBox;
 
 		textStyleBlock.instance.styleChanged.subscribe((event: any) => textBoxContainer.instance.updateTextStyle())
@@ -186,11 +188,11 @@ export class BoxCreationService {
 	 * @param pageNumber => the page where the TextBox should be created in.
 	 * @returns  child: textBoxContainer, parent: commonBoxContainer, box: textBox
 	 */
-	public createTextBox(blockObj: BlockObject, oldBoxId: number, pageNumber: number) {
+	public createTextBox(blockObj: BlockObject, oldBox: BlockObject, pageNumber: number) {
 		const textBox = this.textEditService.toTextBox(blockObj)
 		textBox.StyleState.textFontSize = textBox.StyleState.textBaseFontSize * this.pdfViewerService.currentScale
 
-		this.entityManagerService.addOrReplaceBlockObject(textBox, oldBoxId, false)
+		this.entityManagerService.addOrReplaceBlockObject(textBox, false, oldBox)
 
 		const ret = this.placeTextBoxOntoCanvas(pageNumber, textBox)
 		this.entityManagerService.setComprefSafely(ret.box.id, ret.parent)
@@ -204,11 +206,11 @@ export class BoxCreationService {
 	 * @param pageNumber => the page where the TextBox should be created in.
 	 * @returns  child: textBoxContainer, parent: commonBoxContainer, box: textBox
 	 */
-	public createImgBox(blockObj: BlockObject, oldBoxId: number, pageNumber: number, src: string) {
+	public createImgBox(blockObj: BlockObject, oldBox: BlockObject, pageNumber: number, src: string) {
 		const imgBox = this.imgBoxService.toImgBox(blockObj)
 		imgBox.src = src
 
-		this.entityManagerService.addOrReplaceBlockObject(imgBox, oldBoxId, false)
+		this.entityManagerService.addOrReplaceBlockObject(imgBox, false, oldBox)
 
 		const ret = this.imgBoxService.placeImgBoxOntoCanvas(pageNumber, imgBox)
 		ret.parent.instance.positionChanged.subscribe((event: any) => this.entityManagerService.executeMove(imgBox, event, pageNumber))
@@ -216,6 +218,4 @@ export class BoxCreationService {
 		this.entityManagerService.setComprefSafely(ret.box.id, ret.parent)
 		return ret
 	}
-
-
 }

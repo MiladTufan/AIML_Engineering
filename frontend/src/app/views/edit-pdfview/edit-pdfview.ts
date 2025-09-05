@@ -114,7 +114,7 @@ export class EditPDFView {
 					const blockObj = this.boxCreationService.createBlockObjectAndInitDims(pageNumber, this.mouseX, this.mouseY,
 						this.pdfViewService.currentScale, entityParentRect, dim.width, dim.height, false)
 
-					const ret = this.boxCreationService.createImgBox(blockObj, blockObj.id, pageNumber, URL.createObjectURL(imgFile))
+					const ret = this.boxCreationService.createImgBox(blockObj, blockObj, pageNumber, URL.createObjectURL(imgFile))
 
 
 					// const ret = this.imgBoxService.placeImgBoxOntoCanvas(pageNumber, imgBox)
@@ -184,7 +184,7 @@ export class EditPDFView {
 			const blockObj = this.boxCreationService.createBlockObjectAndInitDims(pageNumber, this.mouseX, this.mouseY,
 				this.pdfViewService.currentScale, entityParentRect)
 
-			this.boxCreationService.createTextBox(blockObj, blockObj.id, pageNumber)
+			this.boxCreationService.createTextBox(blockObj, blockObj, pageNumber)
 
 		}
 	}

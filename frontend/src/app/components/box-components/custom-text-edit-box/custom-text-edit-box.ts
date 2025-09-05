@@ -13,7 +13,6 @@ import { EntityManagerService } from '../../../services/box-services/entity-mana
 })
 export class CustomTextEditBox {
 	//=================================================== Private variables =================================================
-	isDragging = false;
 	id: number = 0;
 	posX: number = 0;
 	posY: number = 0;
@@ -151,8 +150,6 @@ export class CustomTextEditBox {
 			if (!clickInsideTextStyle) {
 				this.currentlyEditing = clickedInsideTextBox;
 				this.textBoxEditClicked.emit(this.currentlyEditing)
-				console.log(this.currentlyEditing)
-				console.log("current box.id: ", this.box.id)
 			}
 		}
 		catch (error) {

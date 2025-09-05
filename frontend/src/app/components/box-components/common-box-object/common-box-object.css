@@ -1,0 +1,13 @@
+/* Resize handles (small squares at corners) */
+.resize-handle {
+  width: 10px;
+  height: 10px;
+  background: black;
+  position: absolute;
+  cursor: se-resize;
+}
+
+.resize-tl { top: -5px; left: -5px; cursor: nw-resize; }
+.resize-tr { top: -5px; right: -5px; cursor: ne-resize; }
+.resize-bl { bottom: -5px; left: -5px; cursor: sw-resize; }
+.resize-br { bottom: -5px; right: -5px; cursor: se-resize; }

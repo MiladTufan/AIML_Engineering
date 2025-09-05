@@ -101,7 +101,7 @@ describe('BoxCreationService', () => {
       PageMock.htmlContainer = pageContainer
       pdfViewerService.allRenderedPages.push(PageMock as any)
 
-      const ret = creationService.createImgBox(obj, obj.id, 1, src);
+      const ret = creationService.createImgBox(obj, obj, 1, src);
 
       // check if Components have been created
       expect(dynamicContainerRegistryMock.dynamicBoxContainer.createComponent).toHaveBeenCalled();
@@ -166,7 +166,7 @@ describe('BoxCreationService', () => {
       PageMock.htmlContainer = pageContainer
       pdfViewerService.allRenderedPages.push(PageMock as any)
 
-      const ret = creationService.createTextBox(obj, obj.id, 1)
+      const ret = creationService.createTextBox(obj, obj, 1)
 
       // check if Components have been created
       expect(dynamicContainerRegistryMock.dynamicBoxContainer.createComponent).toHaveBeenCalled();

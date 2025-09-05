@@ -88,6 +88,13 @@ export class TextEditService {
         }
         const textBox = new TextBox(0, 0, dims, "Text", new TextStyle());
         Object.assign(textBox, obj);
+
+        if (textBox.BoxDims.resizedHeight !== 0 && textBox.BoxDims.resizedWidth !== 0)
+        {
+            textBox.BoxDims.width = textBox.BoxDims.resizedWidth
+            textBox.BoxDims.height = textBox.BoxDims.resizedHeight
+        }
+
         return textBox;
     }
 }

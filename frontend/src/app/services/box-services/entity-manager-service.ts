@@ -96,7 +96,7 @@ export class EntityManagerService {
         obj.BoxDims.top = (pos.top - entityParentRect.top);
         obj.BoxDims.left = pos.left - entityParentRect.left;
         obj.BoxDims.left = this.checkXBounds(obj, pageContainerRect)
-        obj.BoxDims.top = this.checkYBounds(obj, pageContainerRect)
+        //obj.BoxDims.top = this.checkYBounds(obj, pageContainerRect)
 
         obj.baseLeft = obj.BoxDims.left;
         obj.baseTop = obj.BoxDims.top;
@@ -124,6 +124,7 @@ export class EntityManagerService {
     private removeBoxFromPage(id: number) {
         const compref = this.commonBoxCompMap.get(id)
         const box = this.blockObjects.find(b => b.id === id)
+
         const pageOld = this.pdfViewerService.getPageWithNumber(box!.pageId)
         if (box)
             pageOld?.removeBlockObject(box)
@@ -179,6 +180,7 @@ export class EntityManagerService {
         return null
     }
 
+
     /**
      * This function adds a BlockObject to this.blockObjects. If it already exists then it replaces it.
      * On Replace it also sets the baseBoxDims.
@@ -187,25 +189,12 @@ export class EntityManagerService {
      * @param obj => obj to add
      * @param rerender => currently rerendering?
      */
-    public addOrReplaceBlockObject(newObj: BlockObject, oldObjId: number, rerender: Boolean) {
+    public addOrReplaceBlockObject(newObj: BlockObject, rerender: Boolean, oldBox: BlockObject | undefined = undefined) {
         const page = this.pdfViewerService.getPageWithNumber(newObj.pageId)
-        const oldBox: BlockObject = this.blockObjects.find(b => b.id === oldObjId)!
 
-        if (oldBox) {
+        if (oldBox && oldBox.id !== newObj.id ) {
             const idx = this.blockObjects.indexOf(oldBox);
-            newObj.baseTop = oldBox.baseTop;
-            newObj.baseLeft = oldBox.baseLeft;
-            if (oldBox.BoxDims.resizedWidth === 0 && oldBox.BoxDims.resizedHeight === 0) {
-                newObj.baseHeight = oldBox.baseHeight;
-                newObj.baseWidth = oldBox.baseWidth;
-            }
-            else
-            {
-                newObj.baseHeight = oldBox.BoxDims.resizedHeight;
-                newObj.baseWidth = oldBox.BoxDims.resizedWidth ;
-            }
-
-            newObj.id = oldObjId
+            newObj.deepCopyBlockObj(oldBox)
 
             this.blockObjects.splice(idx, 1, newObj);
             page?.replaceBlockObject(newObj, idx)
@@ -232,8 +221,27 @@ export class EntityManagerService {
      */
     public executeMove(obj: BlockObject, pos: { top: number, left: number, clickedPageNum: number }, pageNum: number) {
         let moveToAnotherPage = false
-        const page = this.pdfViewerService.getPageWithNumber(pos.clickedPageNum)
-        const parentContainer = this.getParentContainer(obj, page!)
+        const pageNew = this.pdfViewerService.getPageWithNumber(pos.clickedPageNum)
+        if (pos.clickedPageNum != pageNum)
+        {
+            const pageOld = this.pdfViewerService.getPageWithNumber(obj.pageId)
+            const compref = this.getCompref(obj.id)
+            if (pageOld)
+                pageOld?.removeBlockObject(obj)
+            
+            
+            if (pageNew)
+            {   
+                pageNew.addBlockObject(obj)
+                obj.pageId = pos.clickedPageNum
+                const containerName = (obj instanceof TextBox) ? Constants.OVERLAY_TEXT : Constants.OVERLAY_IMG
+                const container = pageNew?.htmlContainer?.querySelector(containerName)
+			    container?.appendChild(compref?.location.nativeElement)
+            }
+        }
+
+
+        const parentContainer = this.getParentContainer(obj, pageNew!)
         if (parentContainer == null)
             return {
                 error: Constants.ERROR_NO_PARENT_CONTAINER, success: false,
@@ -241,28 +249,38 @@ export class EntityManagerService {
             }
 
         const entityParentRect = (parentContainer as HTMLElement).getBoundingClientRect();
-        const pageContainerRect = (page!.htmlContainer! as HTMLElement).getBoundingClientRect();
+        const pageContainerRect = (pageNew!.htmlContainer! as HTMLElement).getBoundingClientRect();
         this.moveObject(obj, pos, entityParentRect, pageContainerRect)
+
+        const commonBoxRef = this.getCompref(obj.id);
+        if (commonBoxRef && obj instanceof TextBox)
+        {
+            const width = (obj.BoxDims.resizedWidth === 0) ? obj.BoxDims.width : obj.BoxDims.resizedWidth
+            commonBoxRef.instance.childRefAddOn!.instance.translateX = obj.BoxDims.left + width + 10;
+            commonBoxRef.instance.childRefAddOn!.instance.translateY = obj.BoxDims.top + 10;
+        }
 
         // handle obj move from one page to another.
         // We have to delete the object on one page and recreate on the other page.
         if (pos.clickedPageNum != pageNum) {
             moveToAnotherPage = true
-            
-            const creationPayLoad = {
-                obj: obj,
-                parentContainer: parentContainer,
-                pageNumber: pos.clickedPageNum,
-                page: page!
-            }
-            const key = this.eventBusService.constructKey(Constants.EVENT_ASSIGN_AND_CREATE_NEW_OBJ, obj.id.toString())
-            if (this.eventBusService.getEventSubjets().has(key))
-                this.eventBusService.removeKey(Constants.EVENT_ASSIGN_AND_CREATE_NEW_OBJ, obj.id.toString())
 
-            this.eventBusService.emit(Constants.EVENT_ENTITY_MANAGER_EMIT, creationPayLoad)
-            this.eventBusService.emit(Constants.EVENT_ASSIGN_AND_CREATE_NEW_OBJ, creationPayLoad, obj.id.toString(),)
-            //this.assignAndCreateNewObj(obj, parentContainer, pos.clickedPageNum, page!)
-            this.deleteOldObj(obj, pageNum)
+
+            // this.deleteOldObj(obj, pageNum)
+            // console.log("moving to page: ", pos.clickedPageNum)
+
+            // const creationPayLoad = {
+            //     obj: obj,
+            //     parentContainer: parentContainer,
+            //     pageNumber: pos.clickedPageNum,
+            //     page: page!
+            // }
+            // const key = this.eventBusService.constructKey(Constants.EVENT_ASSIGN_AND_CREATE_NEW_OBJ, obj.id.toString())
+            // if (this.eventBusService.getEventSubjets().has(key))
+            //     this.eventBusService.removeKey(Constants.EVENT_ASSIGN_AND_CREATE_NEW_OBJ, obj.id.toString())
+
+            // this.eventBusService.emit(Constants.EVENT_ENTITY_MANAGER_EMIT, creationPayLoad)
+            // this.eventBusService.emit(Constants.EVENT_ASSIGN_AND_CREATE_NEW_OBJ, creationPayLoad, obj.id.toString(),)
         }
 
         return {
