@@ -1,38 +1,150 @@
 <div class="flex hover:border-blue-700">
-    <div class="w-2 h-2 absolute bg-blue-500 hover:border-blue-700 hover:shadow-md cursor-nw-resize" #tl_handle
-        [ngStyle]="{ transform: 'translate(' + (boxBase.BoxDims.left - 2) + 'px, ' + (boxBase.BoxDims.top - 2) + 'px)'}">
-    </div>
+  <div
+    class="absolute flex bg-blue-700 hover:border-blue-700 hover:shadow-md cursor-w-resize z-10"
+    #l_handle
+    (mousedown)="onResizeStart($event, 'left')"
+    [ngStyle]="{
+      transform:
+        'translate(' +
+        (boxBase.BoxDims.left - 2) +
+        'px, ' +
+        (boxBase.BoxDims.top - 2 + boxBase.BoxDims.height / 2 - 2) +
+        'px)',
+      width: 8 + 'px',
+      height: 8 + 'px',
+    }"
+  ></div>
 
-     <div class="w-2 h-2 absolute bg-blue-500 hover:border-blue-700 hover:shadow-md cursor-ne-resize" #bl_handle
-        [ngStyle]="{ transform: 'translate(' + (boxBase.BoxDims.left - 2) + 'px, ' + (boxBase.BoxDims.top - 2 + + boxBase.BoxDims.height - 4) + 'px)'}">
-    </div>
+  <div
+    class="absolute flex bg-blue-700 hover:border-blue-700 hover:shadow-md cursor-e-resize z-10"
+    #r_handle
+    (mousedown)="onResizeStart($event, 'right')"
+    [ngStyle]="{
+      transform:
+        'translate(' +
+        (boxBase.BoxDims.left - 1.5 + boxBase.BoxDims.width - 4) +
+        'px, ' +
+        (boxBase.BoxDims.top - 2 + boxBase.BoxDims.height / 2 - 2) +
+        'px)',
+      width: 8 + 'px',
+      height: 8 + 'px',
+    }"
+  ></div>
 
-    <div class="w-2 h-2 absolute bg-blue-500 hover:border-blue-700 hover:shadow-md cursor-ne-resize" #tr_handle
-        [ngStyle]="{ transform: 'translate(' + (boxBase.BoxDims.left - 2 + boxBase.BoxDims.width - 4) + 'px, ' + (boxBase.BoxDims.top - 2) + 'px)'}">
-    </div>
+  <div
+    class="absolute flex bg-blue-700 hover:border-blue-700 hover:shadow-md cursor-nw-resize z-10"
+    #tl_handle
+    (mousedown)="onResizeStart($event, 'top-left')"
+    [ngStyle]="{
+      transform:
+        'translate(' +
+        (boxBase.BoxDims.left - 2) +
+        'px, ' +
+        (boxBase.BoxDims.top - 2) +
+        'px)',
+      width: 8 + 'px',
+      height: 8 + 'px',
+    }"
+  ></div>
 
-    <div class="w-2 h-2 absolute bg-blue-500 hover:border-blue-700 hover:shadow-md cursor-nw-resize" #tl_handle
-        [ngStyle]="{ transform: 'translate(' + (boxBase.BoxDims.left - 2 + boxBase.BoxDims.width - 4) + 'px, ' + (boxBase.BoxDims.top - 2 + boxBase.BoxDims.height - 4) + 'px)'}">
-    </div>
+  <div
+    class="absolute flex bg-blue-700 hover:border-blue-700 hover:shadow-md cursor-ne-resize z-10"
+    #bl_handle
+    (mousedown)="onResizeStart($event, 'bottom-left')"
+    [ngStyle]="{
+      transform:
+        'translate(' +
+        (boxBase.BoxDims.left - 2) +
+        'px, ' +
+        (boxBase.BoxDims.top - 2 + boxBase.BoxDims.height - 4) +
+        'px)',
+      width: 8 + 'px',
+      height: 8 + 'px',
+    }"
+  ></div>
 
-    <div class="w-2 h-2 absolute bg-blue-500 hover:border-blue-700 hover:shadow-md cursor-n-resize" #bm_handle
-        [ngStyle]="{ transform: 'translate(' + (boxBase.BoxDims.left - 2 + (boxBase.BoxDims.width / 2) - 2) + 'px, ' + (boxBase.BoxDims.top  - 1.5 + boxBase.BoxDims.height - 4) + 'px)'}">
-    </div>
+  <div
+    class="absolute flex bg-blue-700 hover:border-blue-700 hover:shadow-md cursor-ne-resize z-10"
+    #tr_handle
+    (mousedown)="onResizeStart($event, 'top-right')"
+    [ngStyle]="{
+      transform:
+        'translate(' +
+        (boxBase.BoxDims.left - 2 + boxBase.BoxDims.width - 4) +
+        'px, ' +
+        (boxBase.BoxDims.top - 2) +
+        'px)',
+      width: 8 + 'px',
+      height: 8 + 'px',
+    }"
+  ></div>
 
-    <div class="w-2 h-2 absolute bg-blue-500 hover:border-blue-700 hover:shadow-md cursor-n-resize" #tm_handle
-        [ngStyle]="{ transform: 'translate(' + (boxBase.BoxDims.left - 2 + (boxBase.BoxDims.width / 2) - 2) + 'px, ' + (boxBase.BoxDims.top - 2.5) + 'px)'}">
-    </div>
+  <div
+    class="absolute flex bg-blue-700 hover:border-blue-700 hover:shadow-md cursor-nw-resize z-10"
+    #br_handle
+    (mousedown)="onResizeStart($event, 'bottom-right')"
+    [ngStyle]="{
+      transform:
+        'translate(' +
+        (boxBase.BoxDims.left - 2 + boxBase.BoxDims.width - 4) +
+        'px, ' +
+        (boxBase.BoxDims.top - 2 + boxBase.BoxDims.height - 4) +
+        'px)',
+      width: 8 + 'px',
+      height: 8 + 'px',
+    }"
+  ></div>
 
-    <div class="textBoxStyle border-3 border-dashed border-blue-500 z-50
-            hover:border-blue-700 hover:shadow-md cursor-move overflow-hidden" #movableDiv [ngStyle]="{ transform: 'translate(' + boxBase.BoxDims.left + 'px, ' + boxBase.BoxDims.top + 'px)',
-                                        width: boxBase.BoxDims.width + 'px',
-                                        height: boxBase.BoxDims.height + 'px'}">
+  <div
+    class="absolute flex bg-blue-700 hover:border-blue-700 hover:shadow-md cursor-n-resize z-10"
+    #bm_handle
+    (mousedown)="onResizeStart($event, 'bottom')"
+    [ngStyle]="{
+      transform:
+        'translate(' +
+        (boxBase.BoxDims.left - 2 + boxBase.BoxDims.width / 2 - 2) +
+        'px, ' +
+        (boxBase.BoxDims.top - 1.5 + boxBase.BoxDims.height - 4) +
+        'px)',
+      width: 8 + 'px',
+      height: 8 + 'px',
+    }"
+  ></div>
 
+  <div
+    class="absolute flex bg-blue-700 hover:border-blue-700 hover:shadow-md cursor-n-resize z-10"
+    #tm_handle
+    (mousedown)="onResizeStart($event, 'top')"
+    [ngStyle]="{
+      transform:
+        'translate(' +
+        (boxBase.BoxDims.left - 2 + boxBase.BoxDims.width / 2 - 2) +
+        'px, ' +
+        (boxBase.BoxDims.top - 2.5) +
+        'px)',
+      width: 8 + 'px',
+      height: 8 + 'px',
+    }"
+  ></div>
 
-        <div #childContainer></div>
-    </div>
+  <div
+    class="absolute inline-block border-3 border-dashed border-blue-500 z-6 hover:border-blue-700 hover:shadow-md cursor-move overflow-hidden"
+    #movableDiv
+    [ngStyle]="{
+      transform:
+        'translate(' +
+        boxBase.BoxDims.left +
+        'px, ' +
+        boxBase.BoxDims.top +
+        'px)',
+      width: boxBase.BoxDims.width + 'px',
+      height: boxBase.BoxDims.height + 'px',
+    }"
+  >
+    <div #childContainer></div>
+  </div>
 
-    <div #childContainerAddOn></div>
+  <div #childContainerAddOn></div>
 </div>
 
 <!-- (dragend)="onDragEnd($event)" -->

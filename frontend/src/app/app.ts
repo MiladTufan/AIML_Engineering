@@ -11,35 +11,37 @@ import { Constants } from './models/constants/constants';
   standalone: true,
   imports: [RouterOutlet, AlertComponent],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css',
 })
 export class App {
-
   protected readonly title = signal('frontend');
-  constructor(private sessionService: SessionService, private router: Router) { }
+  constructor(
+    private sessionService: SessionService,
+    private router: Router,
+  ) {}
 
   goToCredits() {
     this.router.navigate([Constants.CREDITS_VIEW]);
   }
   ngOnInit() {
-    this.sessionService.getAllSignedSids().subscribe((signeds_sids: Array<string>) => {
-      const signed_sid = this.sessionService.getSessionIdFromBrowser("session_id")
-      const cookies = document.cookie ? document.cookie.split(";") : []
-      for (let cookie of cookies)
-      {
-        const [key, value] = cookie.trim().split("=")
-        try{
-           const val = decodeURIComponent(value)
-           if (!signeds_sids.includes(val))
-           {
-              this.sessionService.deleteCookie(val)
-              console.log("deleting: ", val)
-           }
-        }
-        catch {
-          this.sessionService.deleteCookie(value)
-        }
-      }
-    })
+    // this.sessionService.getAllSignedSids().subscribe((signeds_sids: Array<string>) => {
+    //   const signed_sid = this.sessionService.getSessionIdFromBrowser("session_id")
+    //   const cookies = document.cookie ? document.cookie.split(";") : []
+    //   for (let cookie of cookies)
+    //   {
+    //     const [key, value] = cookie.trim().split("=")
+    //     try{
+    //        const val = decodeURIComponent(value)
+    //        if (!signeds_sids.includes(val))
+    //        {
+    //           this.sessionService.deleteCookie(val)
+    //           console.log("deleting: ", val)
+    //        }
+    //     }
+    //     catch {
+    //       this.sessionService.deleteCookie(value)
+    //     }
+    //   }
+    // })
   }
 }

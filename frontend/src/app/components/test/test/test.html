@@ -1,10 +1,23 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Test</title>
-</head>
-<body>
-<h1>Hello World</h1>
-<p>This is a paragraph</p>
-</body>
+  <head>
+    <title>Test</title>
+  </head>
+  <body>
+    <div></div>
+
+    <div
+      class="absolute border-3 w-100 h-100 border-dashed border-blue-500 z-50 select-none hover:border-blue-700 hover:shadow-md cursor-move overflow-hidden"
+    ></div>
+
+    <div>
+      <div
+        #editor
+        class="editor inline-block w-full h-full outline-none overflow-hidden leading-normal cursor-text"
+        [contentEditable]="true"
+        (input)="onInput($event)"
+        [innerHTML]="boxText"
+      ></div>
+    </div>
+  </body>
 </html>
