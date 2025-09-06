@@ -36,6 +36,9 @@ export class CustomTextEditBox {
   cntr = 0;
   currentAlignment: string = 'left';
   currentEventTarget: EventTarget | null = null;
+  private currentBoxStyle: string = '';
+
+  public boxText = 'Text';
   private resizeObserver!: ResizeObserver;
 
   //=================================================== Inputs =================================================
@@ -51,7 +54,7 @@ export class CustomTextEditBox {
 
   constructor(
     public textEditService: TextEditService,
-    private entityManagerService: EntityManagerService
+    private entityManagerService: EntityManagerService,
   ) {}
   ngOnInit() {
     console.log('init TextBoxComponent');
@@ -64,7 +67,7 @@ export class CustomTextEditBox {
   onInput(event: Event) {
     const text = (event.target as HTMLElement).innerText;
     const savedBox = this.entityManagerService.blockObjects.find(
-      (b) => b.id == this.box.id
+      (b) => b.id == this.box.id,
     );
     if (savedBox && savedBox instanceof TextBox) {
       savedBox.text = text;
@@ -104,57 +107,105 @@ export class CustomTextEditBox {
       : 'normal';
     elem.style.fontFamily = this.box.StyleState.textFontFamily;
 
+    if (this.box.StyleState.textStyle !== this.currentBoxStyle) {
+      this.currentBoxStyle = this.box.StyleState.textStyle;
+      this.boxText = this.box.text;
+    }
+
     return elem;
   }
 
   updateTextStyle() {
     const div = this.editableDiv.nativeElement;
-    this.styleText(div);
 
-    // const selection = window.getSelection();
-    // if (!selection) return;
+    const selection = window.getSelection();
+    if (!selection) return;
 
-    // if (selection.isCollapsed) {
-    // 	this.styleText(div)
-    // 	return;
-    // }
+    if (selection.isCollapsed) {
+      this.styleText(div);
+      return;
+    }
 
-    // if (selection.rangeCount === 0) return;
+    const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
 
-    // const range = selection.getRangeAt(0);
-    // if (!div.contains(range.commonAncestorContainer)) return;
+    if (
+      range &&
+      this.editableDiv.nativeElement.contains(range.commonAncestorContainer)
+    ) {
+      const content = range.extractContents();
 
-    // const blocks = this.getTouchedBlocks(range, div);
+      const nodes: ChildNode[] = Array.from(content.childNodes);
 
-    // blocks.forEach(block => {
-    // 	this.styleText(block)
-    // });
+      nodes.forEach((node) => {
+        let wrapper: HTMLElement;
 
-    // const span = document.createElement('span');
-    // this.styleText(span)
+        if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) {
+          console.log(node.parentElement);
+          console.log('Selected text:', selection.toString());
+          wrapper = document.createElement('span');
+          wrapper.textContent = node.textContent;
+          range.insertNode(wrapper);
+          this.mergeAdjacent(wrapper as HTMLElement);
+          this.styleText(wrapper);
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          wrapper = node as HTMLElement;
+          range.insertNode(wrapper);
+          this.mergeAdjacent(wrapper as HTMLElement);
+          this.styleText(wrapper);
+        }
+      });
 
-    // span.appendChild(range.extractContents());
-    // range.insertNode(span);
-
-    // range.setStartAfter(span);
-    // range.collapse(true);
-    // selection.removeAllRanges();
-    // selection.addRange(range);
+      // console.log('Selected content:', content);
+      // console.log('Created Span:', span);
+      // console.log('Selected text:', selection.toString());
+      // console.log('Range start container:', range.startContainer);
+      // console.log('Range start offset:', range.startOffset);
+      // console.log('Range end container:', range.endContainer);
+      // console.log('Range end offset:', range.endOffset);
+      selection.removeAllRanges();
+    } else {
+      console.log('No selection inside editor');
+    }
 
     div.focus();
   }
 
-  // set caret at a specific position
-  setCaret(pos: number) {
-    const el = this.editableDiv.nativeElement;
-    const range = document.createRange();
-    const sel = window.getSelection();
+  mergeAdjacent(element: HTMLSpanElement) {
+    // Merge next sibling
+    const next = element.nextSibling;
+    if (
+      next &&
+      next.nodeType === 1 &&
+      (next as HTMLElement).style.cssText === element.style.cssText
+    ) {
+      element!.textContent = next!.textContent! + element!.textContent!;
+      next.remove();
+    }
 
-    range.setStart(el.firstChild || el, pos);
-    range.collapse(true);
+    // Merge previous sibling
+    const prev = element.previousSibling;
+    if (
+      prev &&
+      element != null &&
+      prev.nodeType === Node.ELEMENT_NODE &&
+      (prev as HTMLElement).style.cssText === element.style.cssText
+    ) {
+      element!.textContent = element!.textContent! + prev.textContent;
+      prev.remove();
+    }
 
-    sel?.removeAllRanges();
-    sel?.addRange(range);
+    this.removeEmptySpans(element.parentElement!);
+  }
+
+  removeEmptySpans(parent: HTMLElement) {
+    const spans = Array.from(parent.querySelectorAll('span'));
+
+    spans.forEach((span) => {
+      // Remove if no text content and no child elements
+      if (!span.textContent || span.textContent.trim() === '') {
+        span.remove();
+      }
+    });
   }
 
   @HostListener('document:click', ['$event'])
@@ -164,7 +215,7 @@ export class CustomTextEditBox {
       event.stopPropagation();
 
       const clickedInsideTextBox = this.editableDiv.nativeElement.contains(
-        event.target
+        event.target,
       );
       const eventTarget = event.target as HTMLElement;
 

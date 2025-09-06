@@ -46,9 +46,10 @@
   <div
     [contentEditable]="true"
     #editableDiv
-    class="absolute w-full h-full outline-none cursor-text"
+    class="absolute w-full min-h-[150px] outline-none cursor-text"
+    spellcheck="true"
     contenteditable="true"
     (input)="onInput($event)"
-    [innerHTML]="box.text"
+    [innerHTML]="boxText"
   ></div>
 </div>
