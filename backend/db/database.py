@@ -206,6 +206,8 @@ class Database:
         while True:
             time.sleep(self.cleanup_interval)
             try:
-                self.cleanup()
+                # ONLY FOR testing.. In Production this line has to be commented in
+                # self.cleanup()
+                pass
             except Exception as e:
                 self.logger.error(f"Error during session cleanup: {e}")

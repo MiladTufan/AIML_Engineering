@@ -97,6 +97,7 @@ class RouterAPI:
                 return {"filename": pdf.filename, "size": len(pdf_bytes)}
             else:
                self.logger.warning("Could not find session id of user in DB. Not uploading PDF!") 
+               raise BadRequestError()
         else:
             self.logger.warning("Could not verify the session id of the user.")
             raise BadRequestError()

@@ -1,10 +1,20 @@
 <button
-  class="fixed bottom-4 right-4 toolbarBtnStyle rounded-md p-2 bg-gray-200 z-200"
+  class="toolbarBtnStyle fixed bottom-4 right-4 p-2 rounded-md bg-gray-200 dark:bg-gray-700 dark:text-white"
+  (click)="toggleTheme()"
+>
+  {{ themeService.isDarkMode() ? "🌙 Dark" : "☀️ Light" }}
+</button>
+
+<button
+  class="fixed bottom-4 right-24 toolbarBtnStyle rounded-md p-2 bg-gray-200 z-200 dark:bg-gray-700"
   (click)="goToCredits()"
 >
   Credits
 </button>
+
 <app-alert></app-alert>
 <router-outlet></router-outlet>
+
+<!-- <app-navigator-component></app-navigator-component> -->
 
 <!-- <app-test></app-test> -->

@@ -2,6 +2,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-inter: "Inter", sans-serif;
   --font-roboto: "Roboto", sans-serif;
@@ -28,16 +30,14 @@
   --font-standard: var(--font-inter);
 }
 
-body {
-  background-color: var(--main_bg_color);
-  overflow: hidden;
-}
-
 :root {
-  --btn_hover_color: #f3f5f7;
   --btn_border_color: #d9dde1;
   --main_bg_color: #f9f9f9;
   --upload_bg_color: #151b23;
+
+  --main_dark_color: #1d202a;
+  --main_dark_hover_color: #323646;
+  --main_dark_text_color: #d1d7e0;
 }
 
 .hiddenCanvasElement {
@@ -63,16 +63,9 @@ body {
   }
 }
 
-/* .asdasdd {
-  @apply absolute w-[100px] h-[30px] border border-dashed border-gray-700 px-2 py-1 bg-transparent cursor-move flex justify-left items-left rounded-md text-sm text-gray-800 shadow-sm hover:border-gray-900 hover:shadow-md transition-all
-} */
-
-.normalTailwindBtn {
-  @apply bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow cursor-pointer;
-}
-
 .translucentStyle {
-  @apply bg-white/10 backdrop-blur-lg shadow-lg border border-gray-300/40;
+  @apply backdrop-blur-lg shadow-lg dark:shadow-xl border 
+   border-gray-300/40 dark:border-1 dark:border-gray-900    dark:bg-[var(--main_dark_color)] dark:text-[var(--main_dark_text_color)];
 }
 
 .pageInfoStyle {
@@ -83,26 +76,21 @@ body {
   @apply bg-transparent  hover:opacity-100  backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer;
 }
 
+.downloadBtnStyle {
+  @apply flex items-center rounded-md text-sm font-medium   hover:bg-gray-200 dark:hover:bg-[var(--main_dark_hover_color)] text-black dark:text-[var(--main_dark_text_color)]
+       backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer font-standard;
+}
+
 .toolbarBtnStyle {
-  @apply flex items-center rounded-md text-sm font-medium text-gray-800  backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer font-standard;
+  @apply flex items-center rounded-md text-sm font-medium  
+       text-gray-800 dark:text-white backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer font-standard;
 }
 
 .dropdownBtnStyle {
-  @apply text-sm  text-black bg-white/80 hover:bg-gray-100/100 backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer;
-}
-
-.dropdownBtnStyleLowOp {
-  @apply text-sm font-medium text-black  hover:bg-gray-100/100 backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer;
+  @apply text-sm  backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer 
+  hover:bg-gray-200 dark:hover:bg-[var(--main_dark_hover_color)];
 }
 
 .translucentDiv {
-  @apply backdrop-blur-md bg-white/20 border border-white/30 rounded-2xl shadow-lg p-8 max-w-sm text-white;
-}
-
-.toolbarBtnStyleCornerLeft {
-  @apply flex items-center text-sm font-medium text-gray-800 bg-transparent hover:bg-gray-200/100 backdrop-blur-sm h-12 transition rounded-t-md rounded-r-md rounded-l-2xl duration-200 ease-in-out cursor-pointer font-standard;
-}
-
-.toolbarBtnStyleCornerRight {
-  @apply flex items-center text-sm font-medium text-gray-800 bg-transparent hover:bg-gray-200/100 backdrop-blur-sm h-12 transition rounded-r-2xl rounded-l-md duration-200 ease-in-out cursor-pointer font-standard;
+  @apply backdrop-blur-md bg-white/20 dark:bg-[#1D202A] border-white/30 rounded-2xl shadow-lg p-8 max-w-sm text-white;
 }

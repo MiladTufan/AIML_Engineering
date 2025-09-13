@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 import { SlideInOutToolbarExtension } from '../../../animations/animations';
 import { TextEditService } from '../../../services/box-services/text-edit-service';
 import { PDFViewerService } from '../../../services/pdf-services/pdfviewer-service';
+import { ThemeService } from '../../../services/shared/theme-service';
 
 @Component({
   selector: 'app-text-style-block',
@@ -49,6 +50,7 @@ export class TextStyleBlock {
   constructor(
     public textEditService: TextEditService,
     public pdfViewerService: PDFViewerService,
+    public themeService: ThemeService,
   ) {}
 
   colors: string[] = [

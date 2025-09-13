@@ -1,42 +1,95 @@
-<div class="w-[90%] max-w-[1600px] h-14 flex items-center justify-start text-center
-         absolute top-[2%] left-1/2 transform -translate-x-1/2
-         z-50 rounded-lg translucentStyle">
+<div
+  class="w-[90%] max-w-[1600px] h-14 flex items-center justify-start text-center absolute top-[2%] left-1/2 transform -translate-x-1/2 z-50 rounded-lg translucentStyle"
+>
+  <!-- Insert TextBoxCreate Button -->
+  <button
+    class="toolbarBtnStyle ml-1 p-2 rounded-t-sm rounded-r-sm rounded-b-md rounded-l-lg"
+    #TextButtonContainer
+    title="Enter Text"
+    (click)="OnTextBtnClicked($event)"
+  >
+    <!-- <span id="textBtnText" class=>Text</span> -->
+    @if (!themeService.isDarkMode()) {
+      <img
+        [src]="themeService.assetConstants.TEXT_ICON_LIGHT_MODE"
+        class="w-[29px] h-[27px]"
+      />
+    } @else {
+      <img
+        [src]="themeService.assetConstants.TEXT_ICON_DARK_MODE"
+        class="w-[29px] h-[27px]"
+      />
+    }
+  </button>
 
-    <!-- Insert TextBoxCreate Button -->
-    <button class="toolbarBtnStyle ml-1 p-3 hover:bg-gray-200/100 
-                   rounded-t-sm rounded-r-sm rounded-b-md rounded-l-lg" 
-                   #TextButtonContainer title="Enter Text" (click)="OnTextBtnClicked($event)">
+  <!-- Vertical Line -->
+  <div
+    class="w-[2px] h-[80%] bg-[var(--btn_border_color)] dark:bg-[var(--main_dark_text_color)] mx-[5px]"
+  ></div>
 
-        <!-- <span id="textBtnText" class=>Text</span> -->
-        <img src="assets/icons/textIcon.svg" class="w-[20px] h-[20px]"/>
-        <!-- <div class="flex w-[20px] h-[20px] bg-black rounded-[5px] ml-[7px]"
-            [style.background-color]="textEditService.getCurrentTextStyle().currentColor"
-            [ngStyle]="{ 'background-color': textEditService.getCurrentTextStyle().currentColor }"
-            [ngClass]="{'borderedColorContainer': textEditService.getCurrentTextStyle().currentColor === '#FFFFFF'}">
-        </div> -->
-    </button>
+  <!-- Insert Img Button -->
+  <button
+    class="toolbarBtnStyle p-3"
+    title="Paste Image"
+    (click)="OnInsertImageBtnClicked($event)"
+  >
+    @if (!themeService.isDarkMode()) {
+      <img
+        class="flex w-[22px] h-[22px]"
+        [src]="themeService.assetConstants.INSERT_IMG_ICON_LIGHT_MODE"
+      />
+    } @else {
+      <img
+        class="flex w-[22px] h-[22px]"
+        [src]="themeService.assetConstants.INSERT_IMG_ICON_DARK_MODE"
+      />
+    }
+  </button>
 
-    <!-- Vertical Line -->
-    <div class="w-[2px] h-[80%] bg-[var(--btn_border_color)] mx-[5px]"></div>
+  <span
+    class="absolute left-1/2 transform -translate-x-1/2 text-center font-medium"
+  >
+    <input
+      type="text"
+      [(ngModel)]="currentPage"
+      (ngModelChange)="onPageChange($event)"
+      class="w-6 outline-none hover:border hover:border-gray-400 hover:rounded text-center"
+    />/ {{ this.pdfViewerService.totalPages }}
+  </span>
 
-    <!-- Insert Img Button -->
-    <button class="toolbarBtnStyle p-3 hover:bg-gray-200/100 " title="Paste Image" (click)="OnInsertImageBtnClicked($event)">
-        <img class="flex w-[22px] h-[22px]" src="/assets/icons/paste_image.svg">
-    </button>
+  <!-- Vertical Line -->
+  <div
+    class="w-[2px] h-[80%] bg-[var(--btn_border_color)] dark:bg-[var(--main_dark_text_color)] mx-[5px]"
+  ></div>
 
-    <span class="absolute left-1/2 transform -translate-x-1/2 text-center font-medium">
-       <input type="text" [(ngModel)]="currentPage" (ngModelChange)="onPageChange($event)" 
-              class="w-6  outline-none hover:border hover:border-gray-400 hover:rounded text-center"
-       />/ {{ this.pdfViewerService.totalPages }}
-    </span>
-
-    <!-- Vertical Line -->
-    <div class="w-[2px] h-[80%] bg-[var(--btn_border_color)] mx-[5px]"></div>
-
-    <!-- Insert Download Button -->
-    <button class="toolbarBtnStyle p-2 ml-auto mr-1 hover:bg-green-500/100" title="Download File" (click)="OnDownloadBtnClicked($event)">
-        <img class="w-[30px] h-[30px] block hover:opacity-0" src="/assets/icons/downloadIcon.svg">
-        <img src="/assets/icons/downloadIconWhite.svg" alt="Download PDF Icon" class="w-[30px] h-[30px] absolute  opacity-0 hover:opacity-100 hover:scale-120  transform transition-transform duration-500">
-    </button>
+  <!-- Insert Download Button -->
+  <button
+    class="downloadBtnStyle p-2 ml-auto mr-1 hover:bg-green-500/100"
+    title="Download File"
+    (click)="OnDownloadBtnClicked($event)"
+  >
+    @if (!themeService.isDarkMode()) {
+      <img
+        class="w-[30px] h-[30px] block hover:opacity-0"
+        alt="Download PDF Icon"
+        [src]="themeService.assetConstants.DOWNLOAD_ICON_LIGHT_MODE"
+      />
+      <img
+        [src]="themeService.assetConstants.DOWNLOAD_ICON_DARK_MODE"
+        alt="Download PDF Icon"
+        class="w-[30px] h-[30px] absolute opacity-0 hover:opacity-100 hover:scale-120 transform transition-transform duration-500"
+      />
+    } @else {
+      <img
+        [src]="themeService.assetConstants.DOWNLOAD_ICON_DARK_MODE"
+        alt="Download PDF Icon"
+        class="w-[30px] h-[30px] block hover:opacity-0"
+      />
+      <img
+        [src]="themeService.assetConstants.DOWNLOAD_ICON_DARK_MODE"
+        alt="Download PDF Icon"
+        class="w-[30px] h-[30px] absolute opacity-0 hover:opacity-100 hover:scale-120 transform transition-transform duration-500"
+      />
+    }
+  </button>
 </div>
-

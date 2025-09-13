@@ -1,7 +1,5 @@
-import { BlockObject } from "./BlockObject";
-import { TextStyle } from "./TextStyle";
-
-
+import { BlockObject } from './BlockObject';
+import { TextStyle } from './TextStyle';
 
 export type BoxDimensions = {
   top: number;
@@ -15,10 +13,24 @@ export type BoxDimensions = {
   sizeCreationScale: number;
 };
 
+export class TextBlock {
+  constructor(
+    public text: string = 'Text',
+    public startOffset: number = 0,
+    public endOffset: number = 0,
+    public StyleState: TextStyle = new TextStyle(),
+  ) {}
+}
 
 export class TextBox extends BlockObject {
-  constructor(id: number, pageId: number, BoxDims: BoxDimensions, public text: string,
-    public StyleState: TextStyle) {
-    super(id, pageId, BoxDims)
+  constructor(
+    id: number,
+    pageId: number,
+    BoxDims: BoxDimensions,
+    public text: string,
+    public textBlocks: Map<string, TextBlock>,
+    public StyleState: TextStyle,
+  ) {
+    super(id, pageId, BoxDims);
   }
 }

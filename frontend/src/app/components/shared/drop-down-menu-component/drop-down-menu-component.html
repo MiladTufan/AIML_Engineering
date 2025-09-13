@@ -1,36 +1,74 @@
-
 <div>
-    <div class="flex rounded-md justify-center items-center" [style.width.px]="width-30" [style.height.px]="height">
-        <input  type="text"  [style.font-family]="fontClass(currentItem)"
-                [style.width.px]="width-60" class="focus:outline-none hover:font-semibold hover:opacity-100 flex font-light items-center text-black opacity-50  border-b leading-tight border-gray-200" #headerObj
-                [(ngModel)]="currentItem" (ngModelChange)="selectItemInput($event)" (click)="ItemClicked(currentItem)"
-                  autocorrect="off" autocomplete="off" spellcheck="false" autocapitalize="off">
+  <div
+    class="flex rounded-md justify-center items-center"
+    [style.width.px]="width - 30"
+    [style.height.px]="height"
+  >
+    <input
+      #headerObj
+      type="text"
+      [style.font-family]="fontClass(currentItem)"
+      [style.width.px]="width - 60"
+      class="focus:outline-none hover:font-semibold hover:opacity-100 flex font-light items-center text-black dark:text-white opacity-50 border-b leading-tight border-gray-200"
+      [(ngModel)]="currentItem"
+      (ngModelChange)="selectItemInput($event)"
+      (click)="ItemClicked(currentItem)"
+      autocorrect="off"
+      autocomplete="off"
+      spellcheck="false"
+      autocapitalize="off"
+    />
 
-        <svg  (click)="ItemClicked(currentItem)" class="ml-2 h-4  flex cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-							stroke="black" stroke-width="2">
-			<path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-		</svg>
-    </div>
+    <svg
+      (click)="ItemClicked(currentItem)"
+      class="ml-2 h-4 flex cursor-pointer opacity-50"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      [attr.stroke]="themeService.isDarkMode() ? 'white' : 'black'"
+      stroke-width="2"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+    </svg>
+  </div>
 
-@if (isDropDownOpen) {
-<div class="flex mt-1 ml-1  translucentStyle absolute z-10 flex-col justify-center items-center bg-white/100 backdrop-blur-lg rounded-xl">
-    @for (item of dropDownItems; track $index) {
+  @if (isDropDownOpen) {
+    <div
+      class="flex mt-1 ml-1 translucentStyle absolute z-10 flex-col justify-center items-center backdrop-blur-lg rounded-xl bg-white"
+    >
+      @for (item of dropDownItems; track $index) {
         @if ($index == 0) {
-            <button  [style.font-family]="fontClass(item)" [style.width.px]="width" [style.height.px]="height" (click)="ItemClicked(item)"
-                     class="dropdownBtnStyle flex items-center p-2  text-sm text-black   hover:bg-gray-200 text-left rounded-t-xl">{{item}}
-            </button>
+          <button
+            [style.font-family]="fontClass(item)"
+            [style.width.px]="width"
+            [style.height.px]="height"
+            (click)="ItemClicked(item)"
+            class="dropdownBtnStyle flex items-center p-2 text-sm text-left rounded-t-xl"
+          >
+            {{ item }}
+          </button>
+        } @else if (dropDownItems.length - 1 == $index) {
+          <button
+            [style.font-family]="fontClass(item)"
+            [style.width.px]="width"
+            [style.height.px]="height"
+            (click)="ItemClicked(item)"
+            class="dropdownBtnStyle flex items-center p-2 text-sm text-left rounded-b-xl"
+          >
+            {{ item }}
+          </button>
+        } @else {
+          <button
+            [style.font-family]="fontClass(item)"
+            [style.width.px]="width"
+            [style.height.px]="height"
+            (click)="ItemClicked(item)"
+            class="dropdownBtnStyle flex items-center p-2 text-sm text-left"
+          >
+            {{ item }}
+          </button>
         }
-        @else if (dropDownItems.length - 1 == $index) {
-            <button [style.font-family]="fontClass(item)" [style.width.px]="width" [style.height.px]="height" (click)="ItemClicked(item)"
-                    class="dropdownBtnStyle flex items-center   p-2 text-sm text-black  hover:bg-gray-200 text-left rounded-b-xl">{{item}}
-            </button>
-        }
-        @else {
-            <button  [style.font-family]="fontClass(item)" [style.width.px]="width" [style.height.px]="height" (click)="ItemClicked(item)"
-                      class="dropdownBtnStyle flex items-center  p-2 text-sm text-black  hover:bg-gray-200 text-left">{{item}}
-            </button>
-        }
-    }
-</div>
-}
+      }
+    </div>
+  }
 </div>

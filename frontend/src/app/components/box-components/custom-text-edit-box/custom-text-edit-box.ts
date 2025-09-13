@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
 import { TextStyleBlock } from '../../shared/text-style-block/text-style-block';
 import { TextEditService } from '../../../services/box-services/text-edit-service';
 import { EntityManagerService } from '../../../services/box-services/entity-manager-service';
-import { TextBox } from '../../../models/box-models/TextBox';
+import { TextBlock, TextBox } from '../../../models/box-models/TextBox';
 import { BlockObject } from '../../../models/box-models/BlockObject';
 
 @Component({
@@ -70,7 +70,7 @@ export class CustomTextEditBox {
       (b) => b.id == this.box.id,
     );
     if (savedBox && savedBox instanceof TextBox) {
-      savedBox.text = text;
+      this.boxText = text;
     }
   }
 
@@ -104,7 +104,9 @@ export class CustomTextEditBox {
       : 'normal';
     elem.style.textDecoration = this.box.StyleState.textFormat.isUnderline
       ? 'underline'
-      : 'normal';
+      : '';
+
+    console.log(this.box.StyleState.textFormat.isUnderline);
     elem.style.fontFamily = this.box.StyleState.textFontFamily;
 
     if (this.box.StyleState.textStyle !== this.currentBoxStyle) {
@@ -132,42 +134,57 @@ export class CustomTextEditBox {
       range &&
       this.editableDiv.nativeElement.contains(range.commonAncestorContainer)
     ) {
+      const startOffset = range?.startOffset;
+      const endtOffset = range?.endOffset;
       const content = range.extractContents();
 
       const nodes: ChildNode[] = Array.from(content.childNodes);
+      let selectedText: HTMLElement | null = null;
 
       nodes.forEach((node) => {
-        let wrapper: HTMLElement;
-
         if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) {
           console.log(node.parentElement);
           console.log('Selected text:', selection.toString());
-          wrapper = document.createElement('span');
-          wrapper.textContent = node.textContent;
-          range.insertNode(wrapper);
-          this.mergeAdjacent(wrapper as HTMLElement);
-          this.styleText(wrapper);
+          selectedText = document.createElement('span');
+          selectedText.textContent = node.textContent;
+          range.insertNode(selectedText);
+          this.mergeAdjacent(selectedText as HTMLElement);
+          this.styleText(selectedText);
         } else if (node.nodeType === Node.ELEMENT_NODE) {
-          wrapper = node as HTMLElement;
-          range.insertNode(wrapper);
-          this.mergeAdjacent(wrapper as HTMLElement);
-          this.styleText(wrapper);
+          selectedText = node as HTMLElement;
+          range.insertNode(selectedText);
+          this.mergeAdjacent(selectedText as HTMLElement);
+          this.styleText(selectedText);
         }
       });
 
-      // console.log('Selected content:', content);
-      // console.log('Created Span:', span);
-      // console.log('Selected text:', selection.toString());
-      // console.log('Range start container:', range.startContainer);
-      // console.log('Range start offset:', range.startOffset);
-      // console.log('Range end container:', range.endContainer);
-      // console.log('Range end offset:', range.endOffset);
+      // TODO fix correct assignment to textblocks
+      if (selectedText) {
+        const ret = this.removeRange(this.box.text, startOffset, endtOffset);
+        this.box.text = ret.result;
+        const textBlock = new TextBlock(
+          ret.removed,
+          startOffset,
+          endtOffset,
+          structuredClone(this.box.StyleState),
+        );
+        this.box.textBlocks.set(ret.removed, textBlock);
+        this.textEditService.mergeOverlappingTextBlocks(this.box, textBlock);
+        console.log('DEBUG');
+      }
+
       selection.removeAllRanges();
     } else {
       console.log('No selection inside editor');
     }
 
     div.focus();
+  }
+
+  private removeRange(str: string, start: number, end: number) {
+    const removed = str.slice(start, end + 1);
+    const result = str.slice(0, start) + str.slice(end + 1);
+    return { removed: removed, result: result };
   }
 
   mergeAdjacent(element: HTMLSpanElement) {

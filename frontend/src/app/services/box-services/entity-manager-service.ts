@@ -26,15 +26,15 @@ import { DynamicContainerRegistry } from '../shared/dynamic-container-registry';
 })
 export class EntityManagerService {
   private dynamicContainerRegistry: DynamicContainerRegistry = inject(
-    DynamicContainerRegistry
+    DynamicContainerRegistry,
   );
-  private eventBusService: EventBusService = inject(EventBusService);
+
   public pdfViewerService: PDFViewerService = inject(PDFViewerService);
 
   constructor() {
     this.keydownSubscription = fromEvent<KeyboardEvent>(
       window,
-      'keydown'
+      'keydown',
     ).subscribe((event) => {
       this.removeFocusBox(event);
       this.currentFocusBoxId = -1;
@@ -106,7 +106,7 @@ export class EntityManagerService {
     obj: BlockObject,
     pos: { top: number; left: number },
     entityParentRect: DOMRect,
-    pageContainerRect: DOMRect
+    pageContainerRect: DOMRect,
   ) {
     obj.BoxDims.top = pos.top - entityParentRect.top;
     obj.BoxDims.left = pos.left - entityParentRect.left;
@@ -144,7 +144,7 @@ export class EntityManagerService {
     else console.error(Constants.ERROR_CANNOT_REMOVE_BOX);
 
     const index = this.dynamicContainerRegistry.dynamicBoxContainer!.indexOf(
-      compref!.hostView
+      compref!.hostView,
     );
     if (index !== -1) {
       this.dynamicContainerRegistry.dynamicBoxContainer!.remove(index); // this also destroys the component
@@ -203,7 +203,7 @@ export class EntityManagerService {
   public addOrReplaceBlockObject(
     newObj: BlockObject,
     rerender: Boolean,
-    oldBox: BlockObject | undefined = undefined
+    oldBox: BlockObject | undefined = undefined,
   ) {
     const page = this.pdfViewerService.getPageWithNumber(newObj.pageId);
 
@@ -236,7 +236,7 @@ export class EntityManagerService {
   public executeMove(
     obj: BlockObject,
     pos: { top: number; left: number; clickedPageNum: number },
-    pageNum: number
+    pageNum: number,
   ) {
     let moveToAnotherPage = false;
     const pageNew = this.pdfViewerService.getPageWithNumber(pos.clickedPageNum);
@@ -391,7 +391,7 @@ export class EntityManagerService {
    */
   public setComprefSafely(
     id: number,
-    commonBoxComp: ComponentRef<CommonBoxObject>
+    commonBoxComp: ComponentRef<CommonBoxObject>,
   ) {
     if (this.commonBoxCompMap.has(id)) {
       const oldRef = this.commonBoxCompMap.get(id);

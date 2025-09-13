@@ -1,3 +1,4 @@
+<!-- prettier-ignore -->
 <div class="p-4 translucentStyle flex-col rounded-xl  z-100 select-none both overflow-visible absolute"
     [style.transform]="'scale(' + 1 + ')'"
     [@genieGrow]="this.box.StyleState.isCollapsed ? 'hidden' : 'visible'"
@@ -6,34 +7,34 @@
     id="TextStyleContainer">
     <div>
     <div class="flex -ml-0.5" #textAlignSection>
-        <img src="assets/icons/textAlignLeftBlack.svg"
+        <img [src]="themeService.isDarkMode() ? themeService.assetConstants.TEXT_ALIGN_LEFT__ICON_DARK_MODE : themeService.assetConstants.TEXT_ALIGN_LEFT_ICON"
              [ngClass]="isLeftAlign ? 'opacity-100' : 'opacity-50'"
              class="w-5 textStyleBlockItem" (click)="textAlignLeft($event)"/>
-        <img src="assets/icons/textAligncenter.svg"
+        <img [src]="themeService.isDarkMode() ? themeService.assetConstants.TEXT_ALIGN_CENTER_ICON_DARK_MODE : themeService.assetConstants.TEXT_ALIGN_CENTER_ICON"
              [ngClass]="isCenterAlign ? 'opacity-100' : 'opacity-50'"
              class="w-5 ml-6.5 textStyleBlockItem" (click)="textAlignCenter($event)"/>
-        <img src="assets/icons/textAlignRightBlack.svg"
+        <img [src]="themeService.isDarkMode() ? themeService.assetConstants.TEXT_ALIGN_RIGHT_ICON_DARK_MODE : themeService.assetConstants.TEXT_ALIGN_RIGHT_ICON"
              [ngClass]="isRightAlign ? 'opacity-100' : 'opacity-50'"
              class="w-5 ml-7 textStyleBlockItem" (click)="textAlignRight($event)"/>
-        <img src="assets/icons/link.svg"
+        <img [src]="themeService.isDarkMode() ? themeService.assetConstants.TEXT_ALIGN_LINK_ICON_DARK_MODE : themeService.assetConstants.TEXT_ALIGN_LINK_ICON"
              [ngClass]="isLink ? 'opacity-100' : 'opacity-50'"
              class="w-5 ml-7 textStyleBlockItem" (click)="textAlignLeft($event)"/>
     </div>
 
     <div class="flex mt-2" #textFormatSection>
-        <img src="assets/icons/boldB.svg" class="w-3.5 textStyleBlockItem"
+        <img [src]="themeService.isDarkMode() ? themeService.assetConstants.TEXT_FORMAT_BOLD_ICON_DARK_MODE : themeService.assetConstants.TEXT_FORMAT_BOLD_ICON" class="w-3.5 textStyleBlockItem"
              (click)="textFormatBold()"
              [ngClass]="isFontBold ? 'opacity-100' : 'opacity-50'"/>
-        <img src="assets/icons/italic.svg" class="w-2 ml-6 textStyleBlockItem"
+        <img [src]="themeService.isDarkMode() ? themeService.assetConstants.TEXT_FORMAT_ITALIC_ICON_DARK_MODE : themeService.assetConstants.TEXT_FORMAT_ITALIC_ICON"  class="w-4.5 ml-4 textStyleBlockItem"
              (click)="textFormatItalic()"
              [ngClass]="isFontItalic ? 'opacity-100' : 'opacity-50'"/>
-        <img src="assets/icons/underline.svg" class="w-3.5 ml-6 textStyleBlockItem"
+        <img [src]="themeService.isDarkMode() ? themeService.assetConstants.TEXT_FORMAT_UNDERLINE_ICON_DARK_MODE : themeService.assetConstants.TEXT_FORMAT_UNDERLINE_ICON" class="w-5 ml-5 textStyleBlockItem"
              (click)="textFormatUnderline()"
              [ngClass]="isFontUnderline ? 'opacity-100' : 'opacity-50'"/>
-        <img src="assets/icons/superscript.svg" class="w-4 ml-6 textStyleBlockItem"
+        <img [src]="themeService.isDarkMode() ? themeService.assetConstants.TEXT_FORMAT_SUPERSCRIPT_ICON_DARK_MODE : themeService.assetConstants.TEXT_FORMAT_SUPERSCRIPT_ICON"  class="w-4.5 ml-5 textStyleBlockItem"
              (click)="textFormatSuperscript()"
              [ngClass]="isFontSuperscript ? 'opacity-100' : 'opacity-50'"/>
-        <img src="assets/icons/subscript.svg" class="w-4 ml-5.5 textStyleBlockItem"
+        <img [src]="themeService.isDarkMode() ? themeService.assetConstants.TEXT_FORMAT_SUBSCRIPT_ICON_DARK_MODE : themeService.assetConstants.TEXT_FORMAT_SUBSCRIPT_ICON" class="w-4.5 ml-5 textStyleBlockItem"
              (click)="textFormatSubscript()"
              [ngClass]="isFontSubScript ? 'opacity-100' : 'opacity-50'"/>
     </div>
@@ -60,17 +61,15 @@
 
     <div class="flex  text-gray-500 text-sm font-thin  mt-2" #textStyle>
         <span>Size</span>
-        <button class="ml-7.5 inline-flex w-[12px] text-black  hover:font-medium  textStyleBlockItem"
+        <button class="ml-7.5 inline-flex w-[12px] text-black dark:text-white hover:font-medium  textStyleBlockItem"
                 (click)="SelectedFontSize('12', false)"
                 [ngClass]="currentFontSize == '12' ? 'opacity-100 font-semibold' : 'opacity-50 normal'">12</button>
-        <button class="ml-2 inline-flex w-[12px] text-black  hover:font-medium textStyleBlockItem"
+        <button class="ml-2 inline-flex w-[12px] text-black dark:text-white hover:font-medium textStyleBlockItem"
                 (click)="SelectedFontSize('16', false)"
                 [ngClass]="currentFontSize == '16' ? 'opacity-100 font-semibold' : 'opacity-50 normal'">16</button>
-        <button class="ml-2 inline-flex w-[12px] text-black  hover:font-medium textStyleBlockItem"
+        <button class="ml-2 inline-flex w-[12px] text-black dark:text-white hover:font-medium textStyleBlockItem"
                 (click)="SelectedFontSize('24', false)"
                 [ngClass]="currentFontSize == '24' ? 'opacity-100 font-semibold' : 'opacity-50 normal'">24</button>
-        <!-- <button class="ml-2 text-black  textStyleBlockItem" (click)="selectedSize($event, 40)">40</button> -->
-        <!-- <button class="ml-2 text-black  textStyleBlockItem" (click)="selectedSize($event, 64)">64</button> -->
 
         <app-drop-down-menu-component class="ml-2.5 inline-flex w-[12px]" (selectedItem)="SelectedFontSize($event)"
             [width]="80" [height]="20"
