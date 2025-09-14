@@ -25,10 +25,12 @@ export class PageOverlay {
       this.currentPage = val;
 
       //prettier-ignore
-      if (this.currentPage === this.pageNumber) 
-        this.isActivePage = true;
-      else 
-        this.isActivePage = false;
+      setTimeout(() => {
+          if (this.currentPage === this.pageNumber) 
+            this.isActivePage = true;
+          else 
+            this.isActivePage = false;
+      });
     });
   }
 }

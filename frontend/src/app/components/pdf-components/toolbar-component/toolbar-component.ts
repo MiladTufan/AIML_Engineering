@@ -101,16 +101,16 @@ export class ToolbarComponent {
     // 	this.textStyleBlockComponent.collapseColorPallet();
   }
 
-  public onPageChange(pageNum: number) {
-    this.pdfViewerService.setCurrentPage(this.currentPage);
-  }
+  public onPageChange(pageNum: number) {}
 
   public OnEnter(pageNum: number) {
     if (
       this.currentPage != 0 &&
       this.currentPage != null &&
       pageNum <= this.pdfViewerService.totalPages
-    )
+    ) {
+      this.pdfViewerService.setCurrentPage(this.currentPage);
       this.pdfViewerService.scrollToPage(pageNum);
+    }
   }
 }

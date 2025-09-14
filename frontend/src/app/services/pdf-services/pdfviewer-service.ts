@@ -5,7 +5,7 @@ import {
   Renderer2,
   ViewContainerRef,
 } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { Page } from '../../models/Page';
 import { PageInfoComponent } from '../../components/pdf-components/page-info-component/page-info-component';
 import { DynamicContainerRegistry } from '../shared/dynamic-container-registry';
@@ -41,6 +41,8 @@ export class PDFViewerService {
 
   public isCurrentlyJumpingTopage: Boolean = false;
 
+  public renderQueue = new Set<number>();
+  public renderTrigger = new Subject<number>();
   public currentPage$ = this._currentPage.asObservable();
 
   private dynamicContainerRegistry: DynamicContainerRegistry = inject(

@@ -22,11 +22,17 @@ import { PDFFileService } from '../../services/pdf-services/pdffile-service';
 import { BoxCreationService } from '../../services/box-services/box-creation-service';
 import { NavigatorComponent } from '../../components/pdf-components/navigator-component/navigator-component';
 import { PdfViewerHelperService } from '../../services/pdf-services/pdf-viewer-helper-service';
+import { ZoomController } from '../../components/pdf-components/zoom-controller/zoom-controller';
 
 @Component({
   selector: 'app-edit-pdfview',
   standalone: true,
-  imports: [PdfViewerComponent, ToolbarComponent, NavigatorComponent],
+  imports: [
+    PdfViewerComponent,
+    ToolbarComponent,
+    NavigatorComponent,
+    ZoomController,
+  ],
   templateUrl: './edit-pdfview.html',
   styleUrl: './edit-pdfview.css',
 })

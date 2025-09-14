@@ -41,14 +41,12 @@ export class PdfViewerComponent {
   private currentPageNumber: number = 1;
   private devicePixelRatio = window.devicePixelRatio || 1;
   private scale = 1.0 * this.devicePixelRatio;
-  private oldScale = this.scale;
+  private oldScale = 0;
   private pageNumberSub!: Subscription;
   private alreadyRanObserver = false;
-  private renderQueue = new Set<number>();
-  private minScale = 0.6;
-  private maxScale = 10.09;
+
   private observer: any;
-  private renderTrigger = new Subject<number>();
+ 
   public mouseX = 1;
   public mouseY = 1;
 
@@ -74,19 +72,15 @@ export class PdfViewerComponent {
 
   //==================================================== Constructor ======================================================
   constructor() {
-    this.renderTrigger.pipe(debounceTime(10)).subscribe((finalScale) => {
+    this.pdfViewerService.renderTrigger.pipe(debounceTime(10)).subscribe((finalScale) => {
       Promise.all(
-        Array.from(this.renderQueue).map((pageNumber) => {
-          console.log(
-            'Re rendering page on zoom: ',
-            pageNumber,
-            ' scale: ',
-            finalScale,
-          );
+        Array.from(this.pdfViewerService.renderQueue).map((pageNumber) => {
+          //prettier-ignore
+          console.log('Re rendering page on zoom: ', pageNumber,' scale: ', finalScale);
           this.pdfViewerService.renderPage(pageNumber, false, false, finalScale, this.pdfContainer.nativeElement);
         }),
       ).then(() => {
-        this.renderQueue.clear();
+        this.pdfViewerService.renderQueue.clear();
       });
     });
   }
@@ -97,6 +91,8 @@ export class PdfViewerComponent {
    */
   async ngOnInit() {
     this.pdfViewerService.preventWindowZoomIn();
+    this.pdfViewerHelperService.currentScale = 1.0
+    this.oldScale = this.pdfViewerHelperService.currentScale;
     this.loadPDF();
     this.initializeScrollEvent();
     this.subscribeToVisiblePages();
@@ -153,8 +149,8 @@ export class PdfViewerComponent {
         const page = this.pdfViewerHelperService.allRenderedPages.find(
           (p) => p.pageNum === pageNum,
         );
-        if (page?.currentScale != this.scale) {
-          this.pdfViewerService.renderPage(pageNum, false, false, this.scale, this.pdfContainer.nativeElement);
+        if (page?.currentScale != this.pdfViewerHelperService.currentScale) {
+          this.pdfViewerService.renderPage(pageNum, false, false, this.pdfViewerHelperService.currentScale, this.pdfContainer.nativeElement);
           console.log('re-rendering page: ', pageNum);
         }
       }
@@ -177,7 +173,7 @@ export class PdfViewerComponent {
             (p) => p.pageNum === pageNumber,
           )
         )
-          this.pdfViewerService.renderPage(pageNumber, false, false, this.scale, this.pdfContainer.nativeElement);
+          this.pdfViewerService.renderPage(pageNumber, false, false, this.pdfViewerHelperService.currentScale, this.pdfContainer.nativeElement);
       } else {
         this.pdfViewerService.removeVisiblePages(pageNumber);
       }
@@ -234,7 +230,7 @@ export class PdfViewerComponent {
       if (this.renderMode == 0) {
         for (let pageNum = 1; pageNum <= this.totalPages; pageNum++) {
           this.pdfViewerService
-            .renderPage(pageNum, true, false, this.scale, this.pdfContainer.nativeElement)
+            .renderPage(pageNum, true, false, this.pdfViewerHelperService.currentScale, this.pdfContainer.nativeElement)
             .then(() => {
               if (
                 this.pdfContainer.nativeElement.children.length ===
@@ -295,7 +291,7 @@ export class PdfViewerComponent {
     translateX: number = 0,
     translateY: number = 0,
     oldScale: number = this.oldScale,
-    newScale: number = this.scale,
+    newScale: number = this.pdfViewerHelperService.currentScale,
   ) {
     const pointer = {
       x: this.mouseX - rect.left,
@@ -329,7 +325,7 @@ export class PdfViewerComponent {
     translateX: number = 0,
     translateY: number = 0,
     oldScale: number = this.oldScale,
-    newScale: number = this.scale,
+    newScale: number = this.pdfViewerHelperService.currentScale,
   ) {
     const pointer = {
       x: (this.mouseX - rect.left) * (w / rect.width),
@@ -416,8 +412,14 @@ export class PdfViewerComponent {
     this.mouseY = event.pageY;
   }
 
+  public zoom()
+  {
+
+  }
+
+
   /**
-   * This function handles the zoom on the PDF page. It adds pages that are in visibile pages to a renderqueue.
+   * This function handles the zoom on the PDF page. It adds pages that are in visibile pages to a pdfViewerService.renderQueue.
    * @param event
    */
   async onWheel(event: WheelEvent) {
@@ -425,7 +427,7 @@ export class PdfViewerComponent {
       event.preventDefault();
       const delta = event.deltaY < 0 ? 0.1 : -0.1;
       const direction = event.deltaY < 0 ? 1 : -1;
-      const oldScale = this.scale;
+      const oldScale = this.pdfViewerHelperService.currentScale;
       this.oldScale = oldScale;
 
       const zoomIntensity = 0.001; // smaller = slower acceleration
@@ -435,16 +437,16 @@ export class PdfViewerComponent {
       );
       let newScale = oldScale * zoomFactor;
 
-      if (newScale > this.maxScale) newScale = this.maxScale;
+      if (newScale > this.pdfViewerHelperService.maxScale) newScale = this.pdfViewerHelperService.maxScale;
 
-      if (newScale < this.minScale) newScale = this.minScale;
+      if (newScale < this.pdfViewerHelperService.minScale) newScale = this.pdfViewerHelperService.minScale;
 
-      this.scale = newScale;
-      console.log(this.scale);
-      this.pdfViewerHelperService.currentScale = this.scale;
+      this.pdfViewerHelperService.currentScale = newScale;
+      console.log(this.pdfViewerHelperService.currentScale);
+      this.pdfViewerHelperService.currentScale = this.pdfViewerHelperService.currentScale;
 
       for (const p of this.pdfViewerService.visiblePages.getValue()) {
-        this.renderQueue.add(p);
+        this.pdfViewerService.renderQueue.add(p);
 
         // const canvas = (event.currentTarget as HTMLDivElement).querySelector(`#canvasContainer-${p}`) as HTMLDivElement
         // const page = this.pdfViewerService.getPageWithNumber(p)
@@ -456,13 +458,13 @@ export class PdfViewerComponent {
 
         // 	canvas.style.transformOrigin = `0px 0px`;
         // 	canvas.style.transition = 'transform 0.25s ease-in-out';
-        // 	canvas.style.transform = `translate(${ret.tX}px, ${ret.tY}px) scale(${this.scale})`;
-        // 	//this.cssScale = this.scale;
+        // 	canvas.style.transform = `translate(${ret.tX}px, ${ret.tY}px) scale(${this.pdfViewerHelperService.currentScale})`;
+        // 	//this.cssScale = this.pdfViewerHelperService.currentScale;
         // }
       }
 
-      this.renderTrigger.next(newScale);
-      console.log(this.renderQueue);
+      this.pdfViewerService.renderTrigger.next(newScale);
+      console.log(this.pdfViewerService.renderQueue);
     }
   }
 }

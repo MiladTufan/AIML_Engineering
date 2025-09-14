@@ -1,0 +1,82 @@
+<div
+  class="translucentStyle flex rounded-md w-fit h-fit p-2 ml-25 absolute left-1/2 transform -translate-x-1/2 bottom-10"
+>
+  <button
+    class="cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+    (click)="OnMinusClicked($event)"
+    [disabled]="isMinusDisabled()"
+  >
+    <!-- <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      class="w-4 h-4"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M19 9l-7 7-7-7"
+      />
+    </svg> -->
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      class="w-4 h-4"
+      [style.opacity]="isMinusDisabled() ? 0.5 : 1"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M4 12h16"
+      />
+    </svg>
+  </button>
+  <input
+    type="text"
+    [(ngModel)]="inputValue"
+    (ngModelChange)="onZoomChange($event)"
+    (keydown.enter)="OnEnter(inputValue)"
+    class="w-16 outline-none hover:border hover:border-gray-400 hover:rounded text-center"
+  />
+
+  <button
+    class="cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+    (click)="onPlusClicked($event)"
+    [disabled]="isPlusDisabled()"
+  >
+    <!-- <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      class="w-4 h-4"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M5 15l7-7 7 7"
+      />
+    </svg> -->
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      class="w-4 h-4"
+      [style.opacity]="isPlusDisabled() ? 0.5 : 1"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M12 4v16m8-8H4"
+      />
+    </svg>
+  </button>
+</div>

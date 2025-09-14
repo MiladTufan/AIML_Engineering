@@ -7,6 +7,10 @@ import { Page } from '../../models/Page';
 export class PdfViewerHelperService {
   public allRenderedPages: Page[] = [];
   public currentScale: number = 1.0;
+  public scaleStep: number = 0.1;
+
+  public minScale = 0.6;
+  public maxScale = 10.09;
 
   /**
    * Get a PDF page with a certain pageNumber.
@@ -16,6 +20,28 @@ export class PdfViewerHelperService {
   getPageWithNumber(pageNumber: number) {
     const page = this.allRenderedPages.find((p) => p.pageNum == pageNumber);
     return page;
+  }
+
+  checkScaleValid(scale: number) {
+    const startScale = scale;
+    if (scale < this.minScale) scale = this.minScale;
+
+    if (scale > this.maxScale) scale = this.maxScale;
+
+    if (scale != startScale) return { scale: scale, valid: false };
+    return { scale: scale, valid: true };
+  }
+
+  checkScaleUpPossible(scale: number) {
+    if (scale >= this.maxScale) return false;
+
+    return true;
+  }
+
+  checkScaleDownPossible(scale: number) {
+    if (scale <= this.minScale) return false;
+
+    return true;
   }
 
   /**
