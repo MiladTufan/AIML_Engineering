@@ -40,6 +40,10 @@ export class PDFViewerService {
   public pdfDocument: any;
 
   public isCurrentlyJumpingTopage: number = 1;
+  public deletedPages: number[] = [];
+
+  private htmlPreviewPages: any[] = [];
+  private navigatorContainer: ElementRef | null = null;
 
   public renderQueue = new Set<number>();
   public renderTrigger = new Subject<number>();
@@ -55,6 +59,36 @@ export class PDFViewerService {
   private pdfViewerHelperService: PdfViewerHelperService = inject(
     PdfViewerHelperService,
   );
+
+  deletePage(pageNumber: number) {
+    this.deletedPages.push(pageNumber);
+    const page = this.pdfViewerHelperService.getPageWithNumber(pageNumber);
+
+    if (page && page.isDeleted == false) {
+      // remove from DOM
+      // this.PdfContainer?.nativeElement.removeChild(page.htmlContainer);
+      // this.navigatorContainer?.nativeElement.removeChild(
+      //   page.htmlContainerPreview,
+      // );
+
+      // hide in the DOM
+      page.htmlContainer.style.display = 'none';
+      page.htmlContainerPreview.style.display = 'none';
+      page.isDeleted = true;
+
+      // reduce total page numbers
+      this.totalPages--;
+
+      // remove from visible Pages
+      this.removeVisiblePages(pageNumber);
+
+      // remove from rendered pages
+      // const idx = this.pdfViewerHelperService.allRenderedPages.indexOf(page);
+      // this.pdfViewerHelperService.allRenderedPages.splice(idx, 1);
+    } else {
+      console.warn('The Page to delete does not exist!');
+    }
+  }
 
   //=======================================================================================================================
   // Set the total number of pages a pdf has.
@@ -468,6 +502,8 @@ export class PDFViewerService {
     let page: any;
     let viewport: any;
 
+    if (this.navigatorContainer == null) this.navigatorContainer = container;
+
     page = await this.pdfDocument.getPage(pageNumber);
     viewport = page.getViewport({ scale: scale });
     let previewContainer = document.createElement('div');
@@ -510,8 +546,14 @@ export class PDFViewerService {
       pageOverlay.instance.pageNumber = pageNumber;
 
       // previewContainer.appendChild(pageInfo!.location.nativeElement);
-      container.appendChild(firstChild);
+      container.nativeElement.appendChild(firstChild);
       await page.render(renderContext).promise;
+
+      const payLoad = {
+        pageNum: pageNumber,
+        preview: firstChild,
+      };
+      this.htmlPreviewPages.push(payLoad);
     }
   }
   /**
@@ -573,9 +615,12 @@ export class PDFViewerService {
 
         await page.render(renderContext).promise;
 
+        const ret = this.htmlPreviewPages.find((p) => p.pageNum === pageNumber);
+        let preview = null;
+        if (ret) preview = ret.preview;
         //prettier-ignore
         const newPage = new Page(pageNumber, viewport, boxesForPage, [], viewport.height, viewport.width, 0,
-          pageContainer, 0, 0, scale,);
+          pageContainer, preview, 0, 0, scale,);
         this.pdfViewerHelperService.assignPageToRendered(newPage);
       }
     }

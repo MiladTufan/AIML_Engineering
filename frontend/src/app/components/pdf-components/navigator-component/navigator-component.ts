@@ -26,7 +26,10 @@ export class NavigatorComponent {
     this.pageNumberSub = this.pdfViewerService.currentPage$.subscribe((val) => {
       if (!this.pdfViewerService.jumpToPage) {
         this.pdfPreviewContainer.nativeElement.scrollTop =
-          this.pdfViewerService.calcTargetScrolltop(val, true);
+          this.pdfViewerService.calcTargetScrolltop(
+            this.pdfViewerHelperService.getUpdatedPageNumber(val),
+            true,
+          );
       }
     });
 
@@ -40,7 +43,7 @@ export class NavigatorComponent {
         if (!this.renderedPreviews.includes(pageNum))
         {
           this.renderedPreviews.push(pageNum)
-          this.pdfViewerService.renderPage(pageNum, false, true, 0.2, this.pdfPreviewContainer.nativeElement);
+          this.pdfViewerService.renderPage(pageNum, false, true, 0.2, this.pdfPreviewContainer);
           console.log('Rendering Page Preview: ', pageNum);
         }
       }

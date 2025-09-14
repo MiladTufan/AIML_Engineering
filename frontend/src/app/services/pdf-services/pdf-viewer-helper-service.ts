@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { ElementRef, Injectable } from '@angular/core';
 import { Page } from '../../models/Page';
 
 @Injectable({
@@ -20,6 +20,25 @@ export class PdfViewerHelperService {
   getPageWithNumber(pageNumber: number) {
     const page = this.allRenderedPages.find((p) => p.pageNum == pageNumber);
     return page;
+  }
+
+  getUpdatedPageNumber(pageNumber: number) {
+    const page = this.getPageWithNumber(pageNumber);
+    let updatedPageNumber = -1;
+    if (page) {
+      const currIdx = this.allRenderedPages.indexOf(page);
+      updatedPageNumber = pageNumber;
+
+      //prettier-ignore
+      for (let i = currIdx; i >= 0; i--) {
+        if (this.allRenderedPages.at(i)?.isDeleted) 
+          updatedPageNumber--;
+        else 
+          break;
+      }
+    }
+
+    return updatedPageNumber;
   }
 
   checkScaleValid(scale: number) {
