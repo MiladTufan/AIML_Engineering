@@ -27,8 +27,6 @@ export class NavigatorComponent {
       if (!this.pdfViewerService.jumpToPage) {
         this.pdfPreviewContainer.nativeElement.scrollTop =
           this.pdfViewerService.calcTargetScrolltop(val, true);
-      } else {
-        this.pdfViewerService.isCurrentlyJumpingTopage = false;
       }
     });
 

@@ -64,6 +64,40 @@ export class ToolbarComponent {
     this.imgInsertClicked.emit(true);
   }
 
+  /**
+   * Disable down button when the current page >= total pages
+   * @param $event
+   */
+  public isDownDisabled() {
+    if (this.currentPage >= this.pdfViewerService.totalPages) return true;
+    return false;
+  }
+
+  /**
+   * Disable up button when the current page <= 1
+   * @param $event
+   */
+  public isUpDisabled() {
+    if (this.currentPage <= 1) return true;
+    return false;
+  }
+
+  /**
+   * Scroll 1 page down when the down button is clicked
+   * @param $event
+   */
+  public OnDownClicked($event: Event) {
+    this.pdfViewerService.scrollToPage(this.currentPage + 1);
+  }
+
+  /**
+   * Scroll 1 page up when the up button is clicked
+   * @param $event
+   */
+  public onUpClicked($event: Event) {
+    this.pdfViewerService.scrollToPage(this.currentPage - 1);
+  }
+
   // use download Service for this
   public OnDownloadBtnClicked(event: Event) {
     const edits = new GlobalEdit([], [1, 2, 3]);

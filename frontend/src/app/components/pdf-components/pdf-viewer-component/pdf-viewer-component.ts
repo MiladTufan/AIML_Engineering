@@ -128,13 +128,15 @@ export class PdfViewerComponent {
       this.dynamicContainerRegistry.dynamicBoxContainer = this.dynamicContainer;
 
       this.pdfContainer.nativeElement.addEventListener('scroll', (event) => {
-        if (!this.pdfViewerService.isCurrentlyJumpingTopage)
-          this.pdfViewerService.jumpToPage = false;
+      
 
         //prettier-ignore
         this.pdfViewerService.currentScrollTop = this.pdfContainer.nativeElement.scrollTop;
         this.currentPageNumber = this.pdfViewerService.getPageNumberFromScrolltop();
         this.pdfViewerService.setCurrentPage(this.currentPageNumber);
+
+        if (this.pdfViewerService.isCurrentlyJumpingTopage === this.currentPageNumber)
+          this.pdfViewerService.jumpToPage = false;
       });
     }
   }

@@ -1,20 +1,23 @@
-<button
-  class="toolbarBtnStyle fixed bottom-4 right-4 p-2 rounded-md bg-gray-200 dark:bg-gray-700 dark:text-white"
-  (click)="toggleTheme()"
->
-  {{ themeService.isDarkMode() ? "🌙 Dark" : "☀️ Light" }}
-</button>
+<app-header></app-header>
 
-<button
-  class="fixed bottom-4 right-24 toolbarBtnStyle rounded-md p-2 bg-gray-200 z-200 dark:bg-gray-700"
-  (click)="goToCredits()"
->
-  Credits
-</button>
+<div class="mt-2">
+  <button
+    class="toolbarBtnStyle fixed bottom-4 right-4 p-2 rounded-md bg-gray-200 dark:bg-gray-700 dark:text-white"
+    (click)="toggleTheme()"
+  >
+    {{ themeService.isDarkMode() ? "🌙 Dark" : "☀️ Light" }}
+  </button>
 
-<app-alert></app-alert>
-<router-outlet></router-outlet>
+  <button
+    class="fixed bottom-4 right-24 toolbarBtnStyle rounded-md p-2 bg-gray-200 z-200 dark:bg-gray-700"
+    (click)="goToCredits()"
+  >
+    Credits
+  </button>
 
+  <app-alert></app-alert>
+  <router-outlet></router-outlet>
+</div>
 <!-- <app-page-overlay></app-page-overlay> -->
 
 <!-- <app-navigator-component></app-navigator-component> -->

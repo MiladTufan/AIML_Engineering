@@ -39,7 +39,7 @@ export class PDFViewerService {
   public PdfContainer: ElementRef | null = null;
   public pdfDocument: any;
 
-  public isCurrentlyJumpingTopage: Boolean = false;
+  public isCurrentlyJumpingTopage: number = 1;
 
   public renderQueue = new Set<number>();
   public renderTrigger = new Subject<number>();
@@ -142,8 +142,8 @@ export class PDFViewerService {
   // This function adjusts the current scrolltop to jump to a certain page.
   //=======================================================================================================================
   scrollToPage(pageNumber: number) {
-    this.isCurrentlyJumpingTopage = true;
     this.jumpToPage = true;
+    this.isCurrentlyJumpingTopage = pageNumber;
     console.log('Jump to page: ', pageNumber);
     const targetScrolltop = this.calcTargetScrolltop(pageNumber);
     // this.PdfContainer!.nativeElement.scrollTop = targetScrolltop;
@@ -499,6 +499,8 @@ export class PDFViewerService {
       previewContainer.addEventListener('click', () =>
         this.scrollToPage(pageNumber),
       );
+
+      previewContainer.classList.add('cursor-pointer');
       previewContainer.appendChild(canvas);
 
       const firstChild = pageOverlay.location.nativeElement.firstChild;

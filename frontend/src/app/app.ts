@@ -4,11 +4,12 @@ import { AlertComponent } from './shared/alert/alert';
 import { SessionService } from './services/communication/session-service';
 import { Constants } from './models/constants/constants';
 import { ThemeService } from './services/shared/theme-service';
+import { Header } from './components/layout/header/header';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, AlertComponent],
+  imports: [RouterOutlet, AlertComponent, Header],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
