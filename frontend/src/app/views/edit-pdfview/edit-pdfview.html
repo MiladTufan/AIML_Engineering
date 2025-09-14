@@ -1,20 +1,27 @@
-<app-toolbar-component
-  (textBoxClicked)="canCreateTextBox()"
-  (imgInsertClicked)="canCreateImg(); fileInput.click()"
-></app-toolbar-component>
+<div class="flex">
+  <app-navigator-component
+    class="flex flex-col justify-center items-center border-1 h-screen"
+  ></app-navigator-component>
 
-<input
-  type="file"
-  accept="image/*"
-  #fileInput
-  style="display: none"
-  (change)="onFileSelected($event)"
-/>
-<app-pdf-viewer-component
-  #pdfViewer
-  (click)="createTextBox($event)"
-  (click)="createImageBox($event)"
-  class="w-screen flex flex-col items-center justify-center border-red-500 mt-16 px-4"
-></app-pdf-viewer-component>
+  <app-toolbar-component
+    (textBoxClicked)="canCreateTextBox()"
+    (imgInsertClicked)="canCreateImg(); fileInput.click()"
+  ></app-toolbar-component>
 
-<ng-container #dynamicContainer></ng-container>
+  <input
+    type="file"
+    accept="image/*"
+    #fileInput
+    style="display: none"
+    (change)="onFileSelected($event)"
+  />
+
+  <app-pdf-viewer-component
+    #pdfViewer
+    (click)="createTextBox($event)"
+    (click)="createImageBox($event)"
+    class="w-screen flex flex-col items-center justify-center border-red-500 mt-16 px-4"
+  ></app-pdf-viewer-component>
+
+  <ng-container #dynamicContainer></ng-container>
+</div>

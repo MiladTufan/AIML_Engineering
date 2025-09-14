@@ -1,0 +1,17 @@
+<div
+  class="flex flex-col border-blue-500 w-fit h-fit mt-3 p-1"
+  [ngClass]="{
+    'border-1 border-dashed': isActivePage,
+  }"
+>
+  <div class="absolute w-7 h-7 bg-blue-500 justify-center items-center flex">
+    <span>{{ pageNumber }}</span>
+  </div>
+  @if (isActivePage) {
+    <app-page-info-component
+      class="flex justify-center -mt-12"
+      [width]="36"
+      [borderRadius]="3"
+    ></app-page-info-component>
+  }
+</div>

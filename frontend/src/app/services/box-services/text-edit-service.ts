@@ -14,7 +14,6 @@ import {
 } from '../../models/box-models/TextBox';
 import { TextFormat, TextStyle } from '../../models/box-models/TextStyle';
 import { BlockObject } from '../../models/box-models/BlockObject';
-import { PDFViewerService } from '../pdf-services/pdfviewer-service';
 import { EntityManagerService } from './entity-manager-service';
 
 //=======================================================================================================================
@@ -27,7 +26,6 @@ import { EntityManagerService } from './entity-manager-service';
 export class TextEditService {
   public textboxes: TextBox[] = [];
   public currentFocusTextBoxId: number = 0;
-  public pdfViewerService = inject(PDFViewerService);
   public entityManagerService = inject(EntityManagerService);
 
   //=======================================================================================================================

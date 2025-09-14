@@ -15,7 +15,7 @@ import { EntityManagerService } from '../../../services/box-services/entity-mana
 import { Constants } from '../../../models/constants/constants';
 import { PDFViewerService } from '../../../services/pdf-services/pdfviewer-service';
 import { TextStyleBlock } from '../../shared/text-style-block/text-style-block';
-import { BlockObject } from '../../../models/box-models/BlockObject';
+import { PdfViewerHelperService } from '../../../services/pdf-services/pdf-viewer-helper-service';
 
 @Component({
   selector: 'app-common-box-object',
@@ -58,6 +58,7 @@ export class CommonBoxObject {
   constructor(
     public pdfViewerService: PDFViewerService,
     private entityManagerService: EntityManagerService,
+    private pdfViewerHelperService: PdfViewerHelperService,
   ) {}
 
   ngOnInit() {
@@ -73,7 +74,9 @@ export class CommonBoxObject {
         );
 
         if (box) {
-          const page = this.pdfViewerService.getPageWithNumber(box.pageId);
+          const page = this.pdfViewerHelperService.getPageWithNumber(
+            box.pageId,
+          );
           const rect2 = (
             page!.htmlContainer! as HTMLElement
           ).getBoundingClientRect();
@@ -90,7 +93,8 @@ export class CommonBoxObject {
               box.BoxDims.left + box.BoxDims.resizedWidth + 10;
           }
 
-          box.BoxDims.sizeCreationScale = this.pdfViewerService.currentScale;
+          box.BoxDims.sizeCreationScale =
+            this.pdfViewerHelperService.currentScale;
         }
       }
     });

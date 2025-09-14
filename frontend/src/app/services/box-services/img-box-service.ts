@@ -5,16 +5,17 @@ import { BlockObject } from '../../models/box-models/BlockObject';
 import { ImgStyle } from '../../models/box-models/TextStyle';
 import { CommonBoxObject } from '../../components/box-components/common-box-object/common-box-object';
 import { CustomImgBox } from '../../components/box-components/custom-img-box/custom-img-box';
-import { PDFViewerService } from '../pdf-services/pdfviewer-service';
 import { DynamicContainerRegistry } from '../shared/dynamic-container-registry';
+import { PdfViewerHelperService } from '../pdf-services/pdf-viewer-helper-service';
 
+//prettier-ignore
 @Injectable({
   providedIn: 'root'
 })
 export class ImgBoxService {
   public imgboxes: ImgBox[] = [];
   public dynamicContainerRegistry = inject(DynamicContainerRegistry)
-  public pdfViewerService = inject(PDFViewerService)
+  public pdfViewerHelperService = inject(PdfViewerHelperService)
 
   /**
    * Please create an BlockObject with this.entityManagerService.createBlockObject adn then cast it to ImgBox and pass it here.
@@ -31,7 +32,7 @@ export class ImgBoxService {
 
     // on rerender the Page has still old overlay img layer [ONLY after render the correct overlay img layer is set!!]
     if (!rerender) {
-      const page = this.pdfViewerService.getPageWithNumber(pageNumber)
+      const page = this.pdfViewerHelperService.getPageWithNumber(pageNumber)
       const imgLayer = page?.htmlContainer?.querySelector(Constants.OVERLAY_IMG)
       imgLayer?.appendChild(commonBoxContainer.location.nativeElement)
     }

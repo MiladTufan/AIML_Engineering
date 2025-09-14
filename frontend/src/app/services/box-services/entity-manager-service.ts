@@ -6,16 +6,11 @@ import {
 import { TextBox } from '../../models/box-models/TextBox';
 import { Constants } from '../../models/constants/constants';
 import { Page } from '../../models/Page';
-import { TextEditService } from './text-edit-service';
 import { ImgBox } from '../../models/box-models/ImgBox';
 import { fromEvent, Subscription } from 'rxjs';
-import { ImgBoxService } from './img-box-service';
 import { CommonBoxObject } from '../../components/box-components/common-box-object/common-box-object';
-import { CustomTextEditBox } from '../../components/box-components/custom-text-edit-box/custom-text-edit-box';
-import { TextStyleBlock } from '../../components/shared/text-style-block/text-style-block';
-import { PDFViewerService } from '../pdf-services/pdfviewer-service';
-import { EventBusService } from '../communication/event-bus-service';
 import { DynamicContainerRegistry } from '../shared/dynamic-container-registry';
+import { PdfViewerHelperService } from '../pdf-services/pdf-viewer-helper-service';
 
 /**
  * TODO Split this service into mulitple specific services for creating, moving, deleting boxes.
@@ -29,7 +24,9 @@ export class EntityManagerService {
     DynamicContainerRegistry,
   );
 
-  public pdfViewerService: PDFViewerService = inject(PDFViewerService);
+  public pdfViewerHelperService: PdfViewerHelperService = inject(
+    PdfViewerHelperService,
+  );
 
   constructor() {
     this.keydownSubscription = fromEvent<KeyboardEvent>(
@@ -115,7 +112,7 @@ export class EntityManagerService {
 
     obj.baseLeft = obj.BoxDims.left;
     obj.baseTop = obj.BoxDims.top;
-    obj.BoxDims.posCreationScale = this.pdfViewerService.currentScale;
+    obj.BoxDims.posCreationScale = this.pdfViewerHelperService.currentScale;
   }
 
   /**
@@ -128,7 +125,7 @@ export class EntityManagerService {
     const idx = this.blockObjects.indexOf(oldBox);
     this.blockObjects.splice(idx, 1);
 
-    const pageOld = this.pdfViewerService.getPageWithNumber(pageNum);
+    const pageOld = this.pdfViewerHelperService.getPageWithNumber(pageNum);
     pageOld?.removeBlockObject(obj);
   }
 
@@ -139,7 +136,7 @@ export class EntityManagerService {
     const compref = this.commonBoxCompMap.get(id);
     const box = this.blockObjects.find((b) => b.id === id);
 
-    const pageOld = this.pdfViewerService.getPageWithNumber(box!.pageId);
+    const pageOld = this.pdfViewerHelperService.getPageWithNumber(box!.pageId);
     if (box) pageOld?.removeBlockObject(box);
     else console.error(Constants.ERROR_CANNOT_REMOVE_BOX);
 
@@ -205,7 +202,7 @@ export class EntityManagerService {
     rerender: Boolean,
     oldBox: BlockObject | undefined = undefined,
   ) {
-    const page = this.pdfViewerService.getPageWithNumber(newObj.pageId);
+    const page = this.pdfViewerHelperService.getPageWithNumber(newObj.pageId);
 
     if (oldBox && oldBox.id !== newObj.id) {
       const idx = this.blockObjects.indexOf(oldBox);
@@ -239,9 +236,11 @@ export class EntityManagerService {
     pageNum: number,
   ) {
     let moveToAnotherPage = false;
-    const pageNew = this.pdfViewerService.getPageWithNumber(pos.clickedPageNum);
+    const pageNew = this.pdfViewerHelperService.getPageWithNumber(
+      pos.clickedPageNum,
+    );
     if (pos.clickedPageNum != pageNum) {
-      const pageOld = this.pdfViewerService.getPageWithNumber(obj.pageId);
+      const pageOld = this.pdfViewerHelperService.getPageWithNumber(obj.pageId);
       const compref = this.getCompref(obj.id);
       if (pageOld) pageOld?.removeBlockObject(obj);
 

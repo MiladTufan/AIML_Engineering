@@ -2,16 +2,13 @@ import { Component, signal } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { AlertComponent } from './shared/alert/alert';
 import { SessionService } from './services/communication/session-service';
-import { Test } from './components/test/test/test';
-import { Credits } from './views/credits/credits';
 import { Constants } from './models/constants/constants';
-import { NavigatorComponent } from './components/pdf-components/navigator-component/navigator-component';
 import { ThemeService } from './services/shared/theme-service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, AlertComponent, NavigatorComponent],
+  imports: [RouterOutlet, AlertComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

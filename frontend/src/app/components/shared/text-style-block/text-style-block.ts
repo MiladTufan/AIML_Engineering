@@ -9,8 +9,8 @@ import { DropDownMenuComponent } from '../drop-down-menu-component/drop-down-men
 import { CommonModule } from '@angular/common';
 import { SlideInOutToolbarExtension } from '../../../animations/animations';
 import { TextEditService } from '../../../services/box-services/text-edit-service';
-import { PDFViewerService } from '../../../services/pdf-services/pdfviewer-service';
 import { ThemeService } from '../../../services/shared/theme-service';
+import { PdfViewerHelperService } from '../../../services/pdf-services/pdf-viewer-helper-service';
 
 @Component({
   selector: 'app-text-style-block',
@@ -49,8 +49,8 @@ export class TextStyleBlock {
 
   constructor(
     public textEditService: TextEditService,
-    public pdfViewerService: PDFViewerService,
     public themeService: ThemeService,
+    private pdfViewerHelperService: PdfViewerHelperService,
   ) {}
 
   colors: string[] = [
@@ -185,7 +185,7 @@ export class TextStyleBlock {
       this.currentFontSize = fontSize;
       if (toggleDropDown) this.isSizeDropDownOpen = !this.isSizeDropDownOpen;
       this.box.StyleState.textFontSize =
-        fontSizeNumeric * this.pdfViewerService.currentScale;
+        fontSizeNumeric * this.pdfViewerHelperService.currentScale;
 
       this.box.StyleState.textBaseFontSize = fontSizeNumeric;
       this.styleChanged.emit();

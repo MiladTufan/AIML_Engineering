@@ -65,7 +65,7 @@
 
 .translucentStyle {
   @apply backdrop-blur-lg shadow-lg dark:shadow-xl border 
-   border-gray-300/40 dark:border-1 dark:border-gray-900    dark:bg-[var(--main_dark_color)] dark:text-[var(--main_dark_text_color)];
+   border-gray-300/40 dark:border-1 dark:border-gray-900 dark:bg-[var(--main_dark_color)] dark:text-[var(--main_dark_text_color)];
 }
 
 .pageInfoStyle {
@@ -82,7 +82,7 @@
 }
 
 .toolbarBtnStyle {
-  @apply flex items-center rounded-md text-sm font-medium  
+  @apply flex items-center rounded-md text-sm font-medium
        text-gray-800 dark:text-white backdrop-blur-sm transition duration-200 ease-in-out cursor-pointer font-standard;
 }
 

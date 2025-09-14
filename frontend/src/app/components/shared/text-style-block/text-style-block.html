@@ -1,5 +1,5 @@
 <!-- prettier-ignore -->
-<div class="p-4 translucentStyle flex-col rounded-xl  z-100 select-none both overflow-visible absolute"
+<div class="p-4 translucentStyle flex-col rounded-xl z-100 select-none both overflow-visible absolute"
     [style.transform]="'scale(' + 1 + ')'"
     [@genieGrow]="this.box.StyleState.isCollapsed ? 'hidden' : 'visible'"
     [style.left.px]="translateX"
@@ -21,6 +21,7 @@
              class="w-5 ml-7 textStyleBlockItem" (click)="textAlignLeft($event)"/>
     </div>
 
+    
     <div class="flex mt-2" #textFormatSection>
         <img [src]="themeService.isDarkMode() ? themeService.assetConstants.TEXT_FORMAT_BOLD_ICON_DARK_MODE : themeService.assetConstants.TEXT_FORMAT_BOLD_ICON" class="w-3.5 textStyleBlockItem"
              (click)="textFormatBold()"

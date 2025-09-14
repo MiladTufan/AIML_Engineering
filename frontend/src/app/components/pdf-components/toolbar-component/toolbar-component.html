@@ -1,9 +1,9 @@
 <div
-  class="w-[90%] max-w-[1600px] h-14 flex items-center justify-start text-center absolute top-[2%] left-1/2 transform -translate-x-1/2 z-50 rounded-lg translucentStyle"
+  class="w-[90%] max-w-[1400px] ml-25 h-14 flex items-center justify-start text-center absolute top-[2%] left-1/2 transform -translate-x-1/2 z-200 rounded-lg translucentStyle"
 >
   <!-- Insert TextBoxCreate Button -->
   <button
-    class="toolbarBtnStyle ml-1 p-2 rounded-t-sm rounded-r-sm rounded-b-md rounded-l-lg"
+    class="toolbarBtnStyle ml-1 p-2 rounded-t-sm rounded-r-sm rounded-b-md rounded-l-lg dark:hover:bg-[var(--main_dark_hover_color)]"
     #TextButtonContainer
     title="Enter Text"
     (click)="OnTextBtnClicked($event)"
@@ -29,7 +29,7 @@
 
   <!-- Insert Img Button -->
   <button
-    class="toolbarBtnStyle p-3"
+    class="toolbarBtnStyle p-3 dark:hover:bg-[var(--main_dark_hover_color)]"
     title="Paste Image"
     (click)="OnInsertImageBtnClicked($event)"
   >
@@ -53,6 +53,7 @@
       type="text"
       [(ngModel)]="currentPage"
       (ngModelChange)="onPageChange($event)"
+      (keydown.enter)="OnEnter(currentPage)"
       class="w-6 outline-none hover:border hover:border-gray-400 hover:rounded text-center"
     />/ {{ this.pdfViewerService.totalPages }}
   </span>

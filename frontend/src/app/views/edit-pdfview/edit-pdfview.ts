@@ -20,11 +20,13 @@ import { PdfViewerComponent } from '../../components/pdf-components/pdf-viewer-c
 import { PDFViewerService } from '../../services/pdf-services/pdfviewer-service';
 import { PDFFileService } from '../../services/pdf-services/pdffile-service';
 import { BoxCreationService } from '../../services/box-services/box-creation-service';
+import { NavigatorComponent } from '../../components/pdf-components/navigator-component/navigator-component';
+import { PdfViewerHelperService } from '../../services/pdf-services/pdf-viewer-helper-service';
 
 @Component({
   selector: 'app-edit-pdfview',
   standalone: true,
-  imports: [PdfViewerComponent, ToolbarComponent],
+  imports: [PdfViewerComponent, ToolbarComponent, NavigatorComponent],
   templateUrl: './edit-pdfview.html',
   styleUrl: './edit-pdfview.css',
 })
@@ -46,8 +48,10 @@ export class EditPDFView {
   @ViewChild(ToolbarComponent) toolbar!: ToolbarComponent;
 
   private pdfViewService: PDFViewerService = inject(PDFViewerService);
+  private pdfViewerHelperService: PdfViewerHelperService = inject(
+    PdfViewerHelperService,
+  );
   private pdfFileService: PDFFileService = inject(PDFFileService);
-  private textEditService: TextEditService = inject(TextEditService);
   private imgBoxService: ImgBoxService = inject(ImgBoxService);
   private boxCreationService: BoxCreationService = inject(BoxCreationService);
 
@@ -112,9 +116,9 @@ export class EditPDFView {
 
       if (imgFile) {
         const pageNumber = parseInt(containerElement.id?.split('-')[1]);
-        const page = this.pdfViewService.getPageWithNumber(pageNumber);
+        const page = this.pdfViewerHelperService.getPageWithNumber(pageNumber);
         const entityParentContainer = page?.htmlContainer?.querySelector(
-          Constants.OVERLAY_TEXT
+          Constants.OVERLAY_TEXT,
         );
         const entityParentRect = (
           entityParentContainer as HTMLElement
@@ -127,18 +131,18 @@ export class EditPDFView {
             pageNumber,
             this.mouseX,
             this.mouseY,
-            this.pdfViewService.currentScale,
+            this.pdfViewerHelperService.currentScale,
             entityParentRect,
             dim.width,
             dim.height,
-            false
+            false,
           );
 
           const ret = this.boxCreationService.createImgBox(
             blockObj,
             blockObj,
             pageNumber,
-            URL.createObjectURL(imgFile)
+            URL.createObjectURL(imgFile),
           );
 
           // const ret = this.imgBoxService.placeImgBoxOntoCanvas(pageNumber, imgBox)
@@ -150,7 +154,7 @@ export class EditPDFView {
 
       console.error('Invalid Image file');
       throw new AbortException(
-        'Invalid Image File in Edit-pdfview createImageBox.'
+        'Invalid Image File in Edit-pdfview createImageBox.',
       );
     }
   }
@@ -202,9 +206,9 @@ export class EditPDFView {
       this.canCreateTextbox = false;
       const containerElement = event.target as HTMLElement;
       const pageNumber = parseInt(containerElement.id?.split('-')[1]);
-      const page = this.pdfViewService.getPageWithNumber(pageNumber);
+      const page = this.pdfViewerHelperService.getPageWithNumber(pageNumber);
       const entityParentContainer = page?.htmlContainer?.querySelector(
-        Constants.OVERLAY_TEXT
+        Constants.OVERLAY_TEXT,
       );
       const entityParentRect = (
         entityParentContainer as HTMLElement
@@ -214,8 +218,8 @@ export class EditPDFView {
         pageNumber,
         this.mouseX,
         this.mouseY,
-        this.pdfViewService.currentScale,
-        entityParentRect
+        this.pdfViewerHelperService.currentScale,
+        entityParentRect,
       );
 
       this.boxCreationService.createTextBox(blockObj, blockObj, pageNumber);

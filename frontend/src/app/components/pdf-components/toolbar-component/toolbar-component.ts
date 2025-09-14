@@ -15,6 +15,7 @@ import { TextStyleBlock } from '../../shared/text-style-block/text-style-block';
 import { GlobalEdit, MiniPage } from '../../../models/globalEdit';
 import { PDFViewerService } from '../../../services/pdf-services/pdfviewer-service';
 import { ThemeService } from '../../../services/shared/theme-service';
+import { PdfViewerHelperService } from '../../../services/pdf-services/pdf-viewer-helper-service';
 
 @Component({
   selector: 'app-toolbar-component',
@@ -41,6 +42,7 @@ export class ToolbarComponent {
     public themeService: ThemeService,
     public pdfViewerService: PDFViewerService,
     private downloadService: DownloadService,
+    private pdfViewerHelperService: PdfViewerHelperService,
   ) {}
 
   ngOnInit() {
@@ -65,8 +67,12 @@ export class ToolbarComponent {
   // use download Service for this
   public OnDownloadBtnClicked(event: Event) {
     const edits = new GlobalEdit([], [1, 2, 3]);
-    for (let i = 1; i <= this.pdfViewerService.allRenderedPages.length; i++) {
-      const pageOld = this.pdfViewerService.getPageWithNumber(i);
+    for (
+      let i = 1;
+      i <= this.pdfViewerHelperService.allRenderedPages.length;
+      i++
+    ) {
+      const pageOld = this.pdfViewerHelperService.getPageWithNumber(i);
       const miniPage: MiniPage = new MiniPage(i, pageOld!.blockObjects);
       edits.pageEdits.push(miniPage);
     }
@@ -97,7 +103,14 @@ export class ToolbarComponent {
 
   public onPageChange(pageNum: number) {
     this.pdfViewerService.setCurrentPage(this.currentPage);
-    if (this.currentPage != 0 && this.currentPage != null)
+  }
+
+  public OnEnter(pageNum: number) {
+    if (
+      this.currentPage != 0 &&
+      this.currentPage != null &&
+      pageNum <= this.pdfViewerService.totalPages
+    )
       this.pdfViewerService.scrollToPage(pageNum);
   }
 }

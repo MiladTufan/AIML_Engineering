@@ -16,20 +16,22 @@ import { EntityManagerService } from './entity-manager-service';
 import { EventBusService } from '../communication/event-bus-service';
 import { DynamicContainerRegistry } from '../shared/dynamic-container-registry';
 import { ImgBox } from '../../models/box-models/ImgBox';
-import { TextStyle } from '../../models/box-models/TextStyle';
+import { PdfViewerHelperService } from '../pdf-services/pdf-viewer-helper-service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class BoxCreationService {
-  private pdfViewerService: PDFViewerService = inject(PDFViewerService);
+  private pdfViewerHelperService: PdfViewerHelperService = inject(
+    PdfViewerHelperService,
+  );
   private textEditService: TextEditService = inject(TextEditService);
   private imgBoxService: ImgBoxService = inject(ImgBoxService);
   private entityManagerService: EntityManagerService =
     inject(EntityManagerService);
   private eventBusService: EventBusService = inject(EventBusService);
   private dynamicContainerRegistry: DynamicContainerRegistry = inject(
-    DynamicContainerRegistry
+    DynamicContainerRegistry,
   );
 
   constructor() {
@@ -43,7 +45,7 @@ export class BoxCreationService {
               data.obj,
               data.parentContainer,
               data.pageNumber,
-              data.page
+              data.page,
             );
           });
       });
@@ -62,12 +64,12 @@ export class BoxCreationService {
     obj: BlockObject,
     parentContainer: HTMLElement,
     adjustedPageNum: number,
-    page: Page
+    page: Page,
   ) {
     const blockObj = this.createBlockObject(
       adjustedPageNum,
       obj.BoxDims,
-      false
+      false,
     );
     if (obj instanceof TextBox) {
       const textbox = obj as TextBox;
@@ -104,19 +106,19 @@ export class BoxCreationService {
   private placeTextBoxOntoCanvas(
     pageNumber: number,
     textBox: TextBox,
-    rerender: Boolean = false
+    rerender: Boolean = false,
   ) {
     let commonBoxContainer =
       this.dynamicContainerRegistry.dynamicBoxContainer!.createComponent(
-        CommonBoxObject
+        CommonBoxObject,
       );
     let textBoxContainer =
       commonBoxContainer.instance.childContainer.createComponent(
-        CustomTextEditBox
+        CustomTextEditBox,
       );
     let textStyleBlock =
       commonBoxContainer.instance.childContainerAddOn.createComponent(
-        TextStyleBlock
+        TextStyleBlock,
       );
 
     textBoxContainer.location.nativeElement.addEventListener(
@@ -124,7 +126,7 @@ export class BoxCreationService {
       (event: MouseEvent) => {
         event.stopPropagation();
         console.log('Inner text clicked → Start editing');
-      }
+      },
     );
 
     commonBoxContainer.instance.childRefAddOn = textStyleBlock;
@@ -135,13 +137,13 @@ export class BoxCreationService {
     textStyleBlock.instance.box = textBox;
 
     textStyleBlock.instance.styleChanged.subscribe((event: any) =>
-      textBoxContainer.instance.updateTextStyle()
+      textBoxContainer.instance.updateTextStyle(),
     );
     textBoxContainer.instance.textBoxEditClicked.subscribe((event: any) =>
-      this.entityManagerService.onTextBoxEditClick(textBox, event)
+      this.entityManagerService.onTextBoxEditClick(textBox, event),
     );
     commonBoxContainer.instance.positionChanged.subscribe((event: any) =>
-      this.entityManagerService.executeMove(textBox, event, pageNumber)
+      this.entityManagerService.executeMove(textBox, event, pageNumber),
     );
 
     textBoxContainer.instance.box = textBox;
@@ -149,9 +151,9 @@ export class BoxCreationService {
 
     // on rerender the Page has still old overlay img layer [ONLY after render the correct overlay img layer is set!!]
     if (!rerender) {
-      const page = this.pdfViewerService.getPageWithNumber(pageNumber);
+      const page = this.pdfViewerHelperService.getPageWithNumber(pageNumber);
       const textLayer = page?.htmlContainer?.querySelector(
-        Constants.OVERLAY_TEXT
+        Constants.OVERLAY_TEXT,
       );
       textLayer?.appendChild(commonBoxContainer.location.nativeElement);
     }
@@ -177,7 +179,7 @@ export class BoxCreationService {
     scale: number,
     entityParentRect: DOMRect,
     width: number = 110,
-    height: number = 30
+    height: number = 30,
   ): BoxDimensions {
     const top = mouseY - entityParentRect.top;
     const left = mouseX - entityParentRect.left;
@@ -212,10 +214,10 @@ export class BoxCreationService {
     entityParentRect: DOMRect,
     width: number = 110,
     height: number = 30,
-    rerender: Boolean = false
+    rerender: Boolean = false,
   ) {
     const uniqueId = this.entityManagerService.getUniqueId(
-      this.entityManagerService.blockObjects
+      this.entityManagerService.blockObjects,
     );
     const boxDims = this.calculateInitialBoxDims(
       mouseX,
@@ -223,7 +225,7 @@ export class BoxCreationService {
       scale,
       entityParentRect,
       width,
-      height
+      height,
     );
 
     const blockObj = new BlockObject(uniqueId, pageNumber, boxDims);
@@ -244,10 +246,10 @@ export class BoxCreationService {
   public createBlockObject(
     pageNumber: number,
     boxDims: BoxDimensions,
-    rerender: Boolean = false
+    rerender: Boolean = false,
   ) {
     const uniqueId = this.entityManagerService.getUniqueId(
-      this.entityManagerService.blockObjects
+      this.entityManagerService.blockObjects,
     );
     const blockObj = new BlockObject(uniqueId, pageNumber, boxDims);
     //this.addOrReplaceBlockObject(blockObj, oldId, rerender)
@@ -266,11 +268,12 @@ export class BoxCreationService {
   public createTextBox(
     blockObj: BlockObject,
     oldBox: BlockObject,
-    pageNumber: number
+    pageNumber: number,
   ) {
     const textBox = this.textEditService.toTextBox(blockObj);
     textBox.StyleState.textFontSize =
-      textBox.StyleState.textBaseFontSize * this.pdfViewerService.currentScale;
+      textBox.StyleState.textBaseFontSize *
+      this.pdfViewerHelperService.currentScale;
 
     this.entityManagerService.addOrReplaceBlockObject(textBox, false, oldBox);
 
@@ -289,7 +292,7 @@ export class BoxCreationService {
     blockObj: BlockObject,
     oldBox: BlockObject,
     pageNumber: number,
-    src: string
+    src: string,
   ) {
     const imgBox = this.imgBoxService.toImgBox(blockObj);
     imgBox.src = src;
@@ -298,7 +301,7 @@ export class BoxCreationService {
 
     const ret = this.imgBoxService.placeImgBoxOntoCanvas(pageNumber, imgBox);
     ret.parent.instance.positionChanged.subscribe((event: any) =>
-      this.entityManagerService.executeMove(imgBox, event, pageNumber)
+      this.entityManagerService.executeMove(imgBox, event, pageNumber),
     );
 
     this.entityManagerService.setComprefSafely(ret.box.id, ret.parent);
