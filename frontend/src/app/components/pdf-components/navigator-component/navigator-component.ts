@@ -26,10 +26,7 @@ export class NavigatorComponent {
     this.pageNumberSub = this.pdfViewerService.currentPage$.subscribe((val) => {
       if (!this.pdfViewerService.jumpToPage) {
         this.pdfPreviewContainer.nativeElement.scrollTop =
-          this.pdfViewerService.calcTargetScrolltop(
-            this.pdfViewerHelperService.getUpdatedPageNumber(val),
-            true,
-          );
+          this.pdfViewerService.calcTargetScrolltop(val, true);
       }
     });
 

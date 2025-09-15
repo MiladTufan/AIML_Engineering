@@ -166,7 +166,14 @@ export class PdfViewerComponent {
   checkEntry(entries: any) {
     for (const entry of entries) {
       const id = entry.target.id;
-      const pageNumber = parseInt(id?.split('-')[1]);
+      let pageNumber = parseInt(id?.split('-')[1]);
+      const page = this.pdfViewerHelperService.getPageWithOriginalNumber(pageNumber)
+
+      if (page)
+      {
+        if (page.updatePageNum != pageNumber)
+          pageNumber = page.updatePageNum
+      }
 
       if (entry.isIntersecting) {
         this.pdfViewerService.addVisiblePages(pageNumber);

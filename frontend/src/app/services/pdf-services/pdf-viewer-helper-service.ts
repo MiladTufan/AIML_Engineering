@@ -22,23 +22,29 @@ export class PdfViewerHelperService {
     return page;
   }
 
-  getUpdatedPageNumber(pageNumber: number) {
+  /**
+   * Get a PDF page with a certain pageNumber.
+   * @param pageNumber => Page to get.
+   * @returns
+   */
+  getPageWithOriginalNumber(pageNumber: number) {
+    const page = this.allRenderedPages.find(
+      (p) => p.originalPageNum == pageNumber,
+    );
+    return page;
+  }
+
+  updatePageNumbersOnDelete(pageNumber: number) {
     const page = this.getPageWithNumber(pageNumber);
-    let updatedPageNumber = -1;
     if (page) {
       const currIdx = this.allRenderedPages.indexOf(page);
-      updatedPageNumber = pageNumber;
 
       //prettier-ignore
-      for (let i = currIdx; i >= 0; i--) {
-        if (this.allRenderedPages.at(i)?.isDeleted) 
-          updatedPageNumber--;
-        else 
-          break;
+      for (let i = currIdx; i < this.allRenderedPages.length; i++) {
+        this.allRenderedPages.at(i)!.updatePageNum--
+        this.allRenderedPages.at(i)!.htmlContainerPreview.instance.pageNumber = this.allRenderedPages.at(i)!.updatePageNum
       }
     }
-
-    return updatedPageNumber;
   }
 
   checkScaleValid(scale: number) {

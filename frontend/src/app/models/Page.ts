@@ -3,6 +3,7 @@ import { TextBox } from './box-models/TextBox';
 
 export class Page {
   private _pageNum: number = 0;
+  private _updatePageNum: number = 0;
   private _isDeleted: Boolean = false;
   private _viewport: any;
   private _blockObjects: BlockObject[] = [];
@@ -41,13 +42,25 @@ export class Page {
     this._translateY = translateY;
     this._translateY = translateY;
     this._blockObjects = blockObjects;
+    this._updatePageNum = pageNum;
   }
 
+  get originalPageNum(): number {
+    return this._pageNum;
+  }
   get pageNum(): number {
+    if (this._pageNum != this._updatePageNum) return this._updatePageNum;
     return this._pageNum;
   }
   set pageNum(value: number) {
     this._pageNum = value;
+  }
+
+  get updatePageNum(): number {
+    return this._updatePageNum;
+  }
+  set updatePageNum(value: number) {
+    this._updatePageNum = value;
   }
 
   get viewport(): any {

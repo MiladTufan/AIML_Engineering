@@ -73,7 +73,8 @@ export class PDFViewerService {
 
       // hide in the DOM
       page.htmlContainer.style.display = 'none';
-      page.htmlContainerPreview.style.display = 'none';
+      page.htmlContainerPreview.location.nativeElement.firstChild.style.display =
+        'none';
       page.isDeleted = true;
 
       // reduce total page numbers
@@ -81,10 +82,7 @@ export class PDFViewerService {
 
       // remove from visible Pages
       this.removeVisiblePages(pageNumber);
-
-      // remove from rendered pages
-      // const idx = this.pdfViewerHelperService.allRenderedPages.indexOf(page);
-      // this.pdfViewerHelperService.allRenderedPages.splice(idx, 1);
+      this.pdfViewerHelperService.updatePageNumbersOnDelete(page.pageNum);
     } else {
       console.warn('The Page to delete does not exist!');
     }
@@ -546,12 +544,12 @@ export class PDFViewerService {
       pageOverlay.instance.pageNumber = pageNumber;
 
       // previewContainer.appendChild(pageInfo!.location.nativeElement);
-      container.nativeElement.appendChild(firstChild);
+      container.nativeElement.appendChild(pageOverlay.location.nativeElement);
       await page.render(renderContext).promise;
 
       const payLoad = {
         pageNum: pageNumber,
-        preview: firstChild,
+        preview: pageOverlay,
       };
       this.htmlPreviewPages.push(payLoad);
     }
@@ -616,8 +614,7 @@ export class PDFViewerService {
         await page.render(renderContext).promise;
 
         const ret = this.htmlPreviewPages.find((p) => p.pageNum === pageNumber);
-        let preview = null;
-        if (ret) preview = ret.preview;
+        let preview = ret ? ret.preview : null;
         //prettier-ignore
         const newPage = new Page(pageNumber, viewport, boxesForPage, [], viewport.height, viewport.width, 0,
           pageContainer, preview, 0, 0, scale,);
