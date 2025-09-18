@@ -10,17 +10,17 @@ export class AssetConstants {
 	public DOWNLOAD_ICON_LIGHT_MODE: string = '/assets/icons/downloadIcon.svg';
 	public DOWNLOAD_ICON_DARK_MODE: string = '/assets/icons/downloadIconWhite.svg';
 
-	public MOVE_PAGE_BASE_LIGHT_MODE: string = '/assets/icons/movePageIcon.svg';
-	public MOVE_PAGE_BASE_DARK_MODE: string = '/assets/icons/movePageIconDarkMode.svg';
-	public MOVE_PAGE_HOVER_ALL: string = '/assets/icons/movePageIconWhite.svg';
+	public MOVE_PAGE_BASE_LIGHT_MODE: string = '/assets/icons/pageInfo/movePageIcon.svg';
+	public MOVE_PAGE_BASE_DARK_MODE: string = '/assets/icons/pageInfo/movePageIconDarkMode.svg';
+	public MOVE_PAGE_HOVER_ALL: string = '/assets/icons/pageInfo/movePageIconWhite.svg';
 
-	public TRASHCAN_BASE_LIGHT_MODE: string = "/assets/icons/trashcan.svg";
-	public TRASHCAN_BASE_DARK_MODE: string = "/assets/icons/trashcanDarkMode.svg";
-	public TRASHCAN_HOVER_ALL: string = "/assets/icons/trashcanWhite.svg";
+	public TRASHCAN_BASE_LIGHT_MODE: string = "/assets/icons/pageInfo/trashcan.svg";
+	public TRASHCAN_BASE_DARK_MODE: string = "/assets/icons/pageInfo/trashcanDarkMode.svg";
+	public TRASHCAN_HOVER_ALL: string = "/assets/icons/pageInfo/trashcanWhite.svg";
 
-	public INFO_BASE_LIGHT_MODE: string = "/assets/icons/infoIcon.svg";
-	public INFO_BASE_DARK_MODE: string = "/assets/icons/infoIconDarkMode.svg";
-	public INFO_HOVER_ALL: string = "/assets/icons/infoIconWhite.svg";
+	public INFO_BASE_LIGHT_MODE: string = "/assets/icons/pageInfo/infoIcon.svg";
+	public INFO_BASE_DARK_MODE: string = "/assets/icons/pageInfo/infoIconDarkMode.svg";
+	public INFO_HOVER_ALL: string = "/assets/icons/pageInfo/infoIconWhite.svg";
 
 
 
@@ -51,4 +51,7 @@ export class AssetConstants {
 	
 	public TEXT_FORMAT_SUBSCRIPT_ICON: string = "assets/icons/TextBlockIcons/subscript.svg";
 	public TEXT_FORMAT_SUBSCRIPT_ICON_DARK_MODE: string = "assets/icons/TextBlockIcons/subscriptDarkMode.svg";
+
+	public CHECKBOX_CHECK_ICON: string = "assets/icons/tick.svg";
+	public CHECKBOX_CHECK_ICON_DARK_MODE: string = "assets/icons/tickDarkMode.svg";
 }

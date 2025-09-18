@@ -496,7 +496,12 @@ export class PDFViewerService {
     };
   }
 
-  async previewRender(pageNumber: number, scale: number, container: any) {
+  async previewRender(
+    pageNumber: number,
+    scale: number,
+    container: any,
+    organize: Boolean = false,
+  ) {
     let page: any;
     let viewport: any;
 
@@ -530,11 +535,8 @@ export class PDFViewerService {
         intent: 'print',
       };
 
-      previewContainer.addEventListener('click', () =>
-        this.scrollToPage(pageNumber),
-      );
-
       previewContainer.classList.add('cursor-pointer');
+      previewContainer.classList.add('hover:border-blue-500');
       previewContainer.appendChild(canvas);
 
       const firstChild = pageOverlay.location.nativeElement.firstChild;
@@ -542,6 +544,14 @@ export class PDFViewerService {
       firstChild.insertBefore(previewContainer, firstChildOfFirst);
 
       pageOverlay.instance.pageNumber = pageNumber;
+      pageOverlay.instance.IsOrganizePreview = organize;
+
+      previewContainer.addEventListener('click', () => {
+        if (!this.pdfViewerHelperService.organizerActive) {
+          pageOverlay.instance.isActivePage = true;
+          this.scrollToPage(pageNumber);
+        }
+      });
 
       // previewContainer.appendChild(pageInfo!.location.nativeElement);
       container.nativeElement.appendChild(pageOverlay.location.nativeElement);
@@ -567,9 +577,10 @@ export class PDFViewerService {
     preview: Boolean = false,
     scale: number,
     container: any,
+    organize: Boolean = false,
   ) {
     if (preview) {
-      this.previewRender(pageNumber, scale, container);
+      this.previewRender(pageNumber, scale, container, organize);
     } else {
       let page: any;
       let viewport: any;

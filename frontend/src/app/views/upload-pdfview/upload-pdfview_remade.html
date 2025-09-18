@@ -1,109 +1,183 @@
-<img src="/assets/icons/uploadAreaTitle.svg" width="400px" class="mx-auto w-48 lg:w-80 mt-1 sm:mt-2 mb-1 sm:mb-2" />
+<img
+  src="/assets/icons/uploadArea/uploadAreaTitle.svg"
+  width="400px"
+  class="mx-auto w-48 lg:w-80 mt-1 sm:mt-2 mb-1 sm:mb-2"
+/>
 
 <div class="scroller overflow-y-auto max-h-[95vh] lg:max-h-[95vh]">
-    <div class="w-[95%] flex justify-center items-center relative  
-                bg-[var(--upload_bg_color)] rounded-lg  mx-auto mt-4 
-                aspect-square sm:aspect-auto">
-
-        <input #folderInput type="file" accept="application/pdf" style="display: none"
-            (change)="onUploadBtnClicked($event)" />
-
-        <div class="dropAreaContainer w-full flex-col flex justify-center items-center aspect-square sm:aspect-auto
-                relative sm:border-2 border-1 border-dashed border-white rounded sm:m-4 m-2"
-            (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)"
-            (dragend)="onDragEnd($event)">
-
-            <div *ngIf="showGlassySvg" id="overlay" class="absolute top-0 left-0 right-0 bottom-0 bg-opacity-20 flex
-                       backdrop-blur-xl rounded-lg pointer-events-none justify-center items-center">
-
-                <h1 class="z-20 bg-gradient-to-r from-[#3B82F6] to-[#FF4D4D]
-                            bg-clip-text text-transparent font-extrabold text-8xl
-                            drop-shadow-[0_2px_3px_rgba(0,0,0,0.6)]
-                            leading-normal font-inter">Drag it. Drop it. Love it.</h1>
-
-            </div>
-
-
-            <img src="assets/icons/pdf_upload_img.svg" />
-
-            <button (click)="folderInput.click()" class="upload_btn justify-center items-center">
-                <div class="lg:w-128 w-48 h-14 md:w-64 md:h-17 sm:h-14 lg:h-22 bg-[#FF0000] flex items-center 
-                                justify-center cursor-pointer rounded-md md:rounded-xl
-                            hover:bg-[#CC0000] transition-colors duration-200
-                                sm:max-w-[24rem] md:max-w-[33rem]">
-                    <span class="text-white font-bold text-lg md:text-2xl lg:text-4xl font-inter m-4">Upload PDF
-                        File</span>
-                </div>
-            </button>
-
-            <p class="text-xs md:text-lg text-white font-inter mt-2 sm:mb-14">or drop PDF here</p>
-        </div>
-    </div>
-
+  <div
+    class="w-[95%] flex justify-center items-center relative bg-[var(--upload_bg_color)] rounded-lg mx-auto mt-4 aspect-square sm:aspect-auto"
+  >
+    <input
+      #folderInput
+      type="file"
+      accept="application/pdf"
+      style="display: none"
+      (change)="onUploadBtnClicked($event)"
+    />
 
     <div
-        style="font-family: Arial, sans-serif; max-width: 700px; margin: 20px auto; padding: 10px; line-height: 1.6; color: #222;">
-    <p class="w-full max-w-[90%] sm:max-w-full mx-auto mt-3 sm:mt-5 rounded bg-gray-100 font-standard">⚠️
-        <strong>Privacy
-            First:</strong> We never store your files or data unless you explicitly choose to save them. All processing
-        happens securely in your browser or is deleted immediately after use.
+      class="dropAreaContainer w-full flex-col flex justify-center items-center aspect-square sm:aspect-auto relative sm:border-2 border-1 border-dashed border-white rounded sm:m-4 m-2"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)"
+      (dragend)="onDragEnd($event)"
+    >
+      <div
+        *ngIf="showGlassySvg"
+        id="overlay"
+        class="absolute top-0 left-0 right-0 bottom-0 bg-opacity-20 flex backdrop-blur-xl rounded-lg pointer-events-none justify-center items-center"
+      >
+        <h1
+          class="z-20 bg-gradient-to-r from-[#3B82F6] to-[#FF4D4D] bg-clip-text text-transparent font-extrabold text-8xl drop-shadow-[0_2px_3px_rgba(0,0,0,0.6)] leading-normal font-inter"
+        >
+          Drag it. Drop it. Love it.
+        </h1>
+      </div>
+
+      <img src="assets/icons/uploadArea/pdf_upload_img.svg" />
+
+      <button
+        (click)="folderInput.click()"
+        class="upload_btn justify-center items-center"
+      >
+        <div
+          class="lg:w-128 w-48 h-14 md:w-64 md:h-17 sm:h-14 lg:h-22 bg-[#FF0000] flex items-center justify-center cursor-pointer rounded-md md:rounded-xl hover:bg-[#CC0000] transition-colors duration-200 sm:max-w-[24rem] md:max-w-[33rem]"
+        >
+          <span
+            class="text-white font-bold text-lg md:text-2xl lg:text-4xl font-inter m-4"
+            >Upload PDF File</span
+          >
+        </div>
+      </button>
+
+      <p class="text-xs md:text-lg text-white font-inter mt-2 sm:mb-14">
+        or drop PDF here
+      </p>
+    </div>
+  </div>
+
+  <div
+    style="
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 20px auto;
+      padding: 10px;
+      line-height: 1.6;
+      color: #222;
+    "
+  >
+    <p
+      class="w-full max-w-[90%] sm:max-w-full mx-auto mt-3 sm:mt-5 rounded bg-gray-100 font-standard"
+    >
+      ⚠️ <strong>Privacy First:</strong> We never store your files or data
+      unless you explicitly choose to save them. All processing happens securely
+      in your browser or is deleted immediately after use.
     </p>
 
-    <ul class="w-full max-w-[90%] sm:max-w-full mx-auto mt-3 sm:mt-5 rounded bg-gray-100 font-standard">
-        <li>✅ <strong>No registration</strong> – Start editing instantly, no sign-up needed</li>
-        <li>✅ <strong>Completely free</strong> – For a limited time only. Don’t miss out!</li>
-        <li>✅ <strong>No hassle</strong> – Just drag, drop, and edit your PDFs with ease</li>
-
+    <ul
+      class="w-full max-w-[90%] sm:max-w-full mx-auto mt-3 sm:mt-5 rounded bg-gray-100 font-standard"
+    >
+      <li>
+        ✅ <strong>No registration</strong> – Start editing instantly, no
+        sign-up needed
+      </li>
+      <li>
+        ✅ <strong>Completely free</strong> – For a limited time only. Don’t
+        miss out!
+      </li>
+      <li>
+        ✅ <strong>No hassle</strong> – Just drag, drop, and edit your PDFs with
+        ease
+      </li>
     </ul>
 
-    <h1 style="font-size: 2rem; margin-bottom: 0.5rem; color: #1a202c;">
-        Editing PDFs Online: Powerful Features of Modern PDF Editors
+    <h1 style="font-size: 2rem; margin-bottom: 0.5rem; color: #1a202c">
+      Editing PDFs Online: Powerful Features of Modern PDF Editors
     </h1>
 
-    <p style="font-size: 1rem; margin-bottom: 1rem;">
-        In today’s digital world, PDFs remain one of the most popular document formats for sharing and storing
-        information. However, editing PDFs traditionally required specialized software installed on a computer.
-        Thanks to online PDF editors, modifying PDF files has become easier, faster, and accessible from anywhere,
-        without the need to download any software.
+    <p style="font-size: 1rem; margin-bottom: 1rem">
+      In today’s digital world, PDFs remain one of the most popular document
+      formats for sharing and storing information. However, editing PDFs
+      traditionally required specialized software installed on a computer.
+      Thanks to online PDF editors, modifying PDF files has become easier,
+      faster, and accessible from anywhere, without the need to download any
+      software.
     </p>
 
-    <h2 style="font-size: 1.5rem; margin-bottom: 0.75rem; color: #2d3748;">
-        Key Features of Online PDF Editors
+    <h2 style="font-size: 1.5rem; margin-bottom: 0.75rem; color: #2d3748">
+      Key Features of Online PDF Editors
     </h2>
 
-    <ul style="font-size: 1rem; margin-left: 20px; margin-bottom: 1.5rem; color: #4a5568;">
-        <li><strong>Text Editing:</strong> Modify existing text within the PDF or add new text blocks. Online
-            editors let you change fonts, sizes, colors, and formatting to make your document look exactly how you
-            want.</li>
-        <li><strong>Annotate and Comment:</strong> Highlight important parts, add sticky notes, draw shapes, or
-            insert comments directly onto the PDF to collaborate or review documents efficiently.</li>
-        <li><strong>Add and Remove Images:</strong> Easily insert images such as logos, signatures, or photos into
-            your PDFs. You can also resize, move, or delete existing images without hassle.</li>
-        <li><strong>Page Management:</strong> Rearrange pages by dragging and dropping, insert new blank pages,
-            rotate pages, or delete unwanted ones — all within the browser.</li>
-        <li><strong>Fill Forms and Sign:</strong> Complete interactive PDF forms by typing in fields, ticking
-            checkboxes, and adding digital signatures. Some editors even support e-signatures to make document
-            approval workflows seamless.</li>
-        <li><strong>Convert Between Formats:</strong> Many online editors offer PDF conversion features to transform
-            PDFs into editable Word, Excel, or PowerPoint files and vice versa, enabling further editing or reuse of
-            content.</li>
-        <li><strong>Merge and Split PDFs:</strong> Combine multiple PDF documents into one file or extract specific
-            pages to create smaller, focused documents without installing extra tools.</li>
-        <li><strong>Security and Encryption:</strong> Add password protection to restrict access or set permissions
-            that prevent others from copying, printing, or editing your PDFs. Some editors also allow redacting
-            sensitive information permanently.</li>
-        <li><strong>Optical Character Recognition (OCR):</strong> Convert scanned or image-based PDFs into
-            searchable and editable text, making it easier to work with digitized documents.</li>
-        <li><strong>Cloud Integration:</strong> Save and open your PDFs directly from popular cloud storage services
-            like Google Drive, Dropbox, or OneDrive, allowing easy access and sharing across devices.</li>
+    <ul
+      style="
+        font-size: 1rem;
+        margin-left: 20px;
+        margin-bottom: 1.5rem;
+        color: #4a5568;
+      "
+    >
+      <li>
+        <strong>Text Editing:</strong> Modify existing text within the PDF or
+        add new text blocks. Online editors let you change fonts, sizes, colors,
+        and formatting to make your document look exactly how you want.
+      </li>
+      <li>
+        <strong>Annotate and Comment:</strong> Highlight important parts, add
+        sticky notes, draw shapes, or insert comments directly onto the PDF to
+        collaborate or review documents efficiently.
+      </li>
+      <li>
+        <strong>Add and Remove Images:</strong> Easily insert images such as
+        logos, signatures, or photos into your PDFs. You can also resize, move,
+        or delete existing images without hassle.
+      </li>
+      <li>
+        <strong>Page Management:</strong> Rearrange pages by dragging and
+        dropping, insert new blank pages, rotate pages, or delete unwanted ones
+        — all within the browser.
+      </li>
+      <li>
+        <strong>Fill Forms and Sign:</strong> Complete interactive PDF forms by
+        typing in fields, ticking checkboxes, and adding digital signatures.
+        Some editors even support e-signatures to make document approval
+        workflows seamless.
+      </li>
+      <li>
+        <strong>Convert Between Formats:</strong> Many online editors offer PDF
+        conversion features to transform PDFs into editable Word, Excel, or
+        PowerPoint files and vice versa, enabling further editing or reuse of
+        content.
+      </li>
+      <li>
+        <strong>Merge and Split PDFs:</strong> Combine multiple PDF documents
+        into one file or extract specific pages to create smaller, focused
+        documents without installing extra tools.
+      </li>
+      <li>
+        <strong>Security and Encryption:</strong> Add password protection to
+        restrict access or set permissions that prevent others from copying,
+        printing, or editing your PDFs. Some editors also allow redacting
+        sensitive information permanently.
+      </li>
+      <li>
+        <strong>Optical Character Recognition (OCR):</strong> Convert scanned or
+        image-based PDFs into searchable and editable text, making it easier to
+        work with digitized documents.
+      </li>
+      <li>
+        <strong>Cloud Integration:</strong> Save and open your PDFs directly
+        from popular cloud storage services like Google Drive, Dropbox, or
+        OneDrive, allowing easy access and sharing across devices.
+      </li>
     </ul>
 
-    <p style="font-size: 1rem; margin-bottom: 1rem;">
-        Online PDF editors bring incredible convenience by combining these features into intuitive interfaces
-        accessible via any web browser. Whether you need quick edits, collaboration tools, or advanced PDF
-        manipulation, these tools empower users to handle PDFs efficiently — no matter where they are.
+    <p style="font-size: 1rem; margin-bottom: 1rem">
+      Online PDF editors bring incredible convenience by combining these
+      features into intuitive interfaces accessible via any web browser. Whether
+      you need quick edits, collaboration tools, or advanced PDF manipulation,
+      these tools empower users to handle PDFs efficiently — no matter where
+      they are.
     </p>
-</div>
-
-
+  </div>
 </div>

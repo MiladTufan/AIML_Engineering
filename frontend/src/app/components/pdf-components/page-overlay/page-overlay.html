@@ -1,20 +1,26 @@
 <div
-  class="PageOverlayContainer flex flex-col border-blue-500 w-fit h-fit mt-3 p-1"
+  class="PageOverlayContainer flex flex-col border-dashed border-blue-500 w-fit h-fit mt-3 p-1 hover:border-1 hover:shadow-lg"
   [ngClass]="{
-    'border-1 border-dashed': isActivePage,
+    'border-1': isActivePage || isChecked || isPageDeleted,
+    ' border-red-500': isPageDeleted,
   }"
+  (mouseenter)="isActivePage = true"
+  (mouseleave)="isActivePage = false"
 >
   <div
     class="PageOverlayNumber absolute w-7 h-7 bg-blue-500 justify-center items-center flex"
   >
     <span>{{ pageNumber }}</span>
   </div>
-  @if (isActivePage) {
-    <app-page-info-component
-      class="PageOverlayInfo flex justify-center -mt-12"
-      [pageNumber]="pageNumber"
-      [width]="36"
-      [borderRadius]="3"
-    ></app-page-info-component>
-  }
+
+  <app-page-info-component
+    [hidden]="!isActivePage && !isChecked && !isPageDeleted"
+    (checkBoxChanged)="toggleActivePage($event)"
+    (pageDeleted)="handlePageDeleted($event)"
+    class="PageOverlayInfo flex justify-center -mt-12"
+    [pageNumber]="pageNumber"
+    [width]="36"
+    [borderRadius]="3"
+    [IsOrganizePreview]="IsOrganizePreview"
+  ></app-page-info-component>
 </div>

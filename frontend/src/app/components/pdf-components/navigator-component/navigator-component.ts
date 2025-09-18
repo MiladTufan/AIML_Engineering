@@ -24,7 +24,10 @@ export class NavigatorComponent {
 
   ngAfterViewInit() {
     this.pageNumberSub = this.pdfViewerService.currentPage$.subscribe((val) => {
-      if (!this.pdfViewerService.jumpToPage) {
+      if (
+        !this.pdfViewerService.jumpToPage &&
+        !this.pdfViewerHelperService.organizerActive
+      ) {
         this.pdfPreviewContainer.nativeElement.scrollTop =
           this.pdfViewerService.calcTargetScrolltop(val, true);
       }

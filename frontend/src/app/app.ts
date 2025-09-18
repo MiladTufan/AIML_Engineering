@@ -1,22 +1,30 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ViewChild, ViewContainerRef } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { AlertComponent } from './shared/alert/alert';
 import { SessionService } from './services/communication/session-service';
 import { Constants } from './models/constants/constants';
 import { ThemeService } from './services/shared/theme-service';
 import { Header } from './components/layout/header/header';
+import { DynamicContainerRegistry } from './services/shared/dynamic-container-registry';
+import { OrganizeView } from './views/organize-view/organize-view';
+import { Checkbox } from './components/shared/checkbox/checkbox';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, AlertComponent, Header],
+  imports: [RouterOutlet, AlertComponent, Header, OrganizeView, Checkbox],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
 export class App {
   protected readonly title = signal('frontend');
+
+  @ViewChild('dynamicAppContainer', { read: ViewContainerRef })
+  dynamicAppContainer!: ViewContainerRef;
+
   constructor(
     private sessionService: SessionService,
+    private dynamicContainerRegistry: DynamicContainerRegistry,
     public themeService: ThemeService,
     private router: Router,
   ) {}
@@ -27,6 +35,12 @@ export class App {
 
   toggleTheme(): void {
     this.themeService.toggleTheme();
+  }
+
+  ngAfterViewInit() {
+    if (this.dynamicAppContainer)
+      this.dynamicContainerRegistry.dynamicAppContainer =
+        this.dynamicAppContainer;
   }
 
   ngOnInit() {

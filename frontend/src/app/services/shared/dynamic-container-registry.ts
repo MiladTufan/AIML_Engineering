@@ -1,8 +1,9 @@
 import { Injectable, ViewContainerRef } from '@angular/core';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DynamicContainerRegistry {
   dynamicBoxContainer?: ViewContainerRef;
+  dynamicAppContainer?: ViewContainerRef;
 }

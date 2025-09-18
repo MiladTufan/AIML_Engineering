@@ -60,32 +60,38 @@
     />
   </button>
 
-  <button
-    [style.width.px]="width"
-    [style.height.px]="width"
-    class="hover:bg-blue-500/100 pageInfoStyle flex items-center text-center justify-center"
-    [style.border-bottom-left-radius.px]="borderRadius"
-    [style.border-bottom-right-radius.px]="borderRadius"
-    (click)="ShowInfo($event)"
-  >
-    @if (!themeService.isDarkMode()) {
-      <img
-        [src]="themeService.assetConstants.INFO_BASE_LIGHT_MODE"
-        alt="Delete Page Icon"
-        class="w-[60%] block h-full hover:opacity-0"
-      />
-    } @else {
-      <img
-        [src]="themeService.assetConstants.INFO_BASE_DARK_MODE"
-        alt="Delete Page Icon"
-        class="w-[60%] block h-full hover:opacity-0"
-      />
-    }
+  @if (!IsOrganizePreview) {
+    <button
+      [style.width.px]="width"
+      [style.height.px]="width"
+      class="hover:bg-blue-500/100 pageInfoStyle flex items-center text-center justify-center"
+      [style.border-bottom-left-radius.px]="borderRadius"
+      [style.border-bottom-right-radius.px]="borderRadius"
+      (click)="ShowInfo($event)"
+    >
+      @if (!themeService.isDarkMode()) {
+        <img
+          [src]="themeService.assetConstants.INFO_BASE_LIGHT_MODE"
+          alt="Delete Page Icon"
+          class="w-[60%] block h-full hover:opacity-0"
+        />
+      } @else {
+        <img
+          [src]="themeService.assetConstants.INFO_BASE_DARK_MODE"
+          alt="Delete Page Icon"
+          class="w-[60%] block h-full hover:opacity-0"
+        />
+      }
 
-    <img
-      [src]="themeService.assetConstants.INFO_HOVER_ALL"
-      alt="Delete Page Icon"
-      class="w-[60%] absolute h-full opacity-0 hover:opacity-100 hover:scale-110 transform transition-transform duration-500"
-    />
-  </button>
+      <img
+        [src]="themeService.assetConstants.INFO_HOVER_ALL"
+        alt="Delete Page Icon"
+        class="w-[60%] absolute h-full opacity-0 hover:opacity-100 hover:scale-110 transform transition-transform duration-500"
+      />
+    </button>
+  } @else {
+    <app-checkbox (checkChanged)="checkChanged($event)"></app-checkbox>
+  }
+
+  <div></div>
 </div>

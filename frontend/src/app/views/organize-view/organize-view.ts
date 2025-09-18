@@ -25,7 +25,7 @@ export class OrganizeView {
   {
      for (let pageNum = 1; pageNum <= this.pdfViewerService.totalPages; pageNum++) {
           this.pdfViewerService
-            .renderPage(pageNum, true, false, this.pdfViewerHelperService.currentScale, this.pdfContainer.nativeElement)
+            .renderPage(pageNum, false, true, 0.2, this.pdfContainer, true)
             .then(() => {
               if (
                 this.pdfContainer.nativeElement.children.length ===
