@@ -12,7 +12,7 @@ import { Checkbox } from './components/shared/checkbox/checkbox';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, AlertComponent, Header, OrganizeView, Checkbox],
+  imports: [RouterOutlet, AlertComponent, Header],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

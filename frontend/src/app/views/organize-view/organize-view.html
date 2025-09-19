@@ -3,11 +3,47 @@
 >
   <h2 class="ml-5 mt-4 text-2xl">Organize PDF Pages</h2>
   <hr />
-  <span></span>
+
+  <div #filterContainer class="p-2 gap-2 flex">
+    <app-checkbox
+      class="p-2 rounded-sm hover:bg-gray-200 dark:hover:bg-[var(--main_dark_hover_color)]"
+      [text]="'Select All'"
+      [(IsChecked)]="IsChecked"
+      (IsCheckedChange)="handleSelectAll($event)"
+    ></app-checkbox>
+
+    <app-image-button
+      class="flex"
+      (click)="rotatePage($event)"
+      [btnText]="'Rotate'"
+      [imgSide]="'Left'"
+      [lightSrc]="themeService.assetConstants.ROTATE_RIGHT_LIGHT_MODE"
+      [darkSrc]="themeService.assetConstants.ROTATE_RIGHT_DARK_MODE"
+    ></app-image-button>
+
+    <app-image-button
+      class="flex"
+      (click)="AddNewPage($event)"
+      [btnText]="'Add New Page'"
+      [imgSide]="'Left'"
+      [lightSrc]="themeService.assetConstants.ADD_NEW_PAGE_LIGHT_MODE"
+      [darkSrc]="themeService.assetConstants.ADD_NEW_PAGE_DARK_MODE"
+    ></app-image-button>
+
+    <app-image-button
+      (click)="SubmitBtnPressed($event)"
+      class="absolute right-7"
+      [btnText]="'Submit'"
+      [bgColor]="'blue-500'"
+      [imgSide]="'Right'"
+      [lightSrc]="themeService.assetConstants.SUBMIT_ORGANIZE_LIGHT_MODE"
+      [darkSrc]="themeService.assetConstants.SUBMIT_ORGANIZE_DARK_MODE"
+    ></app-image-button>
+  </div>
   <hr />
 
   <div
-    class="w-full ml-7 h-[87vh] transform flex flex-wrap max-w-390 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500"
+    class="w-full ml-7 h-[87vh] transform flex flex-wrap max-w-390 gap-2 overflow-y-auto scrollViewStyle"
     #pdfContainer
   ></div>
 </div>

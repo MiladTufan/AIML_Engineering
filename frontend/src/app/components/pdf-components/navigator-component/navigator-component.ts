@@ -3,6 +3,7 @@ import { PDFViewerService } from '../../../services/pdf-services/pdfviewer-servi
 import { map } from 'rxjs/operators';
 import { PdfViewerHelperService } from '../../../services/pdf-services/pdf-viewer-helper-service';
 import { Subscription } from 'rxjs';
+import { OrganizeService } from '../../../services/pdf-services/organize-service';
 
 @Component({
   selector: 'app-navigator-component',
@@ -22,11 +23,13 @@ export class NavigatorComponent {
     PdfViewerHelperService,
   );
 
+  private organizeService: OrganizeService = inject(OrganizeService);
+
   ngAfterViewInit() {
     this.pageNumberSub = this.pdfViewerService.currentPage$.subscribe((val) => {
       if (
         !this.pdfViewerService.jumpToPage &&
-        !this.pdfViewerHelperService.organizerActive
+        !this.organizeService.organizerActive
       ) {
         this.pdfPreviewContainer.nativeElement.scrollTop =
           this.pdfViewerService.calcTargetScrolltop(val, true);

@@ -1,0 +1,43 @@
+@if (themeService.isDarkMode()) {
+  <div
+    class="flex ml-5 p-2 rounded-sm hover:bg-gray-200 dark:hover:bg-[var(--main_dark_hover_color)] cursor-pointer"
+    [ngClass]="'bg-' + bgColor"
+  >
+    @if (imgSide == "Left") {
+      <button class="flex h-6 rounded-sm">
+        <img class="w-6 h-6 cursor-pointer" [src]="darkSrc" />
+      </button>
+    }
+
+    <span class="ml-1 text-black dark:text-[var(--main_dark_text_color)]">{{
+      btnText
+    }}</span>
+
+    @if (imgSide == "Right") {
+      <button class="flex ml-2 h-6 rounded-sm">
+        <img class="w-6 h-6 cursor-pointer" [src]="darkSrc" />
+      </button>
+    }
+  </div>
+} @else {
+  <div
+    class="flex ml-5 p-2 rounded-sm hover:bg-gray-200 dark:hover:bg-[var(--main_dark_hover_color)] cursor-pointer"
+    [ngClass]="'bg-' + bgColor"
+  >
+    @if (imgSide == "Left") {
+      <button class="flex h-6 rounded-sm">
+        <img class="w-6 h-6 cursor-pointer" [src]="lightSrc" />
+      </button>
+    }
+
+    <span class="ml-1 text-black dark:text-[var(--main_dark_text_color)]">{{
+      btnText
+    }}</span>
+
+    @if (imgSide == "Right") {
+      <button class="flex ml-2 h-6 rounded-sm">
+        <img class="w-6 h-6 cursor-pointer" [src]="lightSrc" />
+      </button>
+    }
+  </div>
+}

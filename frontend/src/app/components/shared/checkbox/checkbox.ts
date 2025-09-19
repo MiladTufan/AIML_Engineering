@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, inject, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { ThemeService } from '../../../services/shared/theme-service';
 
 @Component({
@@ -10,12 +10,13 @@ import { ThemeService } from '../../../services/shared/theme-service';
 })
 export class Checkbox {
   public themeService: ThemeService = inject(ThemeService);
-  public IsChecked: Boolean = false;
+  @Input() IsChecked: Boolean = false;
+  @Input() text: string = '';
 
-  @Output() checkChanged: EventEmitter<Boolean> = new EventEmitter();
+  @Output() IsCheckedChange: EventEmitter<Boolean> = new EventEmitter();
 
   toggleCheck() {
     this.IsChecked = !this.IsChecked;
-    this.checkChanged.emit(this.IsChecked);
+    this.IsCheckedChange.emit(this.IsChecked);
   }
 }

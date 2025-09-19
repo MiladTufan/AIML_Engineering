@@ -17,10 +17,23 @@ export class AssetConstants {
 	public TRASHCAN_BASE_LIGHT_MODE: string = "/assets/icons/pageInfo/trashcan.svg";
 	public TRASHCAN_BASE_DARK_MODE: string = "/assets/icons/pageInfo/trashcanDarkMode.svg";
 	public TRASHCAN_HOVER_ALL: string = "/assets/icons/pageInfo/trashcanWhite.svg";
+	public TRASHCAN_RED: string = "/assets/icons/pageInfo/trashcanRed.svg";
 
 	public INFO_BASE_LIGHT_MODE: string = "/assets/icons/pageInfo/infoIcon.svg";
 	public INFO_BASE_DARK_MODE: string = "/assets/icons/pageInfo/infoIconDarkMode.svg";
 	public INFO_HOVER_ALL: string = "/assets/icons/pageInfo/infoIconWhite.svg";
+
+
+	public ROTATE_RIGHT_LIGHT_MODE: string = "/assets/icons/pageInfo/rotateRight.svg";
+	public ROTATE_RIGHT_DARK_MODE: string = "/assets/icons/pageInfo/rotateRightDarkMode.svg";
+
+	public ADD_NEW_PAGE_LIGHT_MODE: string = "/assets/icons/pageInfo/newPage.svg";
+	public ADD_NEW_PAGE_DARK_MODE: string = "/assets/icons/pageInfo/newPageDarkMode.svg";
+
+
+	public SUBMIT_ORGANIZE_LIGHT_MODE: string = "/assets/icons/pageInfo/submit.svg";
+	public SUBMIT_ORGANIZE_DARK_MODE: string = "/assets/icons/pageInfo/submitDarkMode.svg";
+
 
 
 

@@ -8,7 +8,6 @@ export class PdfViewerHelperService {
   public allRenderedPages: Page[] = [];
   public currentScale: number = 1.0;
   public scaleStep: number = 0.1;
-  public organizerActive: Boolean = false;
 
   public minScale = 0.6;
   public maxScale = 10.09;

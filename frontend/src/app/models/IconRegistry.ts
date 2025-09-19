@@ -132,4 +132,28 @@ export const ICONS_USED: AppIcon[] = [
     license: 'MIT https://github.com/halfmage/majesticons/blob/main/LICENSE',
     link: 'https://icon-sets.iconify.design/charm/tick/',
   },
+  {
+    name: 'fluent:rotate-right-24-filled',
+    usedIn: 'Organizer',
+    purpose: 'rotate right',
+    source: 'Iconify',
+    license: 'MIT https://github.com/halfmage/majesticons/blob/main/LICENSE',
+    link: 'https://icon-sets.iconify.design/fluent/rotate-right-24-filled/',
+  },
+  {
+    name: 'iconoir:page-plus',
+    usedIn: 'Organizer',
+    purpose: 'Add New Page',
+    source: 'Iconify',
+    license: 'MIT https://github.com/halfmage/majesticons/blob/main/LICENSE',
+    link: 'https://icon-sets.iconify.design/iconoir/page-plus/',
+  },
+  {
+    name: 'ep:right',
+    usedIn: 'Organizer',
+    purpose: 'Submit',
+    source: 'Iconify',
+    license: 'MIT https://github.com/halfmage/majesticons/blob/main/LICENSE',
+    link: 'https://icon-sets.iconify.design/ep/right/',
+  },
 ];

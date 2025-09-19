@@ -90,7 +90,10 @@
       />
     </button>
   } @else {
-    <app-checkbox (checkChanged)="checkChanged($event)"></app-checkbox>
+    <app-checkbox
+      [(IsChecked)]="IsChecked"
+      (IsCheckedChange)="checkChanged($event)"
+    ></app-checkbox>
   }
 
   <div></div>

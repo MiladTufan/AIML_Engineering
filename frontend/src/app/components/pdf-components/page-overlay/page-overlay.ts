@@ -4,6 +4,8 @@ import { PDFViewerService } from '../../../services/pdf-services/pdfviewer-servi
 import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { PdfViewerHelperService } from '../../../services/pdf-services/pdf-viewer-helper-service';
+import { ThemeService } from '../../../services/shared/theme-service';
+import { OrganizeService } from '../../../services/pdf-services/organize-service';
 
 @Component({
   selector: 'app-page-overlay',
@@ -22,10 +24,11 @@ export class PageOverlay {
   public isChecked: Boolean = false;
   public isPageDeleted: Boolean = false;
 
+  public currentRotation: number = 0;
+
   private pdfViewerService: PDFViewerService = inject(PDFViewerService);
-  public pdfViewerHelperService: PdfViewerHelperService = inject(
-    PdfViewerHelperService,
-  );
+  public themeService: ThemeService = inject(ThemeService);
+  private organizeService: OrganizeService = inject(OrganizeService);
 
   ngAfterViewInit() {
     this.pageNumberSub = this.pdfViewerService.currentPage$.subscribe((val) => {
@@ -43,9 +46,28 @@ export class PageOverlay {
 
   toggleActivePage(checked: Boolean) {
     this.isChecked = checked;
+    if (checked) {
+      if (!this.organizeService.checkedPages.includes(this.pageNumber))
+        this.organizeService.checkedPages.push(this.pageNumber);
+
+      this.organizeService.deletedPages.splice(
+        this.organizeService.deletedPages.indexOf(this.pageNumber),
+        1,
+      );
+      this.isPageDeleted = false;
+    }
   }
 
   handlePageDeleted(payload: { pageNumber: number; deleted: Boolean }) {
     this.isPageDeleted = payload.deleted;
+    if (payload.deleted) {
+      this.organizeService.checkedPages.splice(
+        this.organizeService.checkedPages.indexOf(this.pageNumber),
+        1,
+      );
+
+      this.organizeService.deletedPages.push(this.pageNumber);
+      this.isChecked = false;
+    }
   }
 }

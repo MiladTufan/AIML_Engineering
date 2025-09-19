@@ -1,22 +1,33 @@
 <div
-  class="PageOverlayContainer flex flex-col border-dashed border-blue-500 w-fit h-fit mt-3 p-1 hover:border-1 hover:shadow-lg"
+  class="PageOverlayContainer relative flex flex-col border-dashed border-blue-500 w-fit h-fit mt-3 p-1 hover:border-1 hover:shadow-lg"
   [ngClass]="{
     'border-1': isActivePage || isChecked || isPageDeleted,
-    ' border-red-500': isPageDeleted,
+    'border-red-500': isPageDeleted,
   }"
   (mouseenter)="isActivePage = true"
   (mouseleave)="isActivePage = false"
 >
   <div
-    class="PageOverlayNumber absolute w-7 h-7 bg-blue-500 justify-center items-center flex"
+    class="PageOverlayNumber absolute w-7 h-7 bg-blue-500 justify-center items-center rounded-br-sm flex"
+    [ngClass]="{
+      'bg-red-500': isPageDeleted,
+    }"
   >
     <span>{{ pageNumber }}</span>
   </div>
 
+  <img
+    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20"
+    [src]="themeService.assetConstants.TRASHCAN_RED"
+    [hidden]="!isPageDeleted"
+  />
+
   <app-page-info-component
     [hidden]="!isActivePage && !isChecked && !isPageDeleted"
-    (checkBoxChanged)="toggleActivePage($event)"
-    (pageDeleted)="handlePageDeleted($event)"
+    [(IsChecked)]="isChecked"
+    (IsCheckedChange)="toggleActivePage($event)"
+    [(IsPageDeleted)]="isPageDeleted"
+    (IsPageDeletedChange)="handlePageDeleted($event)"
     class="PageOverlayInfo flex justify-center -mt-12"
     [pageNumber]="pageNumber"
     [width]="36"

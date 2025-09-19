@@ -1,12 +1,18 @@
-<button
-  class="border-white-100 cursor-pointer border-1 mr-2 ml-2 w-[20px] h-[20px] z-100 rounded-sm pageInfoStyle flex items-center text-center justify-center"
-  (click)="toggleCheck()"
-  [ngClass]="IsChecked ? 'bg-blue-500' : 'bg-transparent'"
->
-  @if (IsChecked) {
-    <img
-      [src]="themeService.assetConstants.CHECKBOX_CHECK_ICON_DARK_MODE"
-      alt="Checkbox check"
-    />
+<div class="flex items-center">
+  <button
+    class="border-white-100 cursor-pointer border-1 mr-2 ml-2 w-[20px] h-[20px] z-100 rounded-sm pageInfoStyle flex items-center text-center justify-center"
+    (click)="toggleCheck()"
+    [ngClass]="IsChecked ? 'bg-blue-500' : 'bg-transparent'"
+  >
+    @if (IsChecked) {
+      <img
+        [src]="themeService.assetConstants.CHECKBOX_CHECK_ICON_DARK_MODE"
+        alt="Checkbox check"
+      />
+    }
+  </button>
+
+  @if (text != "") {
+    <span (click)="toggleCheck()" class="ml-1 cursor-pointer">{{ text }}</span>
   }
-</button>
+</div>

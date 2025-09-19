@@ -16,6 +16,7 @@ import { BoxCreationService } from '../box-services/box-creation-service';
 import { TextEditService } from '../box-services/text-edit-service';
 import { PdfViewerHelperService } from './pdf-viewer-helper-service';
 import { PageOverlay } from '../../components/pdf-components/page-overlay/page-overlay';
+import { OrganizeService } from './organize-service';
 
 @Injectable({
   providedIn: 'root',
@@ -40,7 +41,6 @@ export class PDFViewerService {
   public pdfDocument: any;
 
   public isCurrentlyJumpingTopage: number = 1;
-  public deletedPages: number[] = [];
 
   private htmlPreviewPages: any[] = [];
   private navigatorContainer: ElementRef | null = null;
@@ -59,9 +59,10 @@ export class PDFViewerService {
   private pdfViewerHelperService: PdfViewerHelperService = inject(
     PdfViewerHelperService,
   );
+  private organizeService: OrganizeService = inject(OrganizeService);
 
   deletePage(pageNumber: number) {
-    this.deletedPages.push(pageNumber);
+    // this.deletedPages.push(pageNumber);
     const page = this.pdfViewerHelperService.getPageWithNumber(pageNumber);
 
     if (page && page.isDeleted == false) {
@@ -501,14 +502,16 @@ export class PDFViewerService {
     scale: number,
     container: any,
     organize: Boolean = false,
+    rotation: number = 0,
   ) {
     let page: any;
     let viewport: any;
 
-    if (this.navigatorContainer == null) this.navigatorContainer = container;
+    if (this.navigatorContainer == null && !organize)
+      this.navigatorContainer = container;
 
     page = await this.pdfDocument.getPage(pageNumber);
-    viewport = page.getViewport({ scale: scale });
+    viewport = page.getViewport({ scale: scale, rotation: rotation });
     let previewContainer = document.createElement('div');
     let canvas = document.createElement('canvas');
 
@@ -532,7 +535,6 @@ export class PDFViewerService {
       const renderContext = {
         canvasContext: context,
         viewport: viewport,
-        intent: 'print',
       };
 
       previewContainer.classList.add('cursor-pointer');
@@ -545,11 +547,18 @@ export class PDFViewerService {
 
       pageOverlay.instance.pageNumber = pageNumber;
       pageOverlay.instance.IsOrganizePreview = organize;
+      pageOverlay.instance.currentRotation = rotation;
 
       previewContainer.addEventListener('click', () => {
-        if (!this.pdfViewerHelperService.organizerActive) {
+        if (!this.organizeService.organizerActive) {
           pageOverlay.instance.isActivePage = true;
           this.scrollToPage(pageNumber);
+        } else {
+          pageOverlay.instance.isChecked = !pageOverlay.instance.isChecked;
+          if (pageOverlay.instance.isChecked) {
+            if (!this.organizeService.checkedPages.includes(pageNumber))
+              this.organizeService.checkedPages.push(pageNumber);
+          }
         }
       });
 
@@ -562,6 +571,8 @@ export class PDFViewerService {
         preview: pageOverlay,
       };
       this.htmlPreviewPages.push(payLoad);
+      if (organize)
+        this.organizeService.setComprefSafely(pageNumber, pageOverlay);
     }
   }
   /**
@@ -578,9 +589,10 @@ export class PDFViewerService {
     scale: number,
     container: any,
     organize: Boolean = false,
+    rotation: number = 0,
   ) {
     if (preview) {
-      this.previewRender(pageNumber, scale, container, organize);
+      this.previewRender(pageNumber, scale, container, organize, rotation);
     } else {
       let page: any;
       let viewport: any;

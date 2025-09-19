@@ -1,10 +1,21 @@
-import { Component, ElementRef, inject, ViewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  inject,
+  Output,
+  ViewChild,
+} from '@angular/core';
 import { PDFViewerService } from '../../services/pdf-services/pdfviewer-service';
 import { PdfViewerHelperService } from '../../services/pdf-services/pdf-viewer-helper-service';
+import { Checkbox } from '../../components/shared/checkbox/checkbox';
+import { OrganizeService } from '../../services/pdf-services/organize-service';
+import { ThemeService } from '../../services/shared/theme-service';
+import { ImageButton } from '../../components/shared/image-button/image-button';
 
 @Component({
   selector: 'app-organize-view',
-  imports: [],
+  imports: [Checkbox, ImageButton],
   templateUrl: './organize-view.html',
   styleUrl: './organize-view.css',
 })
@@ -14,11 +25,21 @@ export class OrganizeView {
     PdfViewerHelperService,
   );
 
+  private organizeService: OrganizeService = inject(OrganizeService);
+  public themeService: ThemeService = inject(ThemeService);
+  public addNewPageEnabled: Boolean = true;
+
   private observer: any;
   private alreadyRanObserver: Boolean = false;
 
+  public IsChecked: Boolean = false;
+
+  public organizeComponentRef: any;
+
   @ViewChild('pdfContainer', { static: true })
   pdfContainer!: ElementRef<HTMLDivElement>;
+
+  @Output() closeEvent = new EventEmitter<void>();
 
   //prettier-ignore
   ngAfterViewInit()
@@ -31,35 +52,80 @@ export class OrganizeView {
                 this.pdfContainer.nativeElement.children.length ===
                 this.pdfViewerService.totalPages
               ) {
-                if (!this.alreadyRanObserver) this.createObserver();
+                // if (!this.alreadyRanObserver) this.createObserver();
               }
             });
         }
   }
 
-  /**
-   * Creates the visible pages observer. This Observe observes all pages and tells us which pages are currently visibile
-   */
-  async createObserver() {
-    this.alreadyRanObserver = true;
-    this.observer = new IntersectionObserver(
-      async (entries) => {
-        this.checkEntry(entries);
-      },
-      {
-        root: this.pdfContainer.nativeElement,
-        rootMargin: '200px 0px 700px 0px', // top, right, bottom, left
-        threshold: 0.01, // Trigger if at least 10% is visible
-      },
-    );
-
-    requestAnimationFrame(() => {
-      for (let i = 1; i <= this.pdfViewerService.totalPages; i++) {
-        const pageContainer = this.pdfViewerService.getCanvasForPage(i);
-        if (pageContainer) this.observer.observe(pageContainer);
+  handleSelectAll(isChecked: Boolean) {
+    if (isChecked) {
+      this.organizeService.checkedPages.length = 0;
+      for (
+        let pageNumber = 1;
+        pageNumber <= this.pdfViewerService.totalPages;
+        pageNumber++
+      ) {
+        if (!this.organizeService.checkedPages.includes(pageNumber)) {
+          this.organizeService.checkedPages.push(pageNumber);
+          const pageOverlayComp = this.organizeService.getCompref(pageNumber);
+          pageOverlayComp?.instance.toggleActivePage(isChecked);
+        }
       }
+    } else {
+      this.organizeService.checkedPages.forEach((pageNumber: number) => {
+        const pageOverlayComp = this.organizeService.getCompref(pageNumber);
+        pageOverlayComp?.instance.toggleActivePage(isChecked);
+      });
+      this.organizeService.checkedPages.length = 0;
+    }
+  }
+
+  SubmitBtnPressed(event: Event) {
+    this.closeEvent.emit();
+    this.organizeService.organizerActive = false;
+    this.organizeService.checkedPages.length = 0;
+    this.organizeComponentRef.destroy();
+  }
+  AddNewPage(event: Event) {}
+  rotatePage(event: Event) {
+    this.organizeService.checkedPages.forEach((pageNumber: number) => {
+      const pageOverlayComp = this.organizeService.getCompref(pageNumber);
+      const currentRotation =
+        (pageOverlayComp!.instance.currentRotation + 90) % 360;
+      console.log('rotation for page: ', pageNumber, 'is: ', currentRotation);
+
+      //prettier-ignore
+      this.pdfViewerService.renderPage(pageNumber, false, true, 0.2, this.pdfContainer, true, currentRotation)
+      const pageOverlayCompNew = this.organizeService.getCompref(pageNumber);
+      pageOverlayCompNew!.instance.currentRotation = currentRotation;
+      pageOverlayCompNew!.instance.isChecked = true;
     });
   }
+
+  // /**
+  //  * Creates the visible pages observer. This Observe observes all pages and tells us which pages are currently visibile
+  //  */
+  // async createObserver() {
+  //   this.alreadyRanObserver = true;
+  //   this.observer = new IntersectionObserver(
+  //     async (entries) => {
+  //       this.checkEntry(entries);
+  //     },
+  //     {
+  //       root: this.pdfContainer.nativeElement,
+  //       rootMargin: '200px 0px 700px 0px', // top, right, bottom, left
+  //       threshold: 0.01, // Trigger if at least 10% is visible
+  //     },
+  //   );
+
+  //   requestAnimationFrame(() => {
+  //     for (let i = 1; i <= this.pdfViewerService.totalPages; i++) {
+  //       const pageContainer = this.pdfViewerService.getCanvasForPage(i);
+  //       if (pageContainer) this.observer.observe(pageContainer);
+  //     }
+  //   });
+  // }
 
   /**
    * Checks if the observed pages are currently visible. If yes they are added to the VisiblePages.
