@@ -87,7 +87,11 @@ export class OrganizeView {
     this.organizeService.checkedPages.length = 0;
     this.organizeComponentRef.destroy();
   }
-  AddNewPage(event: Event) {}
+  AddNewPage(event: Event) {
+    //show screen where it asks where to insert the new page
+    this.pdfViewerService.renderEmptyPage(1, 0.2, this.pdfContainer, true, 0);
+  }
+
   rotatePage(event: Event) {
     this.organizeService.checkedPages.forEach((pageNumber: number) => {
       const pageOverlayComp = this.organizeService.getCompref(pageNumber);

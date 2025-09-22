@@ -8,11 +8,12 @@ import { Header } from './components/layout/header/header';
 import { DynamicContainerRegistry } from './services/shared/dynamic-container-registry';
 import { OrganizeView } from './views/organize-view/organize-view';
 import { Checkbox } from './components/shared/checkbox/checkbox';
+import { NumberBox } from './components/shared/number-box/number-box';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, AlertComponent, Header],
+  imports: [RouterOutlet, AlertComponent, Header, NumberBox],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

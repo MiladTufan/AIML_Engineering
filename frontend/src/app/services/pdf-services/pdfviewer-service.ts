@@ -17,6 +17,7 @@ import { TextEditService } from '../box-services/text-edit-service';
 import { PdfViewerHelperService } from './pdf-viewer-helper-service';
 import { PageOverlay } from '../../components/pdf-components/page-overlay/page-overlay';
 import { OrganizeService } from './organize-service';
+import * as pdfjsLib from 'pdfjs-dist';
 
 @Injectable({
   providedIn: 'root',
@@ -545,6 +546,12 @@ export class PDFViewerService {
       const firstChildOfFirst = firstChild.firstChild;
       firstChild.insertBefore(previewContainer, firstChildOfFirst);
 
+      const ref = this.organizeService.getCompref(pageNumber);
+      if (ref) {
+        pageOverlay.instance.isChecked = ref.instance.isChecked;
+        pageOverlay.instance.isPageDeleted = ref.instance.isPageDeleted;
+      }
+
       pageOverlay.instance.pageNumber = pageNumber;
       pageOverlay.instance.IsOrganizePreview = organize;
       pageOverlay.instance.currentRotation = rotation;
@@ -563,7 +570,26 @@ export class PDFViewerService {
       });
 
       // previewContainer.appendChild(pageInfo!.location.nativeElement);
-      container.nativeElement.appendChild(pageOverlay.location.nativeElement);
+
+      // let CanvasOld = container.querySelector(
+      //   '#' + canvasContainer.id,
+      // ) as HTMLDivElement;
+      // this.recreateTextBoxesForPage(
+      //   boxesForPage,
+      //   pageNumber,
+      //   scale,
+      //   textBoxLayer,
+      // );
+
+      // existingPageContainer.replaceChild(canvasContainer, CanvasOld!);
+
+      if (ref)
+        container.nativeElement.replaceChild(
+          pageOverlay.location.nativeElement,
+          ref.location.nativeElement,
+        );
+      else
+        container.nativeElement.appendChild(pageOverlay.location.nativeElement);
       await page.render(renderContext).promise;
 
       const payLoad = {
@@ -575,6 +601,27 @@ export class PDFViewerService {
         this.organizeService.setComprefSafely(pageNumber, pageOverlay);
     }
   }
+
+  /**
+   * Returns the viewport for an empty PDF page.
+   * @param scale
+   * @param rotation
+   * @returns
+   */
+  getEmptyViewport(scale: number, rotation: number) {
+    const width = 595; // A4 width in pt (72 dpi)
+    const height = 842; // A4 height in pt
+
+    return new (pdfjsLib as any).PageViewport({
+      viewBox: [0, 0, width, height],
+      scale,
+      rotation,
+      offsetX: 0,
+      offsetY: 0,
+      dontFlip: false,
+    });
+  }
+
   /**
    * Main render function. This function is the entry point for the entire rendering logic.
    * It handles all logic from creating the pdf canvas to recreating all objects on the PDF page itself.
@@ -644,5 +691,57 @@ export class PDFViewerService {
         this.pdfViewerHelperService.assignPageToRendered(newPage);
       }
     }
+  }
+
+  /**
+   * Renders an empty page.
+   * @param pageNumber
+   * @param scale
+   * @param container
+   * @param organize
+   * @param rotation
+   */
+  async renderEmptyPage(
+    pageNumber: number,
+    scale: number,
+    container: any,
+    organize: Boolean = false,
+    rotation: number = 0,
+  ) {
+    const viewport = this.getEmptyViewport(scale, rotation);
+
+    //prettier-ignore
+    let {canvas,textBoxLayer,textLayer,pageContainer,canvasContainer,baseMarginScale,boxesForPage, imgBoxLayer} = this.replaceChildrenOfPageContainer(
+        container,
+        false,
+        pageNumber,
+        scale,
+      );
+
+    const ctx = canvas.getContext('2d')!;
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+
+    // white background
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // optional gray border (like PDF.js usually shows edges)
+    ctx.strokeStyle = '#ccc';
+    ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+    // optional placeholder text
+    ctx.fillStyle = '#999';
+    ctx.font = `${12 * viewport.scale}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Empty Page', canvas.width / 2, canvas.height / 2);
+
+    const ret = this.htmlPreviewPages.find((p) => p.pageNum === pageNumber);
+    let preview = ret ? ret.preview : null;
+    //prettier-ignore
+    const newPage = new Page(pageNumber, viewport, boxesForPage, [], viewport.height, viewport.width, 0,
+          pageContainer, preview, 0, 0, scale,);
+    this.pdfViewerHelperService.assignPageToRendered(newPage);
   }
 }
