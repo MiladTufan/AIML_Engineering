@@ -1,5 +1,6 @@
 import {
   Component,
+  ComponentRef,
   ElementRef,
   EventEmitter,
   inject,
@@ -12,6 +13,8 @@ import { Checkbox } from '../../components/shared/checkbox/checkbox';
 import { OrganizeService } from '../../services/pdf-services/organize-service';
 import { ThemeService } from '../../services/shared/theme-service';
 import { ImageButton } from '../../components/shared/image-button/image-button';
+import { DynamicContainerRegistry } from '../../services/shared/dynamic-container-registry';
+import { NumberBox } from '../../components/shared/number-box/number-box';
 
 @Component({
   selector: 'app-organize-view',
@@ -24,6 +27,9 @@ export class OrganizeView {
   private pdfViewerHelperService: PdfViewerHelperService = inject(
     PdfViewerHelperService,
   );
+  private dynamicContainerRegistry: DynamicContainerRegistry = inject(
+    DynamicContainerRegistry,
+  );
 
   private organizeService: OrganizeService = inject(OrganizeService);
   public themeService: ThemeService = inject(ThemeService);
@@ -31,6 +37,7 @@ export class OrganizeView {
 
   private observer: any;
   private alreadyRanObserver: Boolean = false;
+  private numberBox!: ComponentRef<NumberBox>;
 
   public IsChecked: Boolean = false;
 
@@ -46,7 +53,7 @@ export class OrganizeView {
   {
      for (let pageNum = 1; pageNum <= this.pdfViewerService.totalPages; pageNum++) {
           this.pdfViewerService
-            .renderPage(pageNum, false, true, 0.2, this.pdfContainer, true)
+            .renderPreviewPage(pageNum, 0.2, this.pdfContainer, true, 0)
             .then(() => {
               if (
                 this.pdfContainer.nativeElement.children.length ===
@@ -87,9 +94,16 @@ export class OrganizeView {
     this.organizeService.checkedPages.length = 0;
     this.organizeComponentRef.destroy();
   }
+
+  //prettier-ignore
   AddNewPage(event: Event) {
-    //show screen where it asks where to insert the new page
-    this.pdfViewerService.renderEmptyPage(1, 0.2, this.pdfContainer, true, 0);
+    this.numberBox = this.dynamicContainerRegistry.dynamicAppContainer?.createComponent( NumberBox,)!;
+    this.numberBox.instance.compref = this.numberBox;
+    this.numberBox.instance.enteredTextEmitter.subscribe((pageNumberStr: string) => {
+      this.pdfViewerService.createSpaceForPage(this.pdfContainer, "PageOverlay", Number(pageNumberStr));
+      //this.pdfViewerService.renderPreviewPage(Number(pageNumberStr), 0.2, this.pdfContainer, true, 0, true);
+      this.numberBox.destroy();
+    });
   }
 
   rotatePage(event: Event) {
@@ -100,7 +114,7 @@ export class OrganizeView {
       console.log('rotation for page: ', pageNumber, 'is: ', currentRotation);
 
       //prettier-ignore
-      this.pdfViewerService.renderPage(pageNumber, false, true, 0.2, this.pdfContainer, true, currentRotation)
+      this.pdfViewerService.renderPreviewPage(pageNumber, 0.2, this.pdfContainer, true, currentRotation)
       const pageOverlayCompNew = this.organizeService.getCompref(pageNumber);
       pageOverlayCompNew!.instance.currentRotation = currentRotation;
       pageOverlayCompNew!.instance.isChecked = true;
@@ -131,38 +145,33 @@ export class OrganizeView {
   //   });
   // }
 
-  /**
-   * Checks if the observed pages are currently visible. If yes they are added to the VisiblePages.
-   * @param entries => these entries represent pages. We need to check if they are currently in the view.
-   */
-  checkEntry(entries: any) {
-    for (const entry of entries) {
-      const id = entry.target.id;
-      let pageNumber = parseInt(id?.split('-')[1]);
-      const page =
-        this.pdfViewerHelperService.getPageWithOriginalNumber(pageNumber);
+  // /**
+  //  * Checks if the observed pages are currently visible. If yes they are added to the VisiblePages.
+  //  * @param entries => these entries represent pages. We need to check if they are currently in the view.
+  //  */
+  // checkEntry(entries: any) {
+  //   for (const entry of entries) {
+  //     const id = entry.target.id;
+  //     let pageNumber = parseInt(id?.split('-')[1]);
+  //     const page =
+  //       this.pdfViewerHelperService.getPageWithOriginalNumber(pageNumber);
 
-      if (page) {
-        if (page.updatePageNum != pageNumber) pageNumber = page.updatePageNum;
-      }
+  //     if (page) {
+  //       if (page.updatePageNum != pageNumber) pageNumber = page.updatePageNum;
+  //     }
 
-      if (entry.isIntersecting) {
-        this.pdfViewerService.addVisiblePages(pageNumber);
-        if (
-          !this.pdfViewerHelperService.allRenderedPages.find(
-            (p) => p.pageNum === pageNumber,
-          )
-        )
-          this.pdfViewerService.renderPage(
-            pageNumber,
-            false,
-            false,
-            0.2,
-            this.pdfContainer.nativeElement,
-          );
-      } else {
-        this.pdfViewerService.removeVisiblePages(pageNumber);
-      }
-    }
-  }
+  //     if (entry.isIntersecting) {
+  //       this.pdfViewerService.addVisiblePages(pageNumber);
+  //       if (
+  //         !this.pdfViewerHelperService.allRenderedPages.find(
+  //           (p) => p.pageNum === pageNumber,
+  //         )
+  //       )
+  //         //prettier-ignore
+  //         this.pdfViewerService.renderPreviewPage(pageNumber, 0.2, this.pdfContainer.nativeElement, true, 0,);
+  //     } else {
+  //       this.pdfViewerService.removeVisiblePages(pageNumber);
+  //     }
+  //   }
+  // }
 }

@@ -8,11 +8,12 @@ export class OrganizeService {
   public organizerActive: Boolean = false;
   public deletedPages: number[] = [];
   public checkedPages: number[] = [];
+  public allrenderedPreviewPages: any[] = [];
 
   public pageOverlayCompMap = new Map<number, ComponentRef<PageOverlay>>();
 
   /**
-   * saves the ComponentRef of a CommonBoxObject for later use.
+   * saves the ComponentRef of a PageOverlay for later use.
    * @param id => id of the box component (TextBox id or ImgBox id)
    * @param commonBoxComp => The componentRef to save
    */
@@ -28,10 +29,20 @@ export class OrganizeService {
   }
 
   /**
-   * get the ComponentRef of a CommonBoxObject for later use.
+   * get the ComponentRef of a PageOverlay for later use.
    * @param id => id of the box component (TextBox id or ImgBox id)
    */
   public getCompref(id: number) {
     return this.pageOverlayCompMap.get(id);
+  }
+
+  /**
+   * removes a ComponentRef
+   * @param id
+   */
+  public removeCompref(id: number) {
+    if (this.pageOverlayCompMap.has(id)) {
+      this.pageOverlayCompMap.delete(id);
+    }
   }
 }

@@ -140,6 +140,9 @@ export class Page {
     this._translateY = value;
   }
 
+  public static widthA4: number = 595; // A4 width in pt (72 dpi)
+  public static heightA4: number = 842; // A4 width in pt (72 dpi)
+
   addBlockObject(newObj: BlockObject) {
     this.blockObjects.push(newObj);
   }

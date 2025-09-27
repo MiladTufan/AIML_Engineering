@@ -6,14 +6,11 @@ import { Constants } from './models/constants/constants';
 import { ThemeService } from './services/shared/theme-service';
 import { Header } from './components/layout/header/header';
 import { DynamicContainerRegistry } from './services/shared/dynamic-container-registry';
-import { OrganizeView } from './views/organize-view/organize-view';
-import { Checkbox } from './components/shared/checkbox/checkbox';
-import { NumberBox } from './components/shared/number-box/number-box';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, AlertComponent, Header, NumberBox],
+  imports: [RouterOutlet, AlertComponent, Header],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
@@ -43,6 +40,12 @@ export class App {
       this.dynamicContainerRegistry.dynamicAppContainer =
         this.dynamicAppContainer;
   }
+
+  // OpenPopUp() {
+  //   this.dialog.open(NumberBox, {
+  //     disableClose: true,
+  //   });
+  // }
 
   ngOnInit() {
     // this.sessionService

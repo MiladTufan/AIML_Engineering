@@ -1,5 +1,28 @@
 <div
-  class="translucentStyle absolute w-50 h-20 left-1/2 transform -translate-x-1/2 rounded-md"
+  class="translucentStyle absolute w-50 h-25 left-1/2 transform -translate-x-1/2 rounded-md items-center justify-center flex flex-col z-500 top-1/2"
 >
-  <span>TEXT</span>
+  <input
+    #numberTxt
+    type="text"
+    [placeholder]="placeholder"
+    (keydown.enter)="OnEnter(numberTxt.value)"
+    (focus)="clearPlaceholder()"
+    (blur)="resetPlaceHolder()"
+    class="w-40 h-10 hover:border hover:border-gray-400 hover:rounded text-center opacity-50 border-1 rounded-sm"
+  />
+  <div class="flex gap-2 items-end mt-1.5">
+    <button
+      (click)="OK(numberTxt.value)"
+      class="p-2 rounded-sm hover:bg-gray-200 dark:hover:bg-[var(--main_dark_hover_color)] cursor-pointer"
+    >
+      OK
+    </button>
+
+    <button
+      (click)="Cancel()"
+      class="p-2 rounded-sm hover:bg-gray-200 dark:hover:bg-[var(--main_dark_hover_color)] cursor-pointer"
+    >
+      Cancel
+    </button>
+  </div>
 </div>
