@@ -68,6 +68,11 @@ export class PageOverlay {
 
       this.organizeService.deletedPages.push(this.pageNumber);
       this.isChecked = false;
+    } else {
+      this.organizeService.deletedPages.splice(
+        this.organizeService.deletedPages.indexOf(payload.pageNumber),
+        1,
+      );
     }
   }
 }

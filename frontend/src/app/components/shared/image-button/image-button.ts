@@ -15,5 +15,8 @@ export class ImageButton {
   @Input() bgColor: string = 'transparent';
   @Input() imgSide: string = '';
 
+  @Input() width: number = 24;
+  @Input() height: number = 24;
+
   public themeService: ThemeService = inject(ThemeService);
 }

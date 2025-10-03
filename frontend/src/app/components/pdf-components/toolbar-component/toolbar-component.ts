@@ -16,6 +16,9 @@ import { GlobalEdit, MiniPage } from '../../../models/globalEdit';
 import { PDFViewerService } from '../../../services/pdf-services/pdfviewer-service';
 import { ThemeService } from '../../../services/shared/theme-service';
 import { PdfViewerHelperService } from '../../../services/pdf-services/pdf-viewer-helper-service';
+import { OrganizeService } from '../../../services/pdf-services/organize-service';
+import { OrganizeView } from '../../../views/organize-view/organize-view';
+import { DynamicContainerRegistry } from '../../../services/shared/dynamic-container-registry';
 
 @Component({
   selector: 'app-toolbar-component',
@@ -43,6 +46,8 @@ export class ToolbarComponent {
     public pdfViewerService: PDFViewerService,
     private downloadService: DownloadService,
     private pdfViewerHelperService: PdfViewerHelperService,
+    private organizeService: OrganizeService,
+    private dynamicContaienrRegistry: DynamicContainerRegistry,
   ) {}
 
   ngOnInit() {
@@ -96,6 +101,17 @@ export class ToolbarComponent {
    */
   public onUpClicked($event: Event) {
     this.pdfViewerService.scrollToPage(this.currentPage - 1);
+  }
+
+  public OnOrganizeBtnClicked($event: Event) {
+    if (!this.organizeService.organizerActive) {
+      this.organizeService.organizerActive = true;
+      const compref =
+        this.dynamicContaienrRegistry.dynamicAppContainer?.createComponent(
+          OrganizeView,
+        );
+      if (compref) compref.instance.organizeComponentRef = compref;
+    }
   }
 
   // use download Service for this

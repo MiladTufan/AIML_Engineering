@@ -4,5 +4,13 @@
   "semi": true,
   "trailingComma": "all",
   "useTabs": false,
-  "printWidth": 9999
+  "printWidth": 9999,
+  "overrides": [
+    {
+      "files": "*.html",
+      "options": {
+        "parser": "none"
+      }
+    }
+  ]
 }

@@ -5,6 +5,7 @@ export class RenderParams {
     public scale: number = 1.0,
     public isDummyPage: Boolean = false,
     public isPreviewPage: Boolean = false,
+    public isOrganize: Boolean = false,
     public container: any,
   ) {}
 }

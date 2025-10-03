@@ -46,6 +46,30 @@
     }
   </button>
 
+  <!-- Vertical Line -->
+  <div
+    class="w-[2px] h-[80%] bg-[var(--btn_border_color)] dark:bg-[var(--main_dark_text_color)] mx-[5px]"
+  ></div>
+
+  <!-- Insert Img Button -->
+  <button
+    class="toolbarBtnStyle p-3 dark:hover:bg-[var(--main_dark_hover_color)]"
+    title="Organize PDF Pages"
+    (click)="OnOrganizeBtnClicked($event)"
+  >
+    @if (!themeService.isDarkMode()) {
+      <img
+        class="flex w-[22px] h-[22px]"
+        [src]="themeService.assetConstants.ORGANIZE_ICON"
+      />
+    } @else {
+      <img
+        class="flex w-[22px] h-[22px]"
+        [src]="themeService.assetConstants.ORGANIZE_ICON_DARK_MODE"
+      />
+    }
+  </button>
+
   <div
     class="absolute left-1/2 transform -translate-x-1/2 flex rounded-md w-fit h-fit"
   >
@@ -69,6 +93,7 @@
         />
       </svg>
     </button>
+
     <span class="text-center font-medium">
       <input
         type="text"

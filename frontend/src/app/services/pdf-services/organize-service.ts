@@ -1,5 +1,6 @@
-import { ComponentRef, Injectable } from '@angular/core';
+import { ComponentRef, inject, Injectable } from '@angular/core';
 import { PageOverlay } from '../../components/pdf-components/page-overlay/page-overlay';
+import { PDFViewerService } from './pdfviewer-service';
 
 @Injectable({
   providedIn: 'root',
@@ -11,6 +12,26 @@ export class OrganizeService {
   public allrenderedPreviewPages: any[] = [];
 
   public pageOverlayCompMap = new Map<number, ComponentRef<PageOverlay>>();
+
+  /**
+   * Checks whether the provided Page is inside checkedPages.
+   * @param pageNumber
+   * @returns
+   */
+  public isPageChecked(pageNumber: number) {
+    if (this.checkedPages.find((p) => p === pageNumber)) return true;
+    return false;
+  }
+
+  /**
+   * Check whether the provided Page is inside deleted Pages.
+   * @param pageNumber
+   * @returns
+   */
+  public isPageDeleted(pageNumber: number) {
+    if (this.deletedPages.find((p) => p === pageNumber)) return true;
+    return false;
+  }
 
   /**
    * saves the ComponentRef of a PageOverlay for later use.
@@ -34,6 +55,37 @@ export class OrganizeService {
    */
   public getCompref(id: number) {
     return this.pageOverlayCompMap.get(id);
+  }
+
+  /**
+   * Destroy Component Ref stored in pageOverlayCompMap
+   * @param pageNumber
+   */
+  public destroy(pageNumber: number) {
+    if (this.pageOverlayCompMap.has(pageNumber)) {
+      const oldRef = this.pageOverlayCompMap.get(pageNumber);
+      oldRef?.destroy();
+      this.removeCompref(pageNumber);
+    }
+  }
+
+  /**
+   * Before inserting a new Page all comprefs have to be shifted by 1 to make place for the new compref
+   * @param pageNumber
+   */
+  public shiftComprefs(pageNumber: number) {
+    const entries = Array.from(this.pageOverlayCompMap.entries()).sort(
+      (a, b) => b[0] - a[0],
+    );
+    for (let [key, value] of entries) {
+      if (key >= pageNumber) {
+        this.pageOverlayCompMap.set(key + 1, value);
+        const compref = this.getCompref(key);
+        if (compref) compref.instance.pageNumber = key + 1;
+        this.pageOverlayCompMap.delete(key);
+      }
+    }
+    return this.pageOverlayCompMap;
   }
 
   /**

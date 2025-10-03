@@ -1,7 +1,18 @@
 <div
-  class="translucentStyle w-400 h-200 absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-500 rounded-lg overflow-auto scrollViewStyle justify-center items-center"
+  class="translucentStyle w-full h-full absolute z-500 rounded-lg overflow-auto scrollViewStyle justify-center items-center"
 >
-  <h2 class="ml-5 mt-4 text-2xl">Organize PDF Pages</h2>
+  <div class="flex">
+    <h2 class="ml-5 mt-4 text-2xl">Organize PDF Pages</h2>
+    <app-image-button
+      class="absolute right-0"
+      (click)="CloseBtnPressed()"
+      [btnText]="''"
+      [imgSide]="'middle'"
+      [lightSrc]="themeService.assetConstants.ClOSE_ICON"
+      [darkSrc]="themeService.assetConstants.ClOSE_ICON"
+      [title]="'Close Window'"
+    ></app-image-button>
+  </div>
   <hr />
 
   <div #filterContainer class="p-2 gap-2 flex">
@@ -10,6 +21,7 @@
       [text]="'Select All'"
       [(IsChecked)]="IsChecked"
       (IsCheckedChange)="handleSelectAll($event)"
+      [title]="'Select all Pages'"
     ></app-checkbox>
 
     <app-image-button
@@ -19,6 +31,7 @@
       [imgSide]="'Left'"
       [lightSrc]="themeService.assetConstants.ROTATE_RIGHT_LIGHT_MODE"
       [darkSrc]="themeService.assetConstants.ROTATE_RIGHT_DARK_MODE"
+      [title]="'Rotate by 90° degrees'"
     ></app-image-button>
 
     <app-image-button
@@ -28,7 +41,15 @@
       [imgSide]="'Left'"
       [lightSrc]="themeService.assetConstants.ADD_NEW_PAGE_LIGHT_MODE"
       [darkSrc]="themeService.assetConstants.ADD_NEW_PAGE_DARK_MODE"
+      [title]="'Add New Page'"
     ></app-image-button>
+
+    <app-checkbox
+      class="p-2 rounded-sm hover:bg-gray-200 dark:hover:bg-[var(--main_dark_hover_color)]"
+      [text]="'Swapping Mode'"
+      [(IsChecked)]="swap"
+      [title]="'Move Pages by Swapping Positions'"
+    ></app-checkbox>
 
     <app-image-button
       (click)="SubmitBtnPressed($event)"
@@ -38,12 +59,44 @@
       [imgSide]="'Right'"
       [lightSrc]="themeService.assetConstants.SUBMIT_ORGANIZE_LIGHT_MODE"
       [darkSrc]="themeService.assetConstants.SUBMIT_ORGANIZE_DARK_MODE"
+      [title]="'Submit all Changes'"
     ></app-image-button>
   </div>
   <hr />
 
-  <div
+  <!-- <div
     class="w-full ml-7 h-[87vh] transform flex flex-wrap max-w-390 gap-2 overflow-y-auto scrollViewStyle"
     #pdfContainer
-  ></div>
+  ></div> -->
+  <!-- <app-drag-and-drop-list [pages]="pages"></app-drag-and-drop-list> -->
+
+  <div
+    cdkDropList
+    class="container drop-list grid grid-cols-10 gap-5 absolute left-1/2 transform -translate-x-1/2"
+    [cdkDropListSortingDisabled]="true"
+    (cdkDropListDropped)="onDrop($event)"
+    [cdkDropListData]="pages"
+  >
+    <div *ngFor="let item of pages; let i = index" class="drag-item">
+      <!-- <div
+        *ngIf="dragOriginIndex !== null && i === previewIndex"
+        class="placeholder p-2 rounded border-2 border-dashed border-red-400 opacity-50"
+      ></div> -->
+
+      <div
+        #previewContainer
+        cdkDrag
+        [attr.data-index]="i"
+        (cdkDragStarted)="dragStarted(i)"
+        (cdkDragMoved)="dragMoved($event)"
+        [class.placeholder]="i === previewIndex && dragOriginIndex !== i"
+      ></div>
+    </div>
+  </div>
+  <!-- <button
+    (click)="loadMorePages()"
+    class="absolute p-2 mt-5 mb-10 bottom-0 rounded-sm bg-blue-500 hover:bg-gray-200 dark:hover:bg-[var(--main_dark_hover_color)] cursor-pointer left-1/2 transform -translate-x-1/2 z-200"
+  >
+    Load More
+  </button> -->
 </div>

@@ -42,20 +42,11 @@ export class PageInfoComponent {
   ShowInfo(event: Event) {}
 
   DeletePage(event: Event) {
-    if (!this.organizeService.organizerActive) {
-      this.organizeService.organizerActive = true;
-      const compref =
-        this.dynamicContaienrRegistry.dynamicAppContainer?.createComponent(
-          OrganizeView,
-        );
-      if (compref) compref.instance.organizeComponentRef = compref;
-    } else {
-      this.IsPageDeleted = !this.IsPageDeleted;
-      this.IsPageDeletedChange.emit({
-        pageNumber: this.pageNumber,
-        deleted: this.IsPageDeleted,
-      });
-    }
+    this.IsPageDeleted = !this.IsPageDeleted;
+    this.IsPageDeletedChange.emit({
+      pageNumber: this.pageNumber,
+      deleted: this.IsPageDeleted,
+    });
 
     //this.router.navigate([Constants.ORGANIZE_VIEW]);
     //this.pdfViewerService.deletePage(this.pageNumber);
@@ -66,5 +57,14 @@ export class PageInfoComponent {
     this.IsCheckedChange.emit(checkChanged);
   }
 
-  MovePage(event: Event) {}
+  MovePage(event: Event) {
+    if (!this.organizeService.organizerActive) {
+      this.organizeService.organizerActive = true;
+      const compref =
+        this.dynamicContaienrRegistry.dynamicAppContainer?.createComponent(
+          OrganizeView,
+        );
+      if (compref) compref.instance.organizeComponentRef = compref;
+    }
+  }
 }

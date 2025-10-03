@@ -1,19 +1,24 @@
 <div
-  class="translucentStyle absolute w-50 h-25 left-1/2 transform -translate-x-1/2 rounded-md items-center justify-center flex flex-col z-500 top-1/2"
+  class="translucentStyle absolute w-50 h-30 left-1/2 transform -translate-x-1/2 rounded-md items-center justify-center flex flex-col z-500 top-1/2"
 >
   <input
     #numberTxt
     type="text"
     [placeholder]="placeholder"
+    (input)="OnInput(numberTxt.value)"
     (keydown.enter)="OnEnter(numberTxt.value)"
     (focus)="clearPlaceholder()"
     (blur)="resetPlaceHolder()"
     class="w-40 h-10 hover:border hover:border-gray-400 hover:rounded text-center opacity-50 border-1 rounded-sm"
+    [ngClass]="{
+      'border-red-500': inputInvalid,
+    }"
   />
   <div class="flex gap-2 items-end mt-1.5">
     <button
+      [disabled]="inputInvalid"
       (click)="OK(numberTxt.value)"
-      class="p-2 rounded-sm hover:bg-gray-200 dark:hover:bg-[var(--main_dark_hover_color)] cursor-pointer"
+      class="p-2 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-[var(--main_dark_hover_color)] cursor-pointer"
     >
       OK
     </button>

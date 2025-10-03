@@ -24,15 +24,6 @@ export class AssetConstants {
 	public INFO_HOVER_ALL: string = "/assets/icons/pageInfo/infoIconWhite.svg";
 
 
-	public ROTATE_RIGHT_LIGHT_MODE: string = "/assets/icons/pageInfo/rotateRight.svg";
-	public ROTATE_RIGHT_DARK_MODE: string = "/assets/icons/pageInfo/rotateRightDarkMode.svg";
-
-	public ADD_NEW_PAGE_LIGHT_MODE: string = "/assets/icons/pageInfo/newPage.svg";
-	public ADD_NEW_PAGE_DARK_MODE: string = "/assets/icons/pageInfo/newPageDarkMode.svg";
-
-
-	public SUBMIT_ORGANIZE_LIGHT_MODE: string = "/assets/icons/pageInfo/submit.svg";
-	public SUBMIT_ORGANIZE_DARK_MODE: string = "/assets/icons/pageInfo/submitDarkMode.svg";
 
 
 
@@ -67,4 +58,25 @@ export class AssetConstants {
 
 	public CHECKBOX_CHECK_ICON: string = "assets/icons/tick.svg";
 	public CHECKBOX_CHECK_ICON_DARK_MODE: string = "assets/icons/tickDarkMode.svg";
+
+
+
+	// organize
+	public ROTATE_RIGHT_LIGHT_MODE: string = "/assets/icons/pageInfo/rotateRight.svg";
+	public ROTATE_RIGHT_DARK_MODE: string = "/assets/icons/pageInfo/rotateRightDarkMode.svg";
+
+	public ADD_NEW_PAGE_LIGHT_MODE: string = "/assets/icons/pageInfo/newPage.svg";
+	public ADD_NEW_PAGE_DARK_MODE: string = "/assets/icons/pageInfo/newPageDarkMode.svg";
+
+
+	public SUBMIT_ORGANIZE_LIGHT_MODE: string = "/assets/icons/pageInfo/submit.svg";
+	public SUBMIT_ORGANIZE_DARK_MODE: string = "/assets/icons/pageInfo/submitDarkMode.svg";
+
+
+	public ORGANIZE_ICON: string = "/assets/icons/organize/organizeIcon.svg";
+	public ORGANIZE_ICON_DARK_MODE: string = "/assets/icons/organize/organizeIconDarkMode.svg";
+
+	
+	public ClOSE_ICON: string = "/assets/icons/organize/closeBtnIcon.svg";
+
 }

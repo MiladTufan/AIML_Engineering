@@ -77,7 +77,7 @@ export class PdfViewerComponent {
         Array.from(this.pdfViewerService.renderQueue).map((pageNumber) => {
           //prettier-ignore
           console.log('Re rendering page on zoom: ', pageNumber,' scale: ', finalScale);
-          this.pdfViewerService.renderPipeline(pageNumber, finalScale, this.pdfContainer.nativeElement, false, false, false, 0)
+          this.pdfViewerService.renderPipeline(pageNumber, finalScale, this.pdfContainer.nativeElement, false, false, false, false, 0)
 
           //this.pdfViewerService.renderPage(pageNumber, false, finalScale, this.pdfContainer.nativeElement);
         }),
@@ -152,7 +152,7 @@ export class PdfViewerComponent {
       for (const pageNum of set) {
         const page = this.pdfViewerHelperService.allRenderedPages.find((p) => p.pageNum === pageNum,);
         if (page?.currentScale != this.pdfViewerHelperService.currentScale) {
-          this.pdfViewerService.renderPipeline(pageNum, this.pdfViewerHelperService.currentScale, this.pdfContainer.nativeElement, false, false,false, 0)
+          this.pdfViewerService.renderPipeline(pageNum, this.pdfViewerHelperService.currentScale, this.pdfContainer.nativeElement, false, false,false,false, 0)
 
           // this.pdfViewerService.renderPage(pageNum, false, this.pdfViewerHelperService.currentScale, this.pdfContainer.nativeElement);
           console.log('re-rendering page: ', pageNum);
@@ -181,7 +181,7 @@ export class PdfViewerComponent {
         this.pdfViewerService.addVisiblePages(pageNumber);
         if (!this.pdfViewerHelperService.allRenderedPages.find((p) => p.pageNum === pageNumber,))
 
-        this.pdfViewerService.renderPipeline(pageNumber, this.pdfViewerHelperService.currentScale, this.pdfContainer.nativeElement, false, false, false,0)
+        this.pdfViewerService.renderPipeline(pageNumber, this.pdfViewerHelperService.currentScale, this.pdfContainer.nativeElement, false, false, false, false,0)
           // this.pdfViewerService.renderPage(pageNumber, false, this.pdfViewerHelperService.currentScale, this.pdfContainer.nativeElement);
       } else {
         this.pdfViewerService.removeVisiblePages(pageNumber);
@@ -239,7 +239,7 @@ export class PdfViewerComponent {
       if (this.renderMode == 0) {
         for (let pageNum = 1; pageNum <= this.totalPages; pageNum++) {
 
-          this.pdfViewerService.renderPipeline(pageNum, this.pdfViewerHelperService.currentScale, this.pdfContainer.nativeElement, true, false, false, 0).then(() => {
+          this.pdfViewerService.renderPipeline(pageNum, this.pdfViewerHelperService.currentScale, this.pdfContainer.nativeElement, true, false, false, false,0).then(() => {
             if (this.pdfContainer.nativeElement.children.length === this.totalPages)
             {
               if (!this.alreadyRanObserver) this.createObserver();

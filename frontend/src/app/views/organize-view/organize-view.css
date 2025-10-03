@@ -1,0 +1,22 @@
+.placeholder {
+  opacity: 0.5;
+}
+
+.cdk-drag-preview {
+  width: auto !important; /* or set exact width */
+  height: auto !important; /* or exact height */
+  box-sizing: border-box;
+  transition: none !important; /* dragged item moves instantly */
+}
+
+.shiftable {
+  transition: transform 1s ease-in-out;
+}
+
+.grid-item {
+  transition: transform 0.2s ease-in-out; /* items shift smoothly */
+}
+
+.dragging {
+  opacity: 0; /* visually disappears but space is preserved */
+}

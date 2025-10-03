@@ -1,4 +1,5 @@
 import {
+  ComponentRef,
   ElementRef,
   inject,
   Injectable,
@@ -753,6 +754,120 @@ export class PDFViewerService {
   // rendering options.
 
   /**
+   * Creates a PageOverlay and sets necessary parameters for it.
+   * @param renderparams 
+   * @param previewContainer 
+   * @returns 
+   */
+  private createPageOverlay(renderparams: RenderParams, previewContainer: HTMLDivElement)
+  {
+    const pageOverlay = this.dynamicContainerRegistry.dynamicBoxContainer?.createComponent(PageOverlay);
+    if (pageOverlay) {
+      pageOverlay.location.nativeElement.id = `#PageOverlay-${renderparams.pageNumber}`;
+
+     const firstChild = pageOverlay.location.nativeElement.firstChild;
+      const firstChildOfFirst = firstChild.firstChild;
+      firstChild.insertBefore(previewContainer, firstChildOfFirst);
+
+      const ref = this.organizeService.getCompref(renderparams.pageNumber);
+      if (ref) {
+        pageOverlay.instance.isChecked = ref.instance.isChecked || this.organizeService.isPageChecked(renderparams.pageNumber);
+        pageOverlay.instance.isPageDeleted = ref.instance.isPageDeleted || this.organizeService.isPageDeleted(renderparams.pageNumber);
+      }
+      else
+      {
+        pageOverlay.instance.isChecked = this.organizeService.isPageChecked(renderparams.pageNumber);
+        pageOverlay.instance.isPageDeleted = this.organizeService.isPageDeleted(renderparams.pageNumber);
+      }
+
+
+      pageOverlay.instance.pageNumber = renderparams.pageNumber;
+      pageOverlay.instance.IsOrganizePreview = renderparams.isOrganize;
+      pageOverlay.instance.currentRotation = renderparams.rotation;
+      return {overlay: pageOverlay, ref: ref}
+    }
+    return null
+  }
+
+  /**
+   * initializes the previewContainer and sets it click listener
+   * @param renderparams 
+   * @param ret 
+   * @param previewContainer 
+   * @param canvas 
+   */
+  private initPreviewCotainer(renderparams: RenderParams, ret: {overlay: ComponentRef<PageOverlay>, ref: ComponentRef<PageOverlay> | undefined}, 
+          previewContainer: HTMLDivElement, canvas: HTMLCanvasElement)
+  {
+    previewContainer.classList.add('cursor-pointer');
+    previewContainer.classList.add('hover:border-blue-500');
+    previewContainer.appendChild(canvas);
+
+    previewContainer.addEventListener('click', () => {
+      if (!this.organizeService.organizerActive) {
+        ret.overlay.instance.isActivePage = true;
+        this.scrollToPage(renderparams.pageNumber);
+      } else {
+        ret.overlay.instance.isChecked = !ret.overlay.instance.isChecked;
+        if (ret.overlay.instance.isChecked) {
+          if (!this.organizeService.checkedPages.includes(renderparams.pageNumber))
+            this.organizeService.checkedPages.push(renderparams.pageNumber);
+        }
+        else
+        {
+           this.organizeService.checkedPages = this.organizeService.checkedPages.filter(p => p !== renderparams.pageNumber)
+        }
+      }
+    });
+  }
+
+  /**
+   * renders a preview page
+   * @param renderparams 
+   */
+  private async renderPreview(renderparams: RenderParams)
+  {
+    let page: any;
+    let viewport: any;
+
+    if (this.navigatorContainer == null && !renderparams.isOrganize)
+      this.navigatorContainer = renderparams.container;
+
+    page = await this.pdfDocument.getPage(renderparams.pageNumber);
+    viewport = page.getViewport({ scale: renderparams.scale, rotation: renderparams.rotation });
+
+    let previewContainer = document.createElement('div');
+    let canvas = document.createElement('canvas');
+
+    const ret = this.createPageOverlay(renderparams, previewContainer)
+
+    if (ret) {
+      const context = canvas.getContext('2d')!;
+      canvas.height = viewport.height
+      canvas.width = viewport.width
+
+      this.previewPageHeight = viewport.height
+      this.initPreviewCotainer(renderparams, ret, previewContainer, canvas);
+
+      // if (ret.ref)
+      //   renderparams.container.nativeElement.replaceChild(
+      //     ret.overlay.location.nativeElement,
+      //     ret.ref.location.nativeElement );
+      // else
+      renderparams.container.nativeElement.appendChild(ret.overlay.location.nativeElement);
+
+      const renderContext = { canvasContext: context, viewport: viewport};
+      await page.render(renderContext).promise;
+
+      const payLoad = {pageNum: renderparams.pageNumber,preview: ret.overlay};
+
+      this.htmlPreviewPages.push(payLoad);
+      if (renderparams.isOrganize)
+        this.organizeService.setComprefSafely(renderparams.pageNumber, ret.overlay);
+    }
+  }
+
+  /**
    * render a dummy page with no content. This is done so that we can prerender an invisible page for intersection detection.
    * Once a dummy page comes close to being in the view it is rendered fully. This is done so we do not have to render every page at the beginning.
    * @param renderparams 
@@ -767,6 +882,80 @@ export class PDFViewerService {
   }
 
   /**
+   * Render an empty preview page.
+   * @param renderparams 
+   */
+  private async renderEmptyPreview(renderparams: RenderParams)
+  {
+    let previewContainer = document.createElement('div');
+    let canvas = document.createElement('canvas');
+
+    const ret = this.createPageOverlay(renderparams, previewContainer)
+
+    if (ret) {
+      const ctx = canvas.getContext('2d')!;
+      canvas.width = Page.widthA4 * renderparams.scale;
+      canvas.height = Page.heightA4 * renderparams.scale;
+
+      canvas.style.transform = `rotate(${renderparams.rotation}deg)`;
+      canvas.style.transformOrigin = 'top left'; // pivot point
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.strokeStyle = '#ccc';
+      ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+      this.previewPageHeight = Page.heightA4 * renderparams.scale
+      this.initPreviewCotainer(renderparams, ret, previewContainer, canvas);
+    
+      renderparams.container.nativeElement.appendChild(ret.overlay.location.nativeElement);
+
+
+      const payLoad = {pageNum: renderparams.pageNumber,preview: ret.overlay};
+
+      this.htmlPreviewPages.push(payLoad);
+      if (renderparams.isOrganize)
+        this.organizeService.setComprefSafely(renderparams.pageNumber, ret.overlay);
+    }
+  }
+
+  /**
+   * Render an empty page.
+   * @param renderparams 
+   */
+  private async renderEmpty(renderparams: RenderParams)
+  {
+    const ret = this.replaceChildrenOfPageContainer(renderparams.container.nativeElement, 
+                                                    renderparams.isDummyPage, renderparams.pageNumber, 
+                                                    renderparams.scale);
+
+    const ctx = ret.canvas.getContext('2d')!;
+    ret.canvas.width = Page.widthA4 * renderparams.scale;
+    ret.canvas.height = Page.heightA4 * renderparams.scale;
+
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, ret.canvas.width, ret.canvas.height);
+
+    ctx.strokeStyle = '#ccc';
+    ctx.strokeRect(0, 0, ret.canvas.width, ret.canvas.height);
+    
+    ret.pageContainer.style.width = `${Page.widthA4 * renderparams.scale}px`;
+    ret.pageContainer.style.height = `${Page.heightA4 * renderparams.scale}px`;
+    ret.pageContainer.style.marginTop = `${ret.baseMarginScale}px`;
+    this.currentBaseMarginScale = ret.baseMarginScale;
+
+    if (renderparams.pageNumber == this.totalPages)
+      ret.pageContainer.style.marginBottom = '128px';
+
+    const newPage = new Page(renderparams.pageNumber, null, ret.boxesForPage, [], 
+                             Page.heightA4 * renderparams.scale, 
+                             Page.widthA4 * renderparams.scale, 0,
+                             ret.pageContainer, null, 0, 0, renderparams.scale,);
+
+    this.pdfViewerHelperService.assignPageToRendered(newPage);
+  }
+
+    /**
    * Renders a PDF page.
    * @param pageNumber => the page to render.
    * @param scale => the scale to render the page for.
@@ -803,42 +992,6 @@ export class PDFViewerService {
   }
 
   /**
-   * Render an empty page.
-   * @param renderparams 
-   */
-  private async renderEmpty(renderparams: RenderParams)
-  {
-    const ret = this.replaceChildrenOfPageContainer(renderparams.container, 
-                                                    renderparams.isDummyPage, renderparams.pageNumber, 
-                                                    renderparams.scale);
-
-    const ctx = ret.canvas.getContext('2d')!;
-    ret.canvas.width = Page.widthA4 * renderparams.scale;
-    ret.canvas.height = Page.heightA4 * renderparams.scale;
-
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, ret.canvas.width, ret.canvas.height);
-
-    ctx.strokeStyle = '#ccc';
-    ctx.strokeRect(0, 0, ret.canvas.width, ret.canvas.height);
-    
-    ret.pageContainer.style.width = `${Page.widthA4 * renderparams.scale}px`;
-    ret.pageContainer.style.height = `${Page.heightA4 * renderparams.scale}px`;
-    ret.pageContainer.style.marginTop = `${ret.baseMarginScale}px`;
-    this.currentBaseMarginScale = ret.baseMarginScale;
-
-    if (renderparams.pageNumber == this.totalPages)
-      ret.pageContainer.style.marginBottom = '128px';
-
-    const newPage = new Page(renderparams.pageNumber, null, ret.boxesForPage, [], 
-                             Page.heightA4 * renderparams.scale, 
-                             Page.widthA4 * renderparams.scale, 0,
-                             ret.pageContainer, null, 0, 0, renderparams.scale,);
-
-    this.pdfViewerHelperService.assignPageToRendered(newPage);
-  }
-
-  /**
    * Main Entrypoint of PDF Page rendering. This function is responsible for calling the appropriate rendering function
    * depending on the paramters provided.
    * @param pageNumber 
@@ -853,16 +1006,21 @@ export class PDFViewerService {
                        isDummyPage: Boolean = false, 
                        isPreviewPage: Boolean = false, 
                        isEmpty: Boolean = false,
+                       isOrganize: Boolean = false,
                        rotation: number = 0)
   {
-    const renderparams = new RenderParams(pageNumber, rotation, scale, isDummyPage, isPreviewPage, container)
+    const renderparams = new RenderParams(pageNumber, rotation, scale, isDummyPage, isPreviewPage, isOrganize, container)
     if (pageNumber === 1) renderparams.isDummyPage = false;
 
-    if (!isDummyPage)
+    if (!isDummyPage && !isEmpty && !isPreviewPage)
       this.render(renderparams)
-    if (isDummyPage)
+    if (isDummyPage && !isEmpty && !isPreviewPage)
       this.renderDummy(renderparams)
-    else if (isEmpty)
+    else if (isEmpty && !isPreviewPage )
       this.renderEmpty(renderparams)
+    else if (isPreviewPage && !isEmpty)
+      this.renderPreview(renderparams)
+    else if (isPreviewPage && isEmpty)
+      this.renderEmptyPreview(renderparams)
   }
 }

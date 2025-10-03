@@ -156,4 +156,20 @@ export const ICONS_USED: AppIcon[] = [
     license: 'MIT https://github.com/halfmage/majesticons/blob/main/LICENSE',
     link: 'https://icon-sets.iconify.design/ep/right/',
   },
+  {
+    name: 'clarity:organization-line',
+    usedIn: 'Toolbar',
+    purpose: 'Organize',
+    source: 'Iconify',
+    license: 'MIT https://github.com/halfmage/majesticons/blob/main/LICENSE',
+    link: 'https://icon-sets.iconify.design/clarity/organization-line/',
+  },
+  {
+    name: 'si:close-line',
+    usedIn: 'App',
+    purpose: 'Close window',
+    source: 'Iconify',
+    license: 'MIT https://github.com/halfmage/majesticons/blob/main/LICENSE',
+    link: 'https://icon-sets.iconify.design/si/close-line/',
+  },
 ];

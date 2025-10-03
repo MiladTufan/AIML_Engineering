@@ -4,7 +4,8 @@
 >
   <!-- <span class="mt-1" [style.font-size.px]="fontSize">#{{ pageNumber }}</span> -->
 
-  <button
+  <div
+    cdkDragHandle
     class="hover:bg-gray-200/100 dark:hover:bg-[var(--main_dark_hover_color)] pageInfoStyle flex items-center text-center justify-center"
     [style.width.px]="width"
     [style.height.px]="width"
@@ -31,7 +32,7 @@
       alt="Move Page Icon"
       class="w-[60%] absolute h-full opacity-0 hover:opacity-100 hover:scale-120 transform transition-transform duration-500"
     />
-  </button>
+  </div>
 
   <button
     class="hover:bg-red-500/100 pageInfoStyle flex items-center text-center justify-center"
@@ -95,6 +96,5 @@
       (IsCheckedChange)="checkChanged($event)"
     ></app-checkbox>
   }
-
   <div></div>
 </div>

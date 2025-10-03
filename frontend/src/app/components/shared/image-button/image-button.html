@@ -4,18 +4,39 @@
     [ngClass]="'bg-' + bgColor"
   >
     @if (imgSide == "Left") {
-      <button class="flex h-6 rounded-sm">
-        <img class="w-6 h-6 cursor-pointer" [src]="darkSrc" />
+      <button class="mr-2 flex h-6 rounded-sm">
+        <img
+          class="cursor-pointer"
+          [src]="darkSrc"
+          [style.width.px]="width"
+          [style.height.px]="height"
+        />
       </button>
     }
 
-    <span class="ml-1 text-black dark:text-[var(--main_dark_text_color)]">{{
+    @if (imgSide == "middle") {
+      <button class="flex h-6 rounded-sm">
+        <img
+          class="cursor-pointer"
+          [src]="lightSrc"
+          [style.width.px]="width"
+          [style.height.px]="height"
+        />
+      </button>
+    }
+
+    <span class="text-black dark:text-[var(--main_dark_text_color)] mt-0.5">{{
       btnText
     }}</span>
 
     @if (imgSide == "Right") {
       <button class="flex ml-2 h-6 rounded-sm">
-        <img class="w-6 h-6 cursor-pointer" [src]="darkSrc" />
+        <img
+          class="cursor-pointer"
+          [src]="darkSrc"
+          [style.width.px]="width"
+          [style.height.px]="height"
+        />
       </button>
     }
   </div>
@@ -25,18 +46,39 @@
     [ngClass]="'bg-' + bgColor"
   >
     @if (imgSide == "Left") {
-      <button class="flex h-6 rounded-sm">
-        <img class="w-6 h-6 cursor-pointer" [src]="lightSrc" />
+      <button class="mr-2 flex h-6 rounded-sm">
+        <img
+          class="cursor-pointer"
+          [src]="lightSrc"
+          [style.width.px]="width"
+          [style.height.px]="height"
+        />
       </button>
     }
 
-    <span class="ml-1 text-black dark:text-[var(--main_dark_text_color)]">{{
+    @if (imgSide == "middle") {
+      <button class="flex h-6 rounded-sm">
+        <img
+          class="cursor-pointer"
+          [src]="lightSrc"
+          [style.width.px]="width"
+          [style.height.px]="height"
+        />
+      </button>
+    }
+
+    <span class="text-black dark:text-[var(--main_dark_text_color)]">{{
       btnText
     }}</span>
 
     @if (imgSide == "Right") {
       <button class="flex ml-2 h-6 rounded-sm">
-        <img class="w-6 h-6 cursor-pointer" [src]="lightSrc" />
+        <img
+          class="cursor-pointer"
+          [src]="lightSrc"
+          [style.width.px]="width"
+          [style.height.px]="height"
+        />
       </button>
     }
   </div>
