@@ -49,6 +49,22 @@ export class OrganizeService {
     this.pageOverlayCompMap.set(id, pageOverlayComp);
   }
 
+  public swapComprefs(key1: number, key2: number) {
+    const val1 = this.pageOverlayCompMap.get(key1)!;
+    const val2 = this.pageOverlayCompMap.get(key2)!;
+
+    // remove old keys
+    this.pageOverlayCompMap.delete(key1);
+    this.pageOverlayCompMap.delete(key2);
+
+    // insert them swapped
+    val1.instance.pageNumber = key2;
+    val2.instance.pageNumber = key1;
+
+    this.pageOverlayCompMap.set(key1, val2);
+    this.pageOverlayCompMap.set(key2, val1);
+  }
+
   /**
    * get the ComponentRef of a PageOverlay for later use.
    * @param id => id of the box component (TextBox id or ImgBox id)
@@ -78,10 +94,31 @@ export class OrganizeService {
       (a, b) => b[0] - a[0],
     );
     for (let [key, value] of entries) {
-      if (key >= pageNumber) {
-        this.pageOverlayCompMap.set(key + 1, value);
+      const valPageNumber = value.instance.pageNumber;
+      if (valPageNumber >= pageNumber) {
+        this.pageOverlayCompMap.set(valPageNumber + 1, value);
+        const compref = this.getCompref(valPageNumber);
+        if (compref) compref.instance.pageNumber = valPageNumber + 1;
+        this.pageOverlayCompMap.delete(valPageNumber);
+      }
+    }
+    return this.pageOverlayCompMap;
+  }
+
+  /**
+   * Before inserting a new Page all comprefs have to be shifted by 1 to make place for the new compref
+   * @param pageNumber
+   */
+  public shiftComprefsRemove(pageNumber: number) {
+    const entries = Array.from(this.pageOverlayCompMap.entries()).sort(
+      (a, b) => b[0] - a[0],
+    );
+    for (let [key, value] of entries) {
+      // insert Page
+      if (key <= pageNumber) {
+        this.pageOverlayCompMap.set(key - 1, value);
         const compref = this.getCompref(key);
-        if (compref) compref.instance.pageNumber = key + 1;
+        if (compref) compref.instance.pageNumber = key - 1;
         this.pageOverlayCompMap.delete(key);
       }
     }

@@ -25,6 +25,7 @@ export class PageOverlay {
   public isPageDeleted: Boolean = false;
 
   public currentRotation: number = 0;
+  public isEmpty: Boolean = false;
 
   private pdfViewerService: PDFViewerService = inject(PDFViewerService);
   public themeService: ThemeService = inject(ThemeService);
@@ -36,7 +37,7 @@ export class PageOverlay {
 
       //prettier-ignore
       setTimeout(() => {
-          if (this.currentPage === this.pageNumber) 
+          if (this.currentPage === this.pageNumber && !this.organizeService.organizerActive) 
             this.isActivePage = true;
           else 
             this.isActivePage = false;

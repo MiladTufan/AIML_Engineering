@@ -907,6 +907,8 @@ export class PDFViewerService {
 
       this.previewPageHeight = Page.heightA4 * renderparams.scale
       this.initPreviewCotainer(renderparams, ret, previewContainer, canvas);
+
+      ret.overlay.instance.isEmpty = true;
     
       renderparams.container.nativeElement.appendChild(ret.overlay.location.nativeElement);
 

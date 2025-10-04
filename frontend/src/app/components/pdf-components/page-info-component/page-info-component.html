@@ -1,5 +1,5 @@
 <div
-  class="translucentStyle flex items-center text-center mt-2"
+  class="translucentStyleBlack flex items-center text-center mt-2"
   [style.border-radius.px]="borderRadius"
 >
   <!-- <span class="mt-1" [style.font-size.px]="fontSize">#{{ pageNumber }}</span> -->
@@ -19,19 +19,24 @@
         alt="Move Page Icon"
         class="w-[60%] block h-full hover:opacity-0"
       />
+
+      <img
+        [src]="themeService.assetConstants.MOVE_PAGE_BASE_LIGHT_MODE"
+        alt="Move Page Icon"
+        class="w-[60%] absolute h-full opacity-0 hover:opacity-100 hover:scale-120 transform transition-transform duration-500"
+      />
     } @else {
       <img
         [src]="themeService.assetConstants.MOVE_PAGE_BASE_DARK_MODE"
         alt="Move Page Icon"
         class="w-[60%] block h-full hover:opacity-0"
       />
+      <img
+        [src]="themeService.assetConstants.MOVE_PAGE_HOVER_ALL"
+        alt="Move Page Icon"
+        class="w-[60%] absolute h-full opacity-0 hover:opacity-100 hover:scale-120 transform transition-transform duration-500"
+      />
     }
-
-    <img
-      [src]="themeService.assetConstants.MOVE_PAGE_HOVER_ALL"
-      alt="Move Page Icon"
-      class="w-[60%] absolute h-full opacity-0 hover:opacity-100 hover:scale-120 transform transition-transform duration-500"
-    />
   </div>
 
   <button

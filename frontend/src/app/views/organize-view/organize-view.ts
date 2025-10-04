@@ -65,22 +65,24 @@ export class OrganizeView {
   public organizeComponentRef: any;
 
   public pages: any[] = [];
+  private originPages: any[] = [];
   public maxPagesStep: number = 20;
   public currentPageCnt: number = 0;
   private numAddedPages: number = 0;
+  public draggedItem: any;
 
   @ViewChild('pdfContainer', { static: true }) pdfContainer!: ElementRef<HTMLDivElement>;
   @ViewChildren('previewContainer') previewContainer!: QueryList<ElementRef<HTMLDivElement>>;
 
   @Output() closeEvent = new EventEmitter<void>();
   constructor(private cd: ChangeDetectorRef) {}
-
+  
   /**
    * Loads Fills the pages array with the first maxPagesStep values.
    */
   ngOnInit() {
-    this.currentPageCnt = this.pdfViewerService.totalPages//(this.maxPagesStep > this.pdfViewerService.totalPages) ? this.pdfViewerService.totalPages : this.maxPagesStep
-    this.pages = Array.from({ length: this.currentPageCnt  }, (_, i) => ({index: i+1, isPlaceholder: false, isHidden: false}));
+    this.currentPageCnt = this.pdfViewerService.totalPages
+    this.pages = Array.from({ length: this.currentPageCnt  }, (_, i) => ({pageNumber: i+1, isPlaceholder: false, isHidden: false}));
     this.cd.detectChanges(); 
   }
 
@@ -91,7 +93,6 @@ export class OrganizeView {
   {
     for (let pageNum = 1; pageNum <= this.currentPageCnt; pageNum++)
         this.pdfViewerService.renderPipeline(pageNum, 0.2, this.previewContainer.get(pageNum-1), false, true, false, true, 0)
-        // this.pdfViewerService.renderPreviewPage(pageNum, 0.2, this.previewContainer.get(pageNum-1), true, 0)
   }
 
   /**
@@ -122,7 +123,7 @@ export class OrganizeView {
     {
       if (i < this.pdfViewerService.totalPages)
       {
-        this.pages.push({index: i + 1, isPlaceholder: false, isHidden: false})
+        this.pages.push({pageNumber: i + 1, isPlaceholder: false, isHidden: false})
         this.cd.detectChanges();
         this.pdfViewerService.renderPipeline(i + 1, 0.2, this.previewContainer.get(i), false, true, false, true, 0)
         cntr += 1
@@ -136,9 +137,19 @@ export class OrganizeView {
    * @param event 
    */
   onDrop(event: CdkDragDrop<string[]>) {
+    this.pages = [...this.originPages];
+
     if (this.dragOriginIndex !== null && this.previewIndex !== null && this.dragOriginIndex !== this.previewIndex && this.swap) {
-      [this.pages[this.dragOriginIndex], this.pages[this.previewIndex]] =
-        [this.pages[this.previewIndex], this.pages[this.dragOriginIndex]];
+        const key1 = this.dragOriginIndex+1
+        const key2 = this.previewIndex+1
+
+        const item = this.pages[this.dragOriginIndex];
+        const itemNew = this.pages[this.previewIndex];
+        item.pageNumber = key2
+        itemNew.pageNumber = key1
+
+        this.swapIdx(this.pages, this.dragOriginIndex, this.previewIndex )
+        this.organizeService.swapComprefs(key1, key2)
     }
 
     if (this.dragOriginIndex !== null &&
@@ -146,12 +157,29 @@ export class OrganizeView {
         this.swap == false &&
         this.dragOriginIndex !== this.previewIndex) {
 
-      const item = this.pages[this.dragOriginIndex];
-      
-      // remove Origin index
-      this.pages.splice(this.dragOriginIndex, 1);
-      const insertIndex = this.dragOriginIndex < this.previewIndex ? this.previewIndex - 1 : this.previewIndex;
-      this.pages.splice(insertIndex, 0, item);
+        const item = this.pages[this.dragOriginIndex];
+        const itemNew = this.pages[this.previewIndex];
+        const insertIndex = this.dragOriginIndex < this.previewIndex ? this.previewIndex -1: this.previewIndex;
+
+        item.pageNumber = insertIndex+1
+        itemNew.pageNumber = this.dragOriginIndex+1
+        
+        //remove original
+        this.pages.splice(this.dragOriginIndex, 1);
+
+        //insert new 
+        this.pages.splice(insertIndex, 0, item);
+
+      // this.organizeService.pageOverlayCompMap.forEach((value, key) => {
+      //   if (value.instance.pageNumber-1 === this.dragOriginIndex)
+      //   {
+      //     value.instance.pageNumber = insertIndex+1
+      //   }
+      //   else if (value.instance.pageNumber <= insertIndex+1)
+      //   {
+      //     value.instance.pageNumber--;
+      //   }
+      // })
     }
 
     this.dragOriginIndex = null;
@@ -166,7 +194,9 @@ export class OrganizeView {
  dragStarted(index: number) {
     this.dragOriginIndex = index; 
     this.lastTargetIndex = index; 
+    this.draggedItem = this.pages[index]
     this.cd.detectChanges();
+    this.originPages = [...this.pages];
   }
 
   /**
@@ -190,9 +220,12 @@ export class OrganizeView {
 
     if (targetIndex !== -1 && targetIndex !== this.previewIndex) {
       this.previewIndex = targetIndex;
-      // this.pages = this.pages.filter(i => !i.isPlaceholder);
-      // this.pages.splice(targetIndex, 0, {index: targetIndex, isPlaceholder: true});
-      // this.lastTargetIndex = targetIndex;
+      this.pages = this.pages.filter(i => !i.isPlaceholder);
+      if (this.dragOriginIndex != targetIndex && !this.swap)
+      {
+        this.pages.splice(targetIndex, 0, {index: targetIndex, isPlaceholder: true});
+        this.lastTargetIndex = targetIndex;
+      }
     }
   }
 
@@ -215,7 +248,9 @@ export class OrganizeView {
           pageOverlayComp?.instance.toggleActivePage(isChecked);
         }
       }
-    } else {
+    } 
+    else 
+    {
       this.organizeService.checkedPages.forEach((pageNumber: number) => {
         const pageOverlayComp = this.organizeService.getCompref(pageNumber);
         pageOverlayComp?.instance.toggleActivePage(isChecked);
@@ -245,14 +280,12 @@ export class OrganizeView {
     this.numberBox = this.dynamicContainerRegistry.dynamicAppContainer?.createComponent( NumberBox,)!;
     this.numberBox.instance.compref = this.numberBox;
     this.numberBox.instance.enteredTextEmitter.subscribe((pageNumberStr: string) => {
-      if (Number(pageNumberStr) > this.pages.length)
-        pageNumberStr = (this.pages.length + 1).toString();
-      this.organizeService.shiftComprefs(Number(pageNumberStr));
-      this.pages.splice(Number(pageNumberStr)-1, 0, {index: Number(pageNumberStr), isPlaceholder: false, isHidden: false})
       
-
+      const {indexPrev, adjustedPageNumber} = this.insertPage(Number(pageNumberStr))
       this.cd.detectChanges();
-      this.pdfViewerService.renderPipeline(Number(pageNumberStr), 0.2, this.previewContainer.get(Number(pageNumberStr)-1), false, true, true, true, 0);
+      this.pdfViewerService.renderPipeline(adjustedPageNumber, 0.2, 
+                                           this.previewContainer.get(indexPrev), 
+                                           false, true, true, true, 0);
       this.numberBox.destroy();
       this.currentPageCnt+= 1
     });
@@ -265,18 +298,98 @@ export class OrganizeView {
   rotatePage(event: Event) {
     this.organizeService.checkedPages.forEach((pageNumber: number) => {
       const pageOverlayComp = this.organizeService.getCompref(pageNumber);
-      const currentRotation =
-        (pageOverlayComp!.instance.currentRotation + 90) % 360;
-      console.log('rotation for page: ', pageNumber, 'is: ', currentRotation);
-      
-      this.pdfViewerService.renderPipeline(pageNumber, 0.2, this.previewContainer.get(pageNumber-1), false, true, false, true, currentRotation)
-      // this.pdfViewerService.renderPipeline(pageNumber, 0.2, this.previewContainer.get(pageNumber-1), false, true, true, true, currentRotation); // empty preview page
-      
-      const pageOverlayCompNew = this.organizeService.getCompref(pageNumber);
-      pageOverlayCompNew!.instance.currentRotation = currentRotation;
-      pageOverlayCompNew!.instance.isChecked = true;
+      if (pageOverlayComp)
+      {
+        const currentRotation = (pageOverlayComp.instance.currentRotation + 90) % 360;
+        console.log('rotation for page: ', pageNumber, 'is: ', currentRotation);
+        
+        const container = this.previewContainer.toArray().find(cnt => {
+          const el = cnt.nativeElement.querySelector("app-page-overlay")
+          const num = Number(el!.id.split("-")[1])
+          if (num === pageNumber)
+            return true;
+          return false;
+        })
+        
+        if (!pageOverlayComp.instance.isEmpty)
+        {
+          this.pdfViewerService.renderPipeline(pageOverlayComp.instance.pageNumber, 0.2, 
+                                              container, 
+                                              false, true, false, true, currentRotation);
+        }
+        else
+        {
+          pageOverlayComp.location.nativeElement.style.transform = `rotate(${currentRotation}deg)`;
+          pageOverlayComp.location.nativeElement.style.transformOrigin = 'top left'; // pivot point
+        }
+
+        const pageOverlayCompNew = this.organizeService.getCompref(pageNumber);
+        pageOverlayCompNew!.instance.currentRotation = currentRotation;
+        pageOverlayCompNew!.instance.isChecked = true;
+      }
     });
   }
+
+  /**
+   * Insert a page into the pages array.
+   * @param pageNumber => the page to insert
+   * @returns indexPrev => the index of the pageContainer.
+   */
+  private insertPage(pageNumber: number)
+  {
+    let lastItem: Boolean = false;
+    if (pageNumber > this.pages.length)
+    {
+      pageNumber = (this.pages.length + 1);
+      lastItem = true;
+    }
+    this.organizeService.shiftComprefs(pageNumber);
+
+    const prevNumber = pageNumber
+    const nextNumber = pageNumber+1
+
+    let indexPrev = this.pages.findIndex(item => item.pageNumber === prevNumber)
+    if (lastItem)
+    {
+      this.pages.splice(pageNumber, 0, {pageNumber: pageNumber, 
+                        isPlaceholder: false, isHidden: false})
+      indexPrev = pageNumber-1
+    }
+    else if ((indexPrev != -1 && this.pages[indexPrev + 1].pageNumber === nextNumber))
+    {
+      this.pages.splice(indexPrev, 0, {pageNumber: pageNumber, 
+                        isPlaceholder: false, isHidden: false})
+
+      this.pages.forEach((item, index) => {
+        if (item.pageNumber >= pageNumber && index != indexPrev)
+          item.pageNumber++;
+      })
+    }
+    return {indexPrev: indexPrev, adjustedPageNumber: pageNumber}
+  }
+
+
+/**
+ * Removes element at given index and shifts array
+ */
+removeAtIndex(arr: any[], pageNumber: number): void {
+  if (pageNumber < 0 || pageNumber >= arr.length) return;
+
+  this.organizeService.shiftComprefsRemove(pageNumber);
+  const idx = arr.findIndex(item => item.pageNumber === pageNumber)
+  arr.splice(idx, 1)
+}
+
+
+/**
+ * Swaps two values in array
+ */
+swapIdx(arr: number[], i: number, j: number): void {
+  if (i < 0 || j < 0 || i >= arr.length || j >= arr.length) return;
+  [arr[i], arr[j]] = [arr[j], arr[i]];
+}
+
+
 
   // /**
   //  * Creates the visible pages observer. This Observe observes all pages and tells us which pages are currently visibile
