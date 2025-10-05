@@ -16,6 +16,7 @@ import { OrganizeService } from '../../../services/pdf-services/organize-service
 export class PageOverlay {
   @Input() pageNumber: number = 1;
   @Input() IsOrganizePreview: Boolean = false;
+  @Input() IsNavigator: Boolean = false;
 
   private currentPage: number = 1;
   private pageNumberSub!: Subscription;

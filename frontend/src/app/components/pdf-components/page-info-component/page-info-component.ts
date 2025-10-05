@@ -22,6 +22,7 @@ export class PageInfoComponent {
   @Input() borderRadius: number = 9;
   @Input() IsChecked: Boolean = false;
   @Input() IsOrganizePreview: Boolean = false;
+  @Input() IsNavigator: Boolean = false;
 
   @Output() IsCheckedChange: EventEmitter<Boolean> = new EventEmitter();
 
@@ -66,5 +67,14 @@ export class PageInfoComponent {
         );
       if (compref) compref.instance.organizeComponentRef = compref;
     }
+  }
+  /**
+   * Duplicate a Page.
+   * @param event
+   */
+  //prettier-ignore
+  DuplicatePage(event: Event) {
+    //this.pdfViewerService.createSpaceForPage(this.pdfViewerService.PdfContainer, "pageContainer", this.pageNumber+1)
+    this.pdfViewerService.renderPipeline(this.pageNumber, 1.0, this.pdfViewerService.PdfContainer!.nativeElement, false, false, false, false, false, true, 0)
   }
 }

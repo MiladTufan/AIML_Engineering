@@ -172,4 +172,12 @@ export const ICONS_USED: AppIcon[] = [
     license: 'MIT https://github.com/halfmage/majesticons/blob/main/LICENSE',
     link: 'https://icon-sets.iconify.design/si/close-line/',
   },
+  {
+    name: 'heroicons-outline:duplicate',
+    usedIn: 'App',
+    purpose: 'Duplicate',
+    source: 'Iconify',
+    license: 'MIT https://github.com/halfmage/majesticons/blob/main/LICENSE',
+    link: 'https://icon-sets.iconify.design/heroicons-outline/duplicate/',
+  },
 ];

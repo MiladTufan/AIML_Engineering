@@ -79,14 +79,19 @@
   >
     <div *ngFor="let item of pages; let i = index" class="drag-item flex">
       <div
-        *ngIf="dragOriginIndex !== null && i === previewIndex && !swap"
+        *ngIf="
+          dragOriginIndex !== null &&
+          i === previewIndex &&
+          previewIndex !== dragOriginIndex &&
+          !swap
+        "
         class="placeholder rounded bg-blue-500 col-span-1 w-[95%] h-[90%] mt-4"
       ></div>
 
       <!-- prettier-ignore -->
       <div
         #previewContainer
-        cdkDrag
+        cdkDrag 
         [attr.data-index]="i"
         (cdkDragStarted)="dragStarted(i)"
         (cdkDragMoved)="dragMoved($event)"

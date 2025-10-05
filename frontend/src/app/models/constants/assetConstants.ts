@@ -79,4 +79,8 @@ export class AssetConstants {
 	
 	public ClOSE_ICON: string = "/assets/icons/organize/closeBtnIcon.svg";
 
+
+	public DUPLICATE_PAGE_ICON: string = "/assets/icons/pageInfo/duplicateIcon.svg";
+	public DUPLICATE_PAGE_ICON_DARK_MODE: string = "/assets/icons/pageInfo/duplicateIconDarkMode.svg";
+
 }

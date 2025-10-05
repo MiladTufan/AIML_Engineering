@@ -64,7 +64,7 @@
 }
 
 .translucentStyle {
-  @apply backdrop-blur-lg shadow-lg dark:shadow-xl border 
+  @apply backdrop-blur-lg shadow-lg dark:shadow-xl border bg-white/70
    border-gray-300/40 dark:border-1 dark:border-gray-900 dark:bg-[var(--main_dark_color)]/90 dark:text-[var(--main_dark_text_color)];
 }
 

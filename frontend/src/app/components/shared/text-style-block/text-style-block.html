@@ -1,5 +1,5 @@
 <!-- prettier-ignore -->
-<div class="p-4 translucentStyle flex-col rounded-xl z-100 select-none both overflow-visible absolute"
+<div class="p-4 translucentStyleBlack flex-col rounded-xl z-100 select-none both overflow-visible absolute"
     [style.transform]="'scale(' + 1 + ')'"
     [@genieGrow]="this.box.StyleState.isCollapsed ? 'hidden' : 'visible'"
     [style.left.px]="translateX"
@@ -41,8 +41,8 @@
     </div>
 
 
-    <div class="flex mt-2 text-gray-500 text-sm font-thin" #textStyle>
-        <span >Style</span>
+    <div class="flex mt-2 dark:text-gray-300 text-sm font-thin" #textStyle>
+        <span>Style</span>
         <app-drop-down-menu-component class="ml-6"
             (selectedItem)="SelectedStyle($event)" [width]="144" [height]="20"
             (selectedItemInput)="SelectedStyle($event, false)"
@@ -51,7 +51,7 @@
 
     </div>
 
-    <div class="flex  text-gray-500 text-sm font-thin  mt-2" #textStyle>
+    <div class="flex  dark:text-gray-300 text-sm font-thin  mt-2" #textStyle>
         <span>Font</span>
         <app-drop-down-menu-component class="ml-6.5" (selectedItem)="SelectedFont($event)" [width]="144" [height]="20"
             (selectedItemInput)="SelectedFont($event, false)"
@@ -60,17 +60,17 @@
 
     </div>
 
-    <div class="flex  text-gray-500 text-sm font-thin  mt-2" #textStyle>
+    <div class="flex  dark:text-gray-300 text-sm font-thin  mt-2" #textStyle>
         <span>Size</span>
         <button class="ml-7.5 inline-flex w-[12px] text-black dark:text-white hover:font-medium  textStyleBlockItem"
                 (click)="SelectedFontSize('12', false)"
-                [ngClass]="currentFontSize == '12' ? 'opacity-100 font-semibold' : 'opacity-50 normal'">12</button>
+                [ngClass]="currentFontSize == '12' ? 'opacity-100 font-semibold' : 'opacity-70 normal'">12</button>
         <button class="ml-2 inline-flex w-[12px] text-black dark:text-white hover:font-medium textStyleBlockItem"
                 (click)="SelectedFontSize('16', false)"
-                [ngClass]="currentFontSize == '16' ? 'opacity-100 font-semibold' : 'opacity-50 normal'">16</button>
+                [ngClass]="currentFontSize == '16' ? 'opacity-100 font-semibold' : 'opacity-70 normal'">16</button>
         <button class="ml-2 inline-flex w-[12px] text-black dark:text-white hover:font-medium textStyleBlockItem"
                 (click)="SelectedFontSize('24', false)"
-                [ngClass]="currentFontSize == '24' ? 'opacity-100 font-semibold' : 'opacity-50 normal'">24</button>
+                [ngClass]="currentFontSize == '24' ? 'opacity-100 font-semibold' : 'opacity-70 normal'">24</button>
 
         <app-drop-down-menu-component class="ml-2.5 inline-flex w-[12px]" (selectedItem)="SelectedFontSize($event)"
             [width]="80" [height]="20"
@@ -79,9 +79,9 @@
             [dropDownItems]="fontSizeSteps"></app-drop-down-menu-component>
     </div>
 
-    <div class="flex  text-gray-500 text-sm font-thin  mt-2" #textStyle>
+    <div class="flex  dark:text-gray-300text-sm font-thin  mt-2" #textStyle>
 
-         <div class="flex-col text-left text-gray-500 text-sm" #textStyle>
+         <div class="flex-col text-left dark:text-gray-300 text-sm" #textStyle>
             <span >Color</span>
             <div class="flex">
                 @for (color of firstRowStyle; track $index) {
@@ -115,7 +115,7 @@
 		    </div>
         </div>
 
-        <div class="flex-col  text-gray-500 text-sm ml-5 font-thin" #textStyle>
+        <div class="flex-col  dark:text-gray-300 text-sm ml-5 font-thin" #textStyle>
             <span class="">Background</span>
 
             <div class="flex">

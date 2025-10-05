@@ -46,7 +46,7 @@ export class NavigatorComponent {
         if (!this.renderedPreviews.includes(pageNum))
         {
           this.renderedPreviews.push(pageNum)
-          this.pdfViewerService.renderPreviewPage(pageNum, 0.2, this.pdfPreviewContainer);
+          this.pdfViewerService.renderPipeline(pageNum, 0.2, this.pdfPreviewContainer, false, true, false, false, true, false,0)
           console.log('Rendering Page Preview: ', pageNum);
         }
       }

@@ -1,5 +1,5 @@
 <div
-  class="PageOverlayContainer relative flex flex-col border-dashed border-blue-500 w-fit h-fit mt-3 p-1 hover:border-1 shadow-lg"
+  class="PageOverlayContainer relative flex flex-col border-dashed border-blue-500 w-fit h-fit mt-3 p-1 hover:border-1"
   [ngClass]="{
     'border-1': isActivePage || isChecked || isPageDeleted,
     'border-red-500': isPageDeleted,
@@ -33,5 +33,6 @@
     [width]="36"
     [borderRadius]="3"
     [IsOrganizePreview]="IsOrganizePreview"
+    [IsNavigator]="IsNavigator"
   ></app-page-info-component>
 </div>

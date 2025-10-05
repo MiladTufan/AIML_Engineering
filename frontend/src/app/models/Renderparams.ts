@@ -1,3 +1,14 @@
+/**
+ *  @param pageNumber
+ * @param scale
+ * @param container
+ * @param isDummyPage
+ * @param isPreviewPage
+ * @param isEmpty
+ * @param isOrganize
+ * @param isNavigator
+ * @param rotation
+ */
 export class RenderParams {
   constructor(
     public pageNumber: number = 1,
@@ -6,6 +17,7 @@ export class RenderParams {
     public isDummyPage: Boolean = false,
     public isPreviewPage: Boolean = false,
     public isOrganize: Boolean = false,
+    public isNavigator: Boolean = false,
     public container: any,
   ) {}
 }

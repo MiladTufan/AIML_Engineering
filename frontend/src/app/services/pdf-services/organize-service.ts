@@ -66,6 +66,59 @@ export class OrganizeService {
   }
 
   /**
+   * Shifts keys in the range of lowerbound and upperbound
+   * @param lowerBound
+   * @param upperBound
+   * @param insertIndex => the key that was inserted and caused shifting
+   * @param invert => key was inserted from right to left => true
+   */
+  shiftKeysByBound(
+    lowerBound: number,
+    upperBound: number,
+    insertIndex: number,
+    invert: Boolean = false,
+  ) {
+    const entries = Array.from(this.pageOverlayCompMap.entries());
+
+    const keysToDelete: number[] = [];
+    const valuesToEnter: any[] = [];
+
+    for (let [key, value] of entries) {
+      if (
+        value.instance.pageNumber - 1 > lowerBound &&
+        value.instance.pageNumber - 1 <= upperBound &&
+        !invert
+      ) {
+        keysToDelete.push(value.instance.pageNumber);
+        value.instance.pageNumber--;
+        valuesToEnter.push({ key: value.instance.pageNumber, value: value });
+      } else if (
+        value.instance.pageNumber - 1 >= lowerBound &&
+        value.instance.pageNumber - 1 < upperBound &&
+        invert
+      ) {
+        keysToDelete.push(value.instance.pageNumber);
+        value.instance.pageNumber++;
+        valuesToEnter.push({ key: value.instance.pageNumber, value: value });
+      } else if (
+        value.instance.pageNumber - 1 === lowerBound ||
+        value.instance.pageNumber - 1 === upperBound
+      ) {
+        keysToDelete.push(value.instance.pageNumber);
+        value.instance.pageNumber = insertIndex + 1;
+        valuesToEnter.push({ key: value.instance.pageNumber, value: value });
+      }
+    }
+
+    keysToDelete.forEach((key) => {
+      this.pageOverlayCompMap.delete(key);
+    });
+    valuesToEnter.forEach((item) => {
+      this.pageOverlayCompMap.set(item.key, item.value);
+    });
+  }
+
+  /**
    * get the ComponentRef of a PageOverlay for later use.
    * @param id => id of the box component (TextBox id or ImgBox id)
    */

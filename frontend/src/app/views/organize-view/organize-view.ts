@@ -28,7 +28,7 @@ import {
   transferArrayItem,
   moveItemInArray,
 } from '@angular/cdk/drag-drop';
-import { ScrollingModule } from '@angular/cdk/scrolling';
+import { RenderParams } from '../../models/Renderparams';
 
 //prettier-ignore
 @Component({
@@ -71,6 +71,7 @@ export class OrganizeView {
   private numAddedPages: number = 0;
   public draggedItem: any;
 
+
   @ViewChild('pdfContainer', { static: true }) pdfContainer!: ElementRef<HTMLDivElement>;
   @ViewChildren('previewContainer') previewContainer!: QueryList<ElementRef<HTMLDivElement>>;
 
@@ -92,7 +93,7 @@ export class OrganizeView {
   ngAfterViewInit()
   {
     for (let pageNum = 1; pageNum <= this.currentPageCnt; pageNum++)
-        this.pdfViewerService.renderPipeline(pageNum, 0.2, this.previewContainer.get(pageNum-1), false, true, false, true, 0)
+        this.pdfViewerService.renderPipeline(pageNum, 0.2, this.previewContainer.get(pageNum-1), false, true, false, true, false, false, 0)
   }
 
   /**
@@ -125,7 +126,7 @@ export class OrganizeView {
       {
         this.pages.push({pageNumber: i + 1, isPlaceholder: false, isHidden: false})
         this.cd.detectChanges();
-        this.pdfViewerService.renderPipeline(i + 1, 0.2, this.previewContainer.get(i), false, true, false, true, 0)
+        this.pdfViewerService.renderPipeline(i + 1, 0.2, this.previewContainer.get(i), false, true, false, true, false, false,0)
         cntr += 1
       }
     }
@@ -159,27 +160,22 @@ export class OrganizeView {
 
         const item = this.pages[this.dragOriginIndex];
         const itemNew = this.pages[this.previewIndex];
-        const insertIndex = this.dragOriginIndex < this.previewIndex ? this.previewIndex -1: this.previewIndex;
+        const insertIndex = this.dragOriginIndex < this.previewIndex ? this.previewIndex - 1: this.previewIndex;
 
-        item.pageNumber = insertIndex+1
+        item.pageNumber = insertIndex+2
         itemNew.pageNumber = this.dragOriginIndex+1
         
-        //remove original
+        // //remove original
         this.pages.splice(this.dragOriginIndex, 1);
 
-        //insert new 
+        // //insert new 
         this.pages.splice(insertIndex, 0, item);
+        const invert = this.dragOriginIndex < insertIndex ? false : true
 
-      // this.organizeService.pageOverlayCompMap.forEach((value, key) => {
-      //   if (value.instance.pageNumber-1 === this.dragOriginIndex)
-      //   {
-      //     value.instance.pageNumber = insertIndex+1
-      //   }
-      //   else if (value.instance.pageNumber <= insertIndex+1)
-      //   {
-      //     value.instance.pageNumber--;
-      //   }
-      // })
+        const upperBound = this.dragOriginIndex < insertIndex ? insertIndex : this.dragOriginIndex
+        const lowerBound = this.dragOriginIndex < insertIndex ? this.dragOriginIndex : insertIndex
+
+        this.organizeService.shiftKeysByBound(lowerBound, upperBound, insertIndex, invert)
     }
 
     this.dragOriginIndex = null;
@@ -285,7 +281,7 @@ export class OrganizeView {
       this.cd.detectChanges();
       this.pdfViewerService.renderPipeline(adjustedPageNumber, 0.2, 
                                            this.previewContainer.get(indexPrev), 
-                                           false, true, true, true, 0);
+                                           false, true, true, true, false, false,0);
       this.numberBox.destroy();
       this.currentPageCnt+= 1
     });
@@ -315,7 +311,7 @@ export class OrganizeView {
         {
           this.pdfViewerService.renderPipeline(pageOverlayComp.instance.pageNumber, 0.2, 
                                               container, 
-                                              false, true, false, true, currentRotation);
+                                              false, true, false, true, false, false,currentRotation);
         }
         else
         {
@@ -345,17 +341,14 @@ export class OrganizeView {
     }
     this.organizeService.shiftComprefs(pageNumber);
 
-    const prevNumber = pageNumber
-    const nextNumber = pageNumber+1
-
-    let indexPrev = this.pages.findIndex(item => item.pageNumber === prevNumber)
+    let indexPrev = pageNumber-1
     if (lastItem)
     {
       this.pages.splice(pageNumber, 0, {pageNumber: pageNumber, 
                         isPlaceholder: false, isHidden: false})
       indexPrev = pageNumber-1
     }
-    else if ((indexPrev != -1 && this.pages[indexPrev + 1].pageNumber === nextNumber))
+    else
     {
       this.pages.splice(indexPrev, 0, {pageNumber: pageNumber, 
                         isPlaceholder: false, isHidden: false})

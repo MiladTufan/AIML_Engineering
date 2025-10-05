@@ -399,6 +399,14 @@ export class PDFViewerService {
     });
   }
 
+  /**
+   * Recreate all objects for a particular page.
+   * @param pageNumber 
+   * @param scale 
+   * @param textBoxLayer 
+   * @param imgBoxLayer 
+   * @returns 
+   */
   private recreateObjectsForPage(
     pageNumber: number,
     scale: number,
@@ -418,6 +426,14 @@ export class PDFViewerService {
     return { boxesForPage: boxesForPage, imgBoxesForPage: imgBoxesForPage };
   }
 
+  /**
+   * Replace all child containers of container with new ones (in case of rerender)
+   * @param container 
+   * @param renderdummy 
+   * @param pageNumber 
+   * @param scale 
+   * @returns 
+   */
   replaceChildrenOfPageContainer(
     container: HTMLDivElement,
     renderdummy: Boolean,
@@ -459,259 +475,6 @@ export class PDFViewerService {
     };
   }
 
-  /**
-   * Renders a preview page with. Used in the Navigator and Organize view to showcase PDF pages.
-   * @param pageNumber
-   * @param scale
-   * @param container
-   * @param organize
-   * @param rotation
-   */
-  async previewRender(
-    pageNumber: number,
-    scale: number,
-    container: any,
-    organize: Boolean = false,
-    rotation: number = 0,
-    empty: Boolean = false,
-  ) {
-    let page: any;
-    let viewport: any;
-
-    if (this.navigatorContainer == null && !organize)
-      this.navigatorContainer = container;
-
-    if (!empty) {
-      page = await this.pdfDocument.getPage(pageNumber);
-      viewport = page.getViewport({ scale: scale, rotation: rotation });
-    }
-
-    let previewContainer = document.createElement('div');
-    let canvas = document.createElement('canvas');
-
-    previewContainer.className = 'relative block';
-    canvas.className = 'relative block';
-
-    const pageOverlay =
-      this.dynamicContainerRegistry.dynamicBoxContainer?.createComponent(
-        PageOverlay,
-      );
-
-    if (pageOverlay) {
-      pageOverlay.location.nativeElement.id = `#PageOverlay-${pageNumber}`;
-      // Insert at index 0
-
-      const context = canvas.getContext('2d')!;
-      canvas.height = !empty ? viewport.height : Page.heightA4 * scale;
-      canvas.width = !empty ? viewport.width : Page.widthA4 * scale;
-
-      this.previewPageHeight = !empty ? viewport.height : Page.heightA4 * scale;
-      let renderContext: any;
-      if (!empty) {
-        renderContext = {
-          canvasContext: context,
-          viewport: viewport,
-        };
-      } else {
-        context.fillStyle = '#fff';
-        context.fillRect(0, 0, canvas.width, canvas.height);
-
-        context.strokeStyle = '#ccc';
-        context.strokeRect(0, 0, canvas.width, canvas.height);
-      }
-
-      previewContainer.classList.add('cursor-pointer');
-      previewContainer.classList.add('hover:border-blue-500');
-      previewContainer.appendChild(canvas);
-
-      const firstChild = pageOverlay.location.nativeElement.firstChild;
-      const firstChildOfFirst = firstChild.firstChild;
-      firstChild.insertBefore(previewContainer, firstChildOfFirst);
-
-      const ref = this.organizeService.getCompref(pageNumber);
-      if (ref) {
-        pageOverlay.instance.isChecked = ref.instance.isChecked;
-        pageOverlay.instance.isPageDeleted = ref.instance.isPageDeleted;
-      }
-
-      pageOverlay.instance.pageNumber = pageNumber;
-      pageOverlay.instance.IsOrganizePreview = organize;
-      pageOverlay.instance.currentRotation = rotation;
-
-      previewContainer.addEventListener('click', () => {
-        if (!this.organizeService.organizerActive) {
-          pageOverlay.instance.isActivePage = true;
-          this.scrollToPage(pageNumber);
-        } else {
-          pageOverlay.instance.isChecked = !pageOverlay.instance.isChecked;
-          if (pageOverlay.instance.isChecked) {
-            if (!this.organizeService.checkedPages.includes(pageNumber))
-              this.organizeService.checkedPages.push(pageNumber);
-          }
-        }
-      });
-
-      if (ref)
-        container.nativeElement.replaceChild(
-          pageOverlay.location.nativeElement,
-          ref.location.nativeElement,
-        );
-      else
-        container.nativeElement.appendChild(pageOverlay.location.nativeElement);
-      if (!empty) {
-        await page.render(renderContext).promise;
-      }
-
-      const payLoad = {
-        pageNum: pageNumber,
-        preview: pageOverlay,
-      };
-      this.htmlPreviewPages.push(payLoad);
-      if (organize)
-        this.organizeService.setComprefSafely(pageNumber, pageOverlay);
-    }
-  }
-
-  /**
-   * Returns the viewport for an empty PDF page.
-   * @param scale
-   * @param rotation
-   * @returns
-   */
-  getEmptyViewport(scale: number, rotation: number) {
-    return new (pdfjsLib as any).PageViewport({
-      viewBox: [0, 0, Page.widthA4, Page.heightA4],
-      scale,
-      rotation,
-      offsetX: 0,
-      offsetY: 0,
-      dontFlip: false,
-    });
-  }
-
-  async renderPreviewPage(
-    pageNumber: number,
-    scale: number,
-    container: any,
-    organize: Boolean = false,
-    rotation: number = 0,
-    empty: Boolean = false,
-  ) {
-    this.previewRender(pageNumber, scale, container, organize, rotation, empty);
-  }
-
-  /**
-   * Main render function. This function is the entry point for the entire rendering logic.
-   * It handles all logic from creating the pdf canvas to recreating all objects on the PDF page itself.
-   * @param pageNumber => the page to render
-   * @param renderdummy => render a dummy page?
-   * @param scale => the scale to render the page in.
-   */
-  async renderPage(
-    pageNumber: number,
-    renderdummy: Boolean = true,
-    scale: number,
-    container: any,
-    organize: Boolean = false,
-    rotation: number = 0,
-  ) {
-    let page: any;
-    let viewport: any;
-
-    if (pageNumber === 1) renderdummy = false;
-
-    console.log('rendering page: ', pageNumber);
-    page = await this.pdfDocument.getPage(pageNumber);
-
-    if (!renderdummy) {
-      page = await this.pdfDocument.getPage(pageNumber);
-      viewport = page.getViewport({ scale: scale });
-      this.setPageHeight(viewport.height);
-    }
-    //prettier-ignore
-    let {canvas,textBoxLayer,textLayer,pageContainer,canvasContainer,baseMarginScale,boxesForPage, imgBoxLayer} = this.replaceChildrenOfPageContainer(
-        container,
-        renderdummy,
-        pageNumber,
-        scale,
-      );
-
-    if (!renderdummy) {
-      const context = canvas.getContext('2d')!;
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
-
-      pageContainer.style.width = `${viewport.width}px`;
-      pageContainer.style.height = `${viewport.height}px`;
-      pageContainer.style.marginTop = `${baseMarginScale}px`;
-
-      if (pageNumber == this.totalPages)
-        pageContainer.style.marginBottom = '128px';
-      this.currentBaseMarginScale = baseMarginScale;
-
-      const renderContext = {
-        canvasContext: context,
-        viewport: viewport,
-        intent: 'print',
-      };
-
-      await page.render(renderContext).promise;
-
-      const ret = this.htmlPreviewPages.find((p) => p.pageNum === pageNumber);
-      let preview = ret ? ret.preview : null;
-      //prettier-ignore
-      const newPage = new Page(pageNumber, viewport, boxesForPage, [], viewport.height, viewport.width, 0,
-          pageContainer, preview, 0, 0, scale,);
-      this.pdfViewerHelperService.assignPageToRendered(newPage);
-    }
-  }
-
-  /**
-   * Renders an empty page.
-   * @param pageNumber
-   * @param scale
-   * @param container
-   * @param organize
-   * @param rotation
-   */
-  async renderEmptyPage(
-    pageNumber: number,
-    scale: number,
-    container: any,
-    organize: Boolean = false,
-    rotation: number = 0,
-    preview: Boolean = false,
-  ) {
-    const width = 595 * scale; // A4 width in pt (72 dpi)
-    const height = 842 * scale; // A4 height in pt
-
-    //prettier-ignore
-    let {canvas,textBoxLayer,textLayer,pageContainer,canvasContainer,baseMarginScale,boxesForPage, imgBoxLayer} = 
-                  this.replaceChildrenOfPageContainer(container.nativeElement, false, pageNumber, scale,);
-
-    const ctx = canvas.getContext('2d')!;
-    canvas.width = width;
-    canvas.height = height;
-
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.strokeStyle = '#ccc';
-    ctx.strokeRect(0, 0, canvas.width, canvas.height);
-
-    // const target = container.nativeElement.querySelector(
-    //   `#${pageContainer.id}`,
-    // );
-    // container.nativeElement.removeChild(target);
-    // container.nativeElement.insertBefore(pageContainer, target);
-
-    const ret = this.htmlPreviewPages.find((p) => p.pageNum === pageNumber);
-    let preview1 = ret ? ret.preview : null;
-    //prettier-ignore
-    const newPage = new Page(pageNumber, null, boxesForPage, [], height, width, 0,
-          pageContainer, preview, 0, 0, scale,);
-    this.pdfViewerHelperService.assignPageToRendered(newPage);
-  }
 
   /**
    * free up the pageNumber in the container
@@ -730,21 +493,7 @@ export class PDFViewerService {
       if (pageNumber >= pageNumberToEnter) {
         pageNumber++;
         child.id = `#${idTag}-${pageNumber}`;
-        //prettier-ignore
-        const page = this.pdfViewerHelperService.allRenderedPages.find((p) => p.pageNum === pageNumber - 1,);
-        if (page) {
-          const ref = this.organizeService.getCompref(page.pageNum);
-          ref!.instance.pageNumber = pageNumber;
-          comprefsToChange.push({ pageNumber: page.pageNum, compref: ref });
-
-          page.pageNum = pageNumber;
-        }
       }
-    });
-
-    comprefsToChange.forEach((ref) => {
-      const adjustedPagenumber = ref.pageNumber + 1;
-      this.organizeService.setComprefSafely(adjustedPagenumber, ref.compref);
     });
   }
 
@@ -779,10 +528,9 @@ export class PDFViewerService {
         pageOverlay.instance.isChecked = this.organizeService.isPageChecked(renderparams.pageNumber);
         pageOverlay.instance.isPageDeleted = this.organizeService.isPageDeleted(renderparams.pageNumber);
       }
-
-
       pageOverlay.instance.pageNumber = renderparams.pageNumber;
       pageOverlay.instance.IsOrganizePreview = renderparams.isOrganize;
+      pageOverlay.instance.IsNavigator = renderparams.isNavigator;
       pageOverlay.instance.currentRotation = renderparams.rotation;
       return {overlay: pageOverlay, ref: ref}
     }
@@ -801,6 +549,9 @@ export class PDFViewerService {
   {
     previewContainer.classList.add('cursor-pointer');
     previewContainer.classList.add('hover:border-blue-500');
+    canvas.classList.add("border-1")
+    canvas.classList.add("border-black/20")
+    canvas.classList.add("shadow-lg")
     previewContainer.appendChild(canvas);
 
     previewContainer.addEventListener('click', () => {
@@ -957,7 +708,48 @@ export class PDFViewerService {
     this.pdfViewerHelperService.assignPageToRendered(newPage);
   }
 
-    /**
+  
+      /**
+   * Renders a PDF page.
+   * @param pageNumber => the page to render.
+   * @param scale => the scale to render the page for.
+   * @param container => the container to render the page in.
+   */
+  private async renderDuplicate(renderparams: RenderParams)
+  {
+    const page = await this.getCachedPage(renderparams.pageNumber)
+    const viewport = page.getViewport({ scale: renderparams.scale, rotation: renderparams.rotation });
+    this.setPageHeight(viewport.height);
+
+    let ret = this.replaceChildrenOfPageContainer(renderparams.container, false, renderparams.pageNumber, renderparams.scale);
+    const context = ret.canvas.getContext('2d')!;
+    ret.canvas.height = viewport.height;
+    ret.canvas.width = viewport.width;
+
+    ret.pageContainer.style.width = `${viewport.width}px`;
+    ret.pageContainer.style.height = `${viewport.height}px`;
+    ret.pageContainer.style.marginTop = `${ret.baseMarginScale}px`;
+
+    ret.pageContainer.id = `pageContainer-${renderparams.pageNumber+1}`
+    ret.canvasContainer.id = `canvasContainer-${renderparams.pageNumber+1}`
+
+    this.currentBaseMarginScale = ret.baseMarginScale;
+
+    if (renderparams.pageNumber == this.totalPages)
+      ret.pageContainer.style.marginBottom = '128px';
+
+    const renderContext = { canvasContext: context, viewport: viewport,intent: 'print', canvas: ret.canvas };
+
+    // this.ngZone.runOutsideAngular(async () => {
+      await page.render(renderContext).promise;
+    // });
+
+    const newPage = new Page(renderparams.pageNumber+1, viewport, ret.boxesForPage, [], viewport.height,
+                              viewport.width, 0, ret.pageContainer, false, 0, 0, renderparams.scale,);
+    this.pdfViewerHelperService.assignPageToRendered(newPage);
+  }
+
+  /**
    * Renders a PDF page.
    * @param pageNumber => the page to render.
    * @param scale => the scale to render the page for.
@@ -1000,6 +792,10 @@ export class PDFViewerService {
    * @param scale 
    * @param container 
    * @param isDummyPage 
+   * @param isPreviewPage 
+   * @param isEmpty 
+   * @param isOrganize 
+   * @param isNavigator 
    * @param rotation 
    */
   public async renderPipeline(pageNumber: number, 
@@ -1009,14 +805,18 @@ export class PDFViewerService {
                        isPreviewPage: Boolean = false, 
                        isEmpty: Boolean = false,
                        isOrganize: Boolean = false,
+                       isNavigator: Boolean = false,
+                       isDuplicate: Boolean = false,
                        rotation: number = 0)
   {
-    const renderparams = new RenderParams(pageNumber, rotation, scale, isDummyPage, isPreviewPage, isOrganize, container)
+    const renderparams = new RenderParams(pageNumber, rotation, scale, isDummyPage, isPreviewPage, isOrganize, isNavigator, container)
     if (pageNumber === 1) renderparams.isDummyPage = false;
 
     if (!isDummyPage && !isEmpty && !isPreviewPage)
       this.render(renderparams)
-    if (isDummyPage && !isEmpty && !isPreviewPage)
+    else if (!isDummyPage && !isEmpty && !isPreviewPage && isDuplicate)
+      this.renderDuplicate(renderparams)
+    else if (isDummyPage && !isEmpty && !isPreviewPage)
       this.renderDummy(renderparams)
     else if (isEmpty && !isPreviewPage )
       this.renderEmpty(renderparams)
