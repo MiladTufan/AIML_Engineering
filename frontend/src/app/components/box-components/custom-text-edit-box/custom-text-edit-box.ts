@@ -6,6 +6,7 @@ import {
   ViewChild,
   ElementRef,
   HostListener,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TextStyleBlock } from '../../shared/text-style-block/text-style-block';
@@ -55,6 +56,7 @@ export class CustomTextEditBox {
   constructor(
     public textEditService: TextEditService,
     private entityManagerService: EntityManagerService,
+    private cdr: ChangeDetectorRef,
   ) {}
   ngOnInit() {
     console.log('init TextBoxComponent');
@@ -70,7 +72,8 @@ export class CustomTextEditBox {
       (b) => b.id == this.box.id,
     );
     if (savedBox && savedBox instanceof TextBox) {
-      this.boxText = text;
+      this.box.text = text;
+      this.cdr.detectChanges();
     }
   }
 
@@ -112,6 +115,7 @@ export class CustomTextEditBox {
     if (this.box.StyleState.textStyle !== this.currentBoxStyle) {
       this.currentBoxStyle = this.box.StyleState.textStyle;
       this.boxText = this.box.text;
+      this.cdr.detectChanges();
     }
 
     return elem;

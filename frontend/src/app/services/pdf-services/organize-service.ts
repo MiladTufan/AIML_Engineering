@@ -1,4 +1,10 @@
-import { ComponentRef, inject, Injectable } from '@angular/core';
+import {
+  ComponentRef,
+  ElementRef,
+  inject,
+  Injectable,
+  QueryList,
+} from '@angular/core';
 import { PageOverlay } from '../../components/pdf-components/page-overlay/page-overlay';
 import { PDFViewerService } from './pdfviewer-service';
 
@@ -12,6 +18,7 @@ export class OrganizeService {
   public allrenderedPreviewPages: any[] = [];
 
   public pageOverlayCompMap = new Map<number, ComponentRef<PageOverlay>>();
+  public previewContainers!: QueryList<ElementRef<HTMLDivElement>>;
 
   /**
    * Checks whether the provided Page is inside checkedPages.

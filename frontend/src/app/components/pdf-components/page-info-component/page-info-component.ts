@@ -74,7 +74,15 @@ export class PageInfoComponent {
    */
   //prettier-ignore
   DuplicatePage(event: Event) {
+    
     //this.pdfViewerService.createSpaceForPage(this.pdfViewerService.PdfContainer, "pageContainer", this.pageNumber+1)
-    this.pdfViewerService.renderPipeline(this.pageNumber, 1.0, this.pdfViewerService.PdfContainer!.nativeElement, false, false, false, false, false, true, 0)
+
+    let container = this.pdfViewerService.PdfContainer!;
+    if (this.IsOrganizePreview)
+      container = this.organizeService.previewContainers.get(this.pageNumber - 1)!
+
+    this.pdfViewerService.renderPipeline(this.pageNumber, 1.0, container, false, false, 
+                                          false, false, false, true, 0)
+
   }
 }

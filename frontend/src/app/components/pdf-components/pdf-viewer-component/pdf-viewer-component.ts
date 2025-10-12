@@ -77,9 +77,9 @@ export class PdfViewerComponent {
         Array.from(this.pdfViewerService.renderQueue).map((pageNumber) => {
           //prettier-ignore
           console.log('Re rendering page on zoom: ', pageNumber,' scale: ', finalScale);
-          this.pdfViewerService.renderPipeline(pageNumber, finalScale, this.pdfContainer.nativeElement, false, false, false, false, false, false,0)
-
-          //this.pdfViewerService.renderPage(pageNumber, false, finalScale, this.pdfContainer.nativeElement);
+          this.pdfViewerService.renderPipeline(pageNumber, finalScale, 
+                                               this.pdfContainer.nativeElement, false, false, 
+                                               false, false, false, false,0)
         }),
       ).then(() => {
         this.pdfViewerService.renderQueue.clear();
@@ -202,7 +202,7 @@ export class PdfViewerComponent {
       },
       {
         root: this.pdfContainer.nativeElement,
-        rootMargin: '200px 0px 700px 0px', // top, right, bottom, left
+        rootMargin: '200px 0px 3200px 0px', // top, right, bottom, left
         threshold: 0.01, // Trigger if at least 10% is visible
       },
     );
@@ -458,12 +458,23 @@ export class PdfViewerComponent {
       );
       let newScale = oldScale * zoomFactor;
 
-      if (newScale > this.pdfViewerHelperService.maxScale) newScale = this.pdfViewerHelperService.maxScale;
+      if (newScale > this.pdfViewerHelperService.maxScale) 
+      {
+        newScale = this.pdfViewerHelperService.maxScale;
+        this.pdfViewerHelperService.currentScale = newScale;
+        this.pdfViewerHelperService.currentScale = this.pdfViewerHelperService.currentScale;
+        return;
+      }
 
-      if (newScale < this.pdfViewerHelperService.minScale) newScale = this.pdfViewerHelperService.minScale;
+      if (newScale < this.pdfViewerHelperService.minScale) 
+      {
+        newScale = this.pdfViewerHelperService.minScale;
+        this.pdfViewerHelperService.currentScale = newScale;
+        this.pdfViewerHelperService.currentScale = this.pdfViewerHelperService.currentScale;
+        return;
+      }
 
       this.pdfViewerHelperService.currentScale = newScale;
-      console.log(this.pdfViewerHelperService.currentScale);
       this.pdfViewerHelperService.currentScale = this.pdfViewerHelperService.currentScale;
 
       for (const p of this.pdfViewerService.visiblePages.getValue()) {

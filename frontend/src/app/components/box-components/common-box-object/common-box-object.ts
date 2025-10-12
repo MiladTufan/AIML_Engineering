@@ -110,6 +110,9 @@ export class CommonBoxObject {
           return; // clicked on content, ignore
         }
         console.log('Outer border clicked → Start move');
+        const rect = (e.target as HTMLElement).getBoundingClientRect();
+        this.dragOffsetX = e.clientX - rect.left;
+        this.dragOffsetY = e.clientY - rect.top;
 
         const onMouseMove = (moveEvent: MouseEvent) => {
           const all = document.elementsFromPoint(
@@ -123,8 +126,8 @@ export class CommonBoxObject {
           });
 
           const payload = {
-            top: moveEvent.clientY,
-            left: moveEvent.clientX,
+            top: moveEvent.clientY - this.dragOffsetY,
+            left: moveEvent.clientX - this.dragOffsetX,
             clickedPageNum: pageNumber,
           };
           this.entityManagerService.executeMove(

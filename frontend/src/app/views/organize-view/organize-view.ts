@@ -94,6 +94,8 @@ export class OrganizeView {
   {
     for (let pageNum = 1; pageNum <= this.currentPageCnt; pageNum++)
         this.pdfViewerService.renderPipeline(pageNum, 0.2, this.previewContainer.get(pageNum-1), false, true, false, true, false, false, 0)
+
+    this.organizeService.previewContainers = this.previewContainer
   }
 
   /**
@@ -284,6 +286,7 @@ export class OrganizeView {
                                            false, true, true, true, false, false,0);
       this.numberBox.destroy();
       this.currentPageCnt+= 1
+      this.organizeService.previewContainers = this.previewContainer
     });
   }
 

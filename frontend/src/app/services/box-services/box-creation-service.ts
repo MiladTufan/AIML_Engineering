@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { ComponentRef, inject, Injectable } from '@angular/core';
 import {
   BlockObject,
   BoxDimensions,

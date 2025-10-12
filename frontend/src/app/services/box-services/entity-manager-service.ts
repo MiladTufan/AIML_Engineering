@@ -206,6 +206,7 @@ export class EntityManagerService {
 
     if (oldBox && oldBox.id !== newObj.id) {
       const idx = this.blockObjects.indexOf(oldBox);
+      if (idx < 0) return;
       newObj.deepCopyBlockObj(oldBox);
 
       this.blockObjects.splice(idx, 1, newObj);
@@ -381,6 +382,8 @@ export class EntityManagerService {
     if (box) box.StyleState.isCollapsed = !editState;
 
     if (editState) this.currentFocusBoxId = box.id;
+
+    console.log('Current focus box id: ', this.currentFocusBoxId, editState);
   }
 
   /**

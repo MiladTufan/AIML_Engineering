@@ -4,7 +4,7 @@
 >
   <!-- <span class="mt-1" [style.font-size.px]="fontSize">#{{ pageNumber }}</span> -->
 
-  <button
+  <!-- <button
     class="hover:bg-gray-200/100 dark:hover:bg-[var(--main_dark_hover_color)] pageInfoStyle flex items-center text-center justify-center"
     [style.width.px]="width"
     [style.height.px]="width"
@@ -37,31 +37,29 @@
         class="w-[60%] absolute h-full opacity-0 hover:opacity-100 hover:scale-120 transform transition-transform duration-500"
       />
     }
-  </button>
+  </button> -->
 
-  @if (!IsOrganizePreview && !IsNavigator) {
-    <button
-      class="hover:bg-gray-200/100 dark:hover:bg-[var(--main_dark_hover_color)] pageInfoStyle flex items-center text-center justify-center"
-      [style.width.px]="width"
-      [style.height.px]="width"
-      (click)="DuplicatePage($event)"
-      title="Duplicate Page"
-    >
-      @if (!themeService.isDarkMode()) {
-        <img
-          [src]="themeService.assetConstants.DUPLICATE_PAGE_ICON"
-          alt="Duplicate Page Icon"
-          class="w-[65%] absolute h-full hover:opacity-100 hover:scale-120 transform transition-transform duration-500"
-        />
-      } @else {
-        <img
-          [src]="themeService.assetConstants.DUPLICATE_PAGE_ICON_DARK_MODE"
-          alt="Dupliace Page Icon"
-          class="w-[65%] absolute h-full hover:opacity-100 hover:scale-120 transform transition-transform duration-500"
-        />
-      }
-    </button>
-  }
+  <button
+    class="hover:bg-gray-200/100 dark:hover:bg-[var(--main_dark_hover_color)] pageInfoStyle flex items-center text-center justify-center"
+    [style.width.px]="width"
+    [style.height.px]="width"
+    (click)="DuplicatePage($event)"
+    title="Duplicate Page"
+  >
+    @if (!themeService.isDarkMode()) {
+      <img
+        [src]="themeService.assetConstants.DUPLICATE_PAGE_ICON"
+        alt="Duplicate Page Icon"
+        class="w-[65%] absolute h-full hover:opacity-100 hover:scale-120 transform transition-transform duration-500"
+      />
+    } @else {
+      <img
+        [src]="themeService.assetConstants.DUPLICATE_PAGE_ICON_DARK_MODE"
+        alt="Dupliace Page Icon"
+        class="w-[65%] absolute h-full hover:opacity-100 hover:scale-120 transform transition-transform duration-500"
+      />
+    }
+  </button>
 
   <button
     class="hover:bg-red-500/100 pageInfoStyle flex items-center text-center justify-center"

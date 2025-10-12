@@ -15,6 +15,8 @@ export class Page {
   private _currentScale: number = 1.0;
   private _translateX: number = 1.0;
   private _translateY: number = 1.0;
+  private _basePageNumber: number = 0; // Pagenumber this page was copied from
+  public _isDuplicate: Boolean = false; // Pagenumber this page was copied from
 
   constructor(
     pageNum: number = 0,
@@ -43,17 +45,25 @@ export class Page {
     this._translateY = translateY;
     this._blockObjects = blockObjects;
     this._updatePageNum = pageNum;
+    this._basePageNumber = pageNum;
   }
 
   get originalPageNum(): number {
     return this._pageNum;
   }
   get pageNum(): number {
-    if (this._pageNum != this._updatePageNum) return this._updatePageNum;
     return this._pageNum;
   }
   set pageNum(value: number) {
     this._pageNum = value;
+  }
+
+  get basePageNumber(): number {
+    return this._basePageNumber;
+  }
+
+  set basePageNumber(value: number) {
+    this._basePageNumber = value;
   }
 
   get updatePageNum(): number {
