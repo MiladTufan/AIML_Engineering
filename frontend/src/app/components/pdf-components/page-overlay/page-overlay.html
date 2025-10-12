@@ -1,5 +1,5 @@
 <div
-  class="PageOverlayContainer relative flex flex-col border-dashed border-blue-500 w-fit h-fit mt-3 p-1 hover:border-1"
+  class="PageOverlayContainer relative flex flex-col border-dashed border-blue-500 w-fit h-fit mt-3 p-1 hover:border-1 z-100"
   [ngClass]="{
     'border-1': isActivePage || isChecked || isPageDeleted,
     'border-red-500': isPageDeleted,
@@ -8,7 +8,7 @@
   (mouseleave)="isActivePage = false"
 >
   <div
-    class="PageOverlayNumber absolute w-7 h-7 bg-blue-500 justify-center items-center rounded-br-sm flex"
+    class="PageOverlayNumber absolute w-7 h-7 bg-blue-500 justify-center items-center rounded-br-sm flex z-100"
     [ngClass]="{
       'bg-red-500': isPageDeleted,
     }"

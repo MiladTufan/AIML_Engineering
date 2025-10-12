@@ -416,8 +416,8 @@ export class PDFViewerService {
         const blockObj = this.boxCreationService.createBlockObject(pageNumber, scaleParams.dims, true,);
 
         const textbox = this.textEditService.toTextBox(blockObj);
-        textbox.StyleState = box.StyleState;
-        textbox.StyleState.textFontSize = textbox.StyleState.textBaseFontSize * this.pdfViewerHelperService.currentScale;
+        textbox.StyleState = structuredClone(box.StyleState);
+        textbox.StyleState.textFontSize = textbox.StyleState.textBaseFontSize * this.pdfViewerHelperService.currentPreviewScale;
         textbox.text = box.text;
         const ret = this.boxCreationService.createDynamicCommonBox(false)
 
@@ -425,6 +425,7 @@ export class PDFViewerService {
         ret.commonBoxContainer.instance.boxBase = textbox as BlockObject;
         ret.commonBoxContainer.instance.resizable = false;
         ret.textBoxContainer.instance.isEditable = false;
+        ret.commonBoxContainer.instance.isSelectable = false;
 
         textbox.baseHeight = scaleParams.baseHeight;
         textbox.baseWidth = scaleParams.baseWidth;
@@ -432,6 +433,42 @@ export class PDFViewerService {
       }
     });
   }
+
+      /**
+   * This function recreates all the ImgBoxes according to the scale
+   * @param boxesForPage => all textboxes to recreate on the page
+   * @param pageNumber => the page where the textboxes are placed
+   * @param scale => current scale of the PDF
+   * @param textBoxLayer => the parent container where the textboxes are placed.
+   */
+  recreateImgBoxesForPreview(
+    boxesForPage: ImgBox[],
+    pageNumber: number,
+    scale: number,
+    imgBoxLayer: HTMLDivElement,
+  ) {
+    boxesForPage.forEach((box) => {
+      if (box.pageId === pageNumber) {
+        const scaleParams = this.entityManagerService.rescaleObjOnRender(box, scale,);
+        this.setCodeResizeTimeout();
+      
+        const blockObj = this.boxCreationService.createBlockObject(pageNumber, scaleParams.dims,true,);
+        const imgBox = this.imgBoxService.toImgBox(blockObj)
+        imgBox.src = box.src;
+
+        const {commonBoxContainer, imgBoxContainer} = this.imgBoxService.createDynamicCommonBox()
+        imgBoxContainer.instance.imgBox = imgBox;
+        commonBoxContainer.instance.boxBase = (imgBox as BlockObject);
+        commonBoxContainer.instance.resizable = false;
+        commonBoxContainer.instance.isSelectable = false;
+
+        imgBox.baseHeight = scaleParams.baseHeight;
+        imgBox.baseWidth = scaleParams.baseWidth;
+        imgBoxLayer.appendChild(commonBoxContainer.location.nativeElement);
+      }
+    });
+  }
+
 
   
 
@@ -503,7 +540,7 @@ export class PDFViewerService {
       ) as ImgBox[];
 
       this.recreateTextBoxesForPreview(boxesForPage, pageNumber, scale, textBoxLayer);
-      // this.recreateImgBoxesForPreview(imgBoxesForPage, pageNumber, scale, imgBoxLayer);
+      this.recreateImgBoxesForPreview(imgBoxesForPage, pageNumber, scale, imgBoxLayer);
 
     return { boxesForPage: boxesForPage, imgBoxesForPage: imgBoxesForPage };
 
@@ -828,48 +865,61 @@ export class PDFViewerService {
   }
 
 
-
+  /**
+   * Renders a duplicate preview Page. Used for all preview pages.
+   * @param renderparams 
+   */
   private async renderDuplicatePreview(renderparams: RenderParams)
   {
-    const {clonedPageContainer, basePage, clonedTextBoxLayer, clonedImgBoxLayer} = this.pdfViewerHelperService.copyCanvas(renderparams)
 
-    if (basePage)
-    {
-      const clonedCanvasContainer = clonedPageContainer.querySelector(`#canvasContainer-${renderparams.pageNumber}`)!;
-      const clonedCanvas = clonedPageContainer.querySelector(`#page-${renderparams.pageNumber}`)!;
+    const page = await this.getCachedPage(renderparams.pageNumber)
+    const viewport = page.getViewport({ scale: renderparams.scale, rotation: renderparams.rotation });
+    this.previewPageHeight = viewport.height
 
-      // create PageOverlay for preview
-      const ret = this.createPageOverlay(renderparams, clonedCanvasContainer as HTMLDivElement)
-      clonedCanvas.classList.add("border-1")
-      clonedCanvas.classList.add("border-black/20")
-      clonedCanvas.classList.add("shadow-lg")
-      clonedCanvas.classList.add("cursor-pointer")
-      clonedCanvasContainer.classList.add("-ml-4")
-      this.setPreviewPageClick(renderparams, clonedCanvasContainer as HTMLDivElement, ret!)
-
-      // recreate the Boxes for preview Scale
-
-      const textLayer = clonedCanvasContainer.querySelector(Constants.OVERLAY_TEXT);
-      const imgLayer = clonedCanvasContainer.querySelector(Constants.OVERLAY_IMG);
-      this.recreateObjectsForPreview(renderparams.pageNumber, renderparams.scale, 
-                                     textLayer as HTMLDivElement, imgLayer as HTMLDivElement)
-
-      // Remove old Preview and replace with new Preview
-      const overlay = renderparams.container.nativeElement.querySelector(`#PageOverlay-${renderparams.pageNumber}`)
-      const overlayNext = renderparams.container.nativeElement.querySelector(`#PageOverlay-${renderparams.pageNumber+1}`)
-
-      if (!overlay)
-        renderparams.container.nativeElement.appendChild(ret?.overlay.location.nativeElement)
-      else
+    this.pdfViewerHelperService.copyCanvas(renderparams, page, viewport).then((retVal: any) => {
+      if (retVal.basePage)
       {
-        renderparams.container.nativeElement.insertBefore( ret?.overlay.location.nativeElement, overlayNext)
-        renderparams.container.nativeElement.removeChild(overlay)
+        const clonedCanvasContainer = retVal.clonedPageContainer.querySelector(`#canvasContainer-${renderparams.pageNumber}`)!;
+        const clonedCanvas = retVal.clonedPageContainer.querySelector(`#page-${renderparams.pageNumber}`)!;
+
+        // create PageOverlay for preview
+        const ret = this.createPageOverlay(renderparams, clonedCanvasContainer as HTMLDivElement)
+        if (!ret) return;
+        clonedCanvas.classList.add("border-1")
+        clonedCanvas.classList.add("border-black/20")
+        clonedCanvas.classList.add("shadow-lg")
+        clonedCanvas.classList.add("cursor-pointer")
+        clonedCanvasContainer.classList.add("-ml-4")
+        this.setPreviewPageClick(renderparams, clonedCanvasContainer as HTMLDivElement, ret)
+
+        // recreate the Boxes for preview Scale
+
+        const textLayer = clonedCanvasContainer.querySelector(Constants.OVERLAY_TEXT);
+        const imgLayer = clonedCanvasContainer.querySelector(Constants.OVERLAY_IMG);
+        this.recreateObjectsForPreview(renderparams.pageNumber, renderparams.scale, 
+                                      textLayer as HTMLDivElement, imgLayer as HTMLDivElement)
+
+        // Remove old Preview and replace with new Preview
+        const overlay = renderparams.container.nativeElement.querySelector(`#PageOverlay-${renderparams.pageNumber}`)
+        const overlayNext = renderparams.container.nativeElement.querySelector(`#PageOverlay-${renderparams.pageNumber+1}`)
+
+
+
+        if (!overlay)
+          renderparams.container.nativeElement.appendChild(ret.overlay.location.nativeElement)
+        else
+        {
+          renderparams.container.nativeElement.insertBefore( ret.overlay.location.nativeElement, overlayNext)
+          renderparams.container.nativeElement.removeChild(overlay)
+        }
+
+        if (renderparams.isOrganize)
+          this.organizeService.setComprefSafely(renderparams.pageNumber, ret.overlay);
       }
-    }
+    })
 
-
+   
   }
-
   
   /**
    * Renders a PDF page.
@@ -879,40 +929,44 @@ export class PDFViewerService {
    */
   private async renderDuplicate(renderparams: RenderParams)
   {
-    const {clonedPageContainer, basePage, clonedTextBoxLayer, clonedImgBoxLayer} = this.pdfViewerHelperService.copyCanvas(renderparams)
-    if (basePage)
-    {
-      let container = basePage.htmlContainer
-      const nextPage = this.pdfViewerHelperService.getPageWithNumber(renderparams.pageNumber + 1)
+    const page = await this.getCachedPage(renderparams.pageNumber)
+    const viewport = page.getViewport({ scale: renderparams.scale, rotation: renderparams.rotation });
+    this.pdfViewerHelperService.copyCanvas(renderparams, page, viewport).then((retVal: any) => {
+      if (retVal.basePage)
+        {
+          let container = retVal.basePage.htmlContainer
+          const nextPage = this.pdfViewerHelperService.getPageWithNumber(renderparams.pageNumber + 1)
 
-      if (nextPage) container = nextPage.htmlContainer
+          if (nextPage) container = nextPage.htmlContainer
 
-      this.pdfViewerHelperService.updateOnInsert(renderparams, renderparams.pageNumber)
-
-
-      this.pdfViewerHelperService.updateContainerNumbers(clonedPageContainer, renderparams.pageNumber, 
-                                                         renderparams.pageNumber + 1, renderparams.scale)
+          this.pdfViewerHelperService.updateOnInsert(renderparams, renderparams.pageNumber)
 
 
+          this.pdfViewerHelperService.updateContainerNumbers(retVal.clonedPageContainer, renderparams.pageNumber, 
+                                                            renderparams.pageNumber + 1, renderparams.scale)
 
-      this.deepCopyBlockObjects(renderparams.pageNumber)
-      this.recreateObjectsForPage(renderparams.pageNumber + 1, renderparams.scale, 
-                                  clonedTextBoxLayer, clonedImgBoxLayer)
-      
-      renderparams.container.nativeElement.insertBefore(clonedPageContainer, container)
 
-      const newPage = new Page(renderparams.pageNumber+1, basePage.viewport, basePage.blockObjects, [], basePage.height,
-                              basePage.width, 0, clonedPageContainer, false, 0, 0, renderparams.scale,);
-      newPage._isDuplicate = true;
-      newPage.basePageNumber = renderparams.pageNumber
-      this.pdfViewerHelperService.allRenderedPages.set(renderparams.pageNumber+1, newPage)
-      // this.pdfViewerHelperService.assignPageToRendered(newPage);
-      this.totalPages += 1
-      this.scrollToPage(renderparams.pageNumber + 1)
-      this.getCachedPage(renderparams.pageNumber).then(page => {
-        this.insertIntoPageCache(renderparams.pageNumber + 1, page)
-      })
-    }
+
+          this.deepCopyBlockObjects(renderparams.pageNumber)
+          this.recreateObjectsForPage(renderparams.pageNumber + 1, renderparams.scale, 
+                                      retVal.clonedTextBoxLayer, retVal.clonedImgBoxLayer)
+          
+          renderparams.container.nativeElement.insertBefore(retVal.clonedPageContainer, container)
+
+          const newPage = new Page(renderparams.pageNumber+1, viewport, retVal.basePage.blockObjects, [], retVal.basePage.height,
+                                  retVal.basePage.width, 0, retVal.clonedPageContainer, false, 0, 0, renderparams.scale,);
+          newPage._isDuplicate = true;
+          newPage.basePageNumber = renderparams.pageNumber
+          this.pdfViewerHelperService.allRenderedPages.set(renderparams.pageNumber+1, newPage)
+          // this.pdfViewerHelperService.assignPageToRendered(newPage);
+          this.totalPages += 1
+          this.scrollToPage(renderparams.pageNumber + 1)
+          this.getCachedPage(renderparams.pageNumber).then(page => {
+            this.insertIntoPageCache(renderparams.pageNumber + 1, page)
+          })
+        }
+    })
+  
   }
 
   /**

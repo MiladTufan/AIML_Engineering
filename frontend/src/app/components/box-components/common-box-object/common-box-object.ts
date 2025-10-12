@@ -16,6 +16,7 @@ import { Constants } from '../../../models/constants/constants';
 import { PDFViewerService } from '../../../services/pdf-services/pdfviewer-service';
 import { TextStyleBlock } from '../../shared/text-style-block/text-style-block';
 import { PdfViewerHelperService } from '../../../services/pdf-services/pdf-viewer-helper-service';
+import { EventBusService } from '../../../services/communication/event-bus-service';
 
 @Component({
   selector: 'app-common-box-object',
@@ -40,6 +41,7 @@ export class CommonBoxObject {
   private currentHandle: string | null = null;
   private resizeObserver!: ResizeObserver;
   public resizable: Boolean = true;
+  public isSelectable: Boolean = true;
 
   @ViewChild('childContainer', { read: ViewContainerRef, static: true })
   childContainer!: ViewContainerRef;
@@ -60,6 +62,7 @@ export class CommonBoxObject {
     public pdfViewerService: PDFViewerService,
     private entityManagerService: EntityManagerService,
     public pdfViewerHelperService: PdfViewerHelperService,
+    private eventBusService: EventBusService,
   ) {}
 
   ngOnInit() {
@@ -142,6 +145,10 @@ export class CommonBoxObject {
           const onMouseUp = () => {
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
+            this.eventBusService.emit(Constants.EVENT_PAGE_RENDERED, {
+              pageNumber: this.boxBase.pageId,
+              updated: true,
+            });
           };
 
           document.addEventListener('mousemove', onMouseMove);
@@ -253,5 +260,10 @@ export class CommonBoxObject {
 
     document.removeEventListener('mousemove', this.onResizing);
     document.removeEventListener('mouseup', this.onResizeEnd);
+
+    this.eventBusService.emit(Constants.EVENT_PAGE_RENDERED, {
+      pageNumber: this.boxBase.pageId,
+      updated: true,
+    });
   };
 }

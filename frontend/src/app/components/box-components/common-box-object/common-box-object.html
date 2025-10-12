@@ -130,6 +130,7 @@
   <div
     class="absolute inline-block border-3 border-dashed border-blue-500 z-6 hover:border-blue-700 hover:shadow-md cursor-move overflow-hidden"
     #movableDiv
+    [ngClass]="isSelectable ? 'select-auto' : 'select-none'"
     [ngStyle]="{
       transform:
         'translate(' +

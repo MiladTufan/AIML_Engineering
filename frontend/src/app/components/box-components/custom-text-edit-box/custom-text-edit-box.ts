@@ -66,6 +66,10 @@ export class CustomTextEditBox {
     console.log('init TextBoxComponent');
   }
 
+  ngAfterViewInit() {
+    if (this.editableDiv) this.updateTextStyle();
+  }
+
   roundedWidth(w: number) {
     return Math.round(w);
   }
@@ -78,10 +82,10 @@ export class CustomTextEditBox {
     if (savedBox && savedBox instanceof TextBox) {
       this.box.text = text;
       this.cdr.detectChanges();
-      this.eventBusService.emit(Constants.EVENT_PAGE_RENDERED, {
-        pageNumber: this.box.pageId,
-        updated: true,
-      });
+      // this.eventBusService.emit(Constants.EVENT_PAGE_RENDERED, {
+      //   pageNumber: this.box.pageId,
+      //   updated: true,
+      // });
     }
   }
 

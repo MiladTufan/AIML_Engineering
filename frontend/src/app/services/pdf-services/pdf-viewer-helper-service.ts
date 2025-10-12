@@ -4,6 +4,7 @@ import { RenderParams } from '../../models/Renderparams';
 import { PageInfoComponent } from '../../components/pdf-components/page-info-component/page-info-component';
 import { DynamicContainerRegistry } from '../shared/dynamic-container-registry';
 import { Constants } from '../../models/constants/constants';
+import { PageViewport, PDFPageProxy } from 'pdfjs-dist';
 //prettier-ignore
 @Injectable({
   providedIn: 'root',
@@ -14,6 +15,7 @@ export class PdfViewerHelperService {
   public allRenderedPages: Map<number, Page> = new Map<number, Page>();
   // public allRenderedPages: Page[] = [];
   public currentScale: number = 1.0;
+  public currentPreviewScale: number = 0.2;
   public scaleStep: number = 0.1;
 
   public minScale = 0.1;
@@ -184,6 +186,7 @@ export class PdfViewerHelperService {
       if (valPageNumber > basePageNumber)
       {
         this.updateContainerNumbers(p.htmlContainer, p.pageNum,  p.pageNum + 1, renderparams.scale);
+        p.pageNum += 1
         this.allRenderedPages.set(valPageNumber + 1, p);
         this.allRenderedPages.delete(valPageNumber);
       }
@@ -195,7 +198,7 @@ export class PdfViewerHelperService {
    * @param renderparams 
    * @returns 
    */
-  public copyCanvas(renderparams: RenderParams)
+  public async copyCanvas(renderparams: RenderParams, page: PDFPageProxy, viewport: PageViewport)
   {
     const basePage = this.getPageWithNumber(renderparams.pageNumber);
     if (basePage)
@@ -219,12 +222,17 @@ export class PdfViewerHelperService {
       const copiedCanvas = document.createElement('canvas');
       copiedCanvas.id = `page-${renderparams.pageNumber}`
 
-      copiedCanvas.width = originalCanvas.width * renderparams.scale;
-      copiedCanvas.height = originalCanvas.height * renderparams.scale;
+      copiedCanvas.width = viewport.width;
+      copiedCanvas.height = viewport.height;
 
       const ctx = copiedCanvas.getContext('2d')!;
-      ctx.scale(renderparams.scale, renderparams.scale);
-      ctx.drawImage(originalCanvas, 0, 0);
+
+      const renderContext = { canvasContext: ctx, viewport: viewport, intent: 'print', canvas: copiedCanvas };
+
+      await page.render(renderContext).promise;
+
+      // ctx.scale(renderparams.scale, renderparams.scale);
+      // ctx.drawImage(originalCanvas, 0, 0);
 
       clonedCanvasContainer.replaceChild(copiedCanvas, clonedCanvas!)
       clonedCanvasContainer.replaceChild(textBoxLayer, clonedTextBoxLayer)

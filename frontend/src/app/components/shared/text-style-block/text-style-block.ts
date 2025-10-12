@@ -11,6 +11,7 @@ import { SlideInOutToolbarExtension } from '../../../animations/animations';
 import { TextEditService } from '../../../services/box-services/text-edit-service';
 import { ThemeService } from '../../../services/shared/theme-service';
 import { PdfViewerHelperService } from '../../../services/pdf-services/pdf-viewer-helper-service';
+import { EventBusService } from '../../../services/communication/event-bus-service';
 
 @Component({
   selector: 'app-text-style-block',
@@ -51,6 +52,7 @@ export class TextStyleBlock {
     public textEditService: TextEditService,
     public themeService: ThemeService,
     private pdfViewerHelperService: PdfViewerHelperService,
+    private eventBusService: EventBusService,
   ) {}
 
   colors: string[] = [

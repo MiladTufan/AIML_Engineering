@@ -93,7 +93,16 @@ export class OrganizeView {
   ngAfterViewInit()
   {
     for (let pageNum = 1; pageNum <= this.currentPageCnt; pageNum++)
+    {
+      const page = this.pdfViewerHelperService.allRenderedPages.get(pageNum)
+      if (page)
+        this.pdfViewerService.renderPipeline(pageNum as number, 0.2, this.previewContainer.get(pageNum-1), false, true, false, true, false, true,0)
+      else
         this.pdfViewerService.renderPipeline(pageNum, 0.2, this.previewContainer.get(pageNum-1), false, true, false, true, false, false, 0)
+    }
+        
+    
+    //
 
     this.organizeService.previewContainers = this.previewContainer
   }
@@ -161,10 +170,13 @@ export class OrganizeView {
         this.dragOriginIndex !== this.previewIndex) {
 
         const item = this.pages[this.dragOriginIndex];
-        const itemNew = this.pages[this.previewIndex];
+        let offset = 0
+        if (this.previewIndex >= this.pages.length)
+          offset =  1
+        const itemNew = this.pages[this.previewIndex - offset];
         const insertIndex = this.dragOriginIndex < this.previewIndex ? this.previewIndex - 1: this.previewIndex;
 
-        item.pageNumber = insertIndex+2
+        item.pageNumber = insertIndex+2-offset
         itemNew.pageNumber = this.dragOriginIndex+1
         
         // //remove original

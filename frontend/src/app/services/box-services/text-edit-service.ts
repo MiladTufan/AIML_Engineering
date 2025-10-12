@@ -202,8 +202,6 @@ export class TextEditService {
       textBox.BoxDims.height = textBox.BoxDims.resizedHeight;
     }
 
-    textBox.text += ' ' + textBox.id;
-
     return textBox;
   }
 }

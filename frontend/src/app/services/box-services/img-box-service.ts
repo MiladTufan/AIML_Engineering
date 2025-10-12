@@ -17,6 +17,19 @@ export class ImgBoxService {
   public dynamicContainerRegistry = inject(DynamicContainerRegistry)
   public pdfViewerHelperService = inject(PdfViewerHelperService)
 
+
+  /**
+   * Creates a commonbox object for Images.
+   * @returns 
+   */
+  public createDynamicCommonBox()
+  {
+    let commonBoxContainer = this.dynamicContainerRegistry.dynamicBoxContainer!.createComponent(CommonBoxObject)
+    let imgBoxContainer = commonBoxContainer.instance.childContainer.createComponent(CustomImgBox)
+
+    return {commonBoxContainer: commonBoxContainer, imgBoxContainer: imgBoxContainer }
+  }
+
   /**
    * Please create an BlockObject with this.entityManagerService.createBlockObject adn then cast it to ImgBox and pass it here.
    * This function will create the ImgBox HTML container and place it on the pageNumber specified by @pageNumber .
@@ -24,9 +37,8 @@ export class ImgBoxService {
    * @param img => the img
    */
   public placeImgBoxOntoCanvas(pageNumber: number, imgBox: ImgBox, rerender: Boolean = false) {
-    let commonBoxContainer = this.dynamicContainerRegistry.dynamicBoxContainer!.createComponent(CommonBoxObject)
-    let imgBoxContainer = commonBoxContainer.instance.childContainer.createComponent(CustomImgBox)
 
+    const {commonBoxContainer, imgBoxContainer} = this.createDynamicCommonBox()
     imgBoxContainer.instance.imgBox = imgBox;
     commonBoxContainer.instance.boxBase = (imgBox as BlockObject);
 
