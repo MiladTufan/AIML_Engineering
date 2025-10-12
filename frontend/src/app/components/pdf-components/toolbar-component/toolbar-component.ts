@@ -119,7 +119,7 @@ export class ToolbarComponent {
     const edits = new GlobalEdit([], [1, 2, 3]);
     for (
       let i = 1;
-      i <= this.pdfViewerHelperService.allRenderedPages.length;
+      i <= this.pdfViewerHelperService.allRenderedPages.size;
       i++
     ) {
       const pageOld = this.pdfViewerHelperService.getPageWithNumber(i);

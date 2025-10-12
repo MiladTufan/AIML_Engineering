@@ -11,8 +11,8 @@ import { Constants } from '../../models/constants/constants';
 
 export class PdfViewerHelperService {
   // TODO: Switch this with a Map so access is faster for many pages!!!
-  // public allRenderedPages: Map<number, Page> = new Map<number, Page>();
-  public allRenderedPages: Page[] = [];
+  public allRenderedPages: Map<number, Page> = new Map<number, Page>();
+  // public allRenderedPages: Page[] = [];
   public currentScale: number = 1.0;
   public scaleStep: number = 0.1;
 
@@ -27,8 +27,9 @@ export class PdfViewerHelperService {
    * @returns
    */
   getPageWithNumber(pageNumber: number) {
-    const page = this.allRenderedPages.find((p) => p.pageNum === pageNumber);
-    return page;
+    return this.allRenderedPages.get(pageNumber);
+    // const page = this.allRenderedPages.find((p) => p.pageNum === pageNumber);
+    // return page;
   }
 
   /**
@@ -37,24 +38,45 @@ export class PdfViewerHelperService {
    * @returns
    */
   getPageWithOriginalNumber(pageNumber: number) {
-    const page = this.allRenderedPages.find(
-      (p) => p.originalPageNum == pageNumber,
-    );
-    return page;
+    return [...this.allRenderedPages.values()].find(item => item.originalPageNum === pageNumber);
   }
 
   updatePageNumbersOnDelete(pageNumber: number) {
-    const page = this.getPageWithNumber(pageNumber);
-    if (page) {
-      const currIdx = this.allRenderedPages.indexOf(page);
+    // const page = this.getPageWithNumber(pageNumber);
+    // if (page) {
+    //   const currIdx = this.allRenderedPages.indexOf(page);
 
-      //prettier-ignore
-      for (let i = currIdx; i < this.allRenderedPages.length; i++) {
-        this.allRenderedPages.at(i)!.updatePageNum--
-        this.allRenderedPages.at(i)!.htmlContainerPreview.instance.pageNumber = this.allRenderedPages.at(i)!.updatePageNum
-      }
+    //   //prettier-ignore
+    //   for (let i = currIdx; i < this.allRenderedPages.length; i++) {
+    //     this.allRenderedPages.at(i)!.updatePageNum--
+    //     this.allRenderedPages.at(i)!.htmlContainerPreview.instance.pageNumber = this.allRenderedPages.at(i)!.updatePageNum
+    //   }
+    // }
+  }
+
+  public insertAndShift<K extends number, V>(
+  map: Map<K, V>,
+  insertKey: K,
+  insertValue: V
+): Map<K, V> {
+  const newMap = new Map<K, V>();
+
+  // Sort keys descending so we don’t overwrite while shifting
+  const keys = Array.from(map.keys()).sort((a, b) => b - a);
+
+  for (const key of keys) {
+    const value = map.get(key)!;
+    if (key >= insertKey) {
+      newMap.set((key + 1) as K, value); // Shift up
+    } else {
+      newMap.set(key, value);
     }
   }
+
+  // Insert the new key
+  newMap.set(insertKey, insertValue);
+  return newMap;
+}
 
   checkScaleValid(scale: number) {
     const startScale = scale;
@@ -86,13 +108,7 @@ export class PdfViewerHelperService {
   // This function assigns a Page to the alreadyRenderedPages
   //=======================================================================================================================
   assignPageToRendered(newPage: Page) {
-    const renderedPage = this.allRenderedPages.find(
-      (p) => p.pageNum === newPage.pageNum,
-    );
-    if (renderedPage) {
-      const idx = this.allRenderedPages.indexOf(renderedPage);
-      this.allRenderedPages.splice(idx, 1, newPage);
-    } else this.allRenderedPages.push(newPage);
+    this.allRenderedPages.set(newPage.pageNum, newPage)
   }
   
   /**
@@ -159,14 +175,19 @@ export class PdfViewerHelperService {
    */
   public updateOnInsert(renderparams: RenderParams, basePageNumber: number)
   {
-    this.allRenderedPages.forEach(p => {
-      if (p.pageNum > basePageNumber)
+    const entries = Array.from(this.allRenderedPages.entries()).sort(
+      (a, b) => b[0] - a[0],
+    );
+
+    for (let [key, p] of entries) {
+      const valPageNumber = p.pageNum;
+      if (valPageNumber > basePageNumber)
       {
         this.updateContainerNumbers(p.htmlContainer, p.pageNum,  p.pageNum + 1, renderparams.scale);
-        p.pageNum+= 1;
+        this.allRenderedPages.set(valPageNumber + 1, p);
+        this.allRenderedPages.delete(valPageNumber);
       }
-      return p
-    })
+    }
   }
 
   /**
@@ -208,6 +229,13 @@ export class PdfViewerHelperService {
       clonedCanvasContainer.replaceChild(copiedCanvas, clonedCanvas!)
       clonedCanvasContainer.replaceChild(textBoxLayer, clonedTextBoxLayer)
       clonedCanvasContainer.replaceChild(imgBoxLayer, clonedImgBoxLayer)
+
+      if (renderparams.isPreviewPage)
+      {
+        const child = clonedCanvasContainer.querySelector( `#pageInfo-${renderparams.pageNumber}`);
+        if (child)
+          clonedCanvasContainer.removeChild(child)
+      }
       
       return {clonedPageContainer: clonedPageContainer, basePage: basePage, 
               clonedTextBoxLayer: textBoxLayer, clonedImgBoxLayer: imgBoxLayer}

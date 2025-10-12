@@ -1,5 +1,4 @@
-
-
+//prettier-ignore
 export class Constants {
 
     // routes
@@ -18,6 +17,7 @@ export class Constants {
     public static EVENT_POSITION_CHANGED: string = "positionChanged"
     public static EVENT_ASSIGN_AND_CREATE_NEW_OBJ: string = "assignAndCreateNewObj"
     public static EVENT_ENTITY_MANAGER_EMIT: string = "entityManagerService"
+    public static EVENT_PAGE_RENDERED: string = "PDF_PAGE_RENDERED"
     
 
     

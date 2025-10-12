@@ -14,6 +14,8 @@ import { TextEditService } from '../../../services/box-services/text-edit-servic
 import { EntityManagerService } from '../../../services/box-services/entity-manager-service';
 import { TextBlock, TextBox } from '../../../models/box-models/TextBox';
 import { BlockObject } from '../../../models/box-models/BlockObject';
+import { EventBusService } from '../../../services/communication/event-bus-service';
+import { Constants } from '../../../models/constants/constants';
 
 @Component({
   selector: 'app-custom-text-edit-box',
@@ -40,6 +42,7 @@ export class CustomTextEditBox {
   private currentBoxStyle: string = '';
 
   public boxText = 'Text';
+  public isEditable: Boolean = true;
   private resizeObserver!: ResizeObserver;
 
   //=================================================== Inputs =================================================
@@ -57,6 +60,7 @@ export class CustomTextEditBox {
     public textEditService: TextEditService,
     private entityManagerService: EntityManagerService,
     private cdr: ChangeDetectorRef,
+    private eventBusService: EventBusService,
   ) {}
   ngOnInit() {
     console.log('init TextBoxComponent');
@@ -74,6 +78,10 @@ export class CustomTextEditBox {
     if (savedBox && savedBox instanceof TextBox) {
       this.box.text = text;
       this.cdr.detectChanges();
+      this.eventBusService.emit(Constants.EVENT_PAGE_RENDERED, {
+        pageNumber: this.box.pageId,
+        updated: true,
+      });
     }
   }
 

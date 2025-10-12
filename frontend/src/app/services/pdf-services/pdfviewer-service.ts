@@ -22,6 +22,9 @@ import { OrganizeService } from './organize-service';
 import * as pdfjsLib from 'pdfjs-dist';
 import { RenderParams } from '../../models/Renderparams';
 import { ImgBoxService } from '../box-services/img-box-service';
+import { EventBusService } from '../communication/event-bus-service';
+import { Constants } from '../../models/constants/constants';
+import { BlockObject } from '../../models/box-models/BlockObject';
 
 //prettier-ignore
 @Injectable({
@@ -70,7 +73,7 @@ export class PDFViewerService {
   private organizeService: OrganizeService = inject(OrganizeService);
     private imgBoxService: ImgBoxService = inject(ImgBoxService);
 
-
+  private eventBusService: EventBusService = inject(EventBusService)
 
 
   deletePage(pageNumber: number) {
@@ -393,6 +396,45 @@ export class PDFViewerService {
     });
   }
 
+    /**
+   * This function recreates all the textboxes according to the scale
+   * @param boxesForPage => all textboxes to recreate on the page
+   * @param pageNumber => the page where the textboxes are placed
+   * @param scale => current scale of the PDF
+   * @param textBoxLayer => the parent container where the textboxes are placed.
+   */
+  recreateTextBoxesForPreview(
+    boxesForPage: TextBox[],
+    pageNumber: number,
+    scale: number,
+    textBoxLayer: HTMLDivElement,
+  ) {
+    boxesForPage.forEach((box) => {
+      if (box.pageId === pageNumber) {
+        const scaleParams = this.entityManagerService.rescaleObjOnRender(box, scale,);
+        this.setCodeResizeTimeout();
+        const blockObj = this.boxCreationService.createBlockObject(pageNumber, scaleParams.dims, true,);
+
+        const textbox = this.textEditService.toTextBox(blockObj);
+        textbox.StyleState = box.StyleState;
+        textbox.StyleState.textFontSize = textbox.StyleState.textBaseFontSize * this.pdfViewerHelperService.currentScale;
+        textbox.text = box.text;
+        const ret = this.boxCreationService.createDynamicCommonBox(false)
+
+        ret.textBoxContainer.instance.box = textbox;
+        ret.commonBoxContainer.instance.boxBase = textbox as BlockObject;
+        ret.commonBoxContainer.instance.resizable = false;
+        ret.textBoxContainer.instance.isEditable = false;
+
+        textbox.baseHeight = scaleParams.baseHeight;
+        textbox.baseWidth = scaleParams.baseWidth;
+        textBoxLayer.appendChild(ret.commonBoxContainer.location.nativeElement);
+      }
+    });
+  }
+
+  
+
   /**
    * This function recreates all the ImgBoxes according to the scale
    * @param boxesForPage => all ImgBoxes to recreate on the page
@@ -408,7 +450,7 @@ export class PDFViewerService {
   ) {
     boxesForPage.forEach((box) => {
       if (box.pageId === pageNumber) {
-        const scaleParams = this.entityManagerService.rescaleObjOnRender(box,scale,);
+        const scaleParams = this.entityManagerService.rescaleObjOnRender(box, scale,);
         this.setCodeResizeTimeout();
 
         const blockObj = this.boxCreationService.createBlockObject(pageNumber, scaleParams.dims,true,);
@@ -448,6 +490,26 @@ export class PDFViewerService {
     return { boxesForPage: boxesForPage, imgBoxesForPage: imgBoxesForPage };
   }
 
+  private recreateObjectsForPreview(pageNumber: number,
+    scale: number,
+    textBoxLayer: HTMLDivElement,
+    imgBoxLayer: HTMLDivElement,)
+    {
+      const boxesForPage = this.entityManagerService.blockObjects.filter(
+        (b) => b.pageId === pageNumber && b instanceof TextBox,
+      ) as TextBox[];
+      const imgBoxesForPage = this.entityManagerService.blockObjects.filter(
+        (b) => b.pageId === pageNumber && b instanceof ImgBox,
+      ) as ImgBox[];
+
+      this.recreateTextBoxesForPreview(boxesForPage, pageNumber, scale, textBoxLayer);
+      // this.recreateImgBoxesForPreview(imgBoxesForPage, pageNumber, scale, imgBoxLayer);
+
+    return { boxesForPage: boxesForPage, imgBoxesForPage: imgBoxesForPage };
+
+    }
+
+
   /**
    * Replace all child containers of container with new ones (in case of rerender)
    * @param container 
@@ -471,7 +533,7 @@ export class PDFViewerService {
 
     if (existingPageContainer != null) {
       let CanvasOld = existingPageContainer.querySelector('#' + ret.canvasContainer.id,) as HTMLDivElement;
-      this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, ret.textBoxLayer,);
+      //this.recreateTextBoxesForPage(boxesForPage, pageNumber, scale, ret.textBoxLayer,);
 
       existingPageContainer.replaceChild(ret.canvasContainer, CanvasOld!);
 
@@ -538,7 +600,7 @@ export class PDFViewerService {
   {
     const pageOverlay = this.dynamicContainerRegistry.dynamicBoxContainer?.createComponent(PageOverlay);
     if (pageOverlay) {
-      pageOverlay.location.nativeElement.id = `#PageOverlay-${renderparams.pageNumber}`;
+      pageOverlay.location.nativeElement.id = `PageOverlay-${renderparams.pageNumber}`;
 
      const firstChild = pageOverlay.location.nativeElement.firstChild;
       const firstChildOfFirst = firstChild.firstChild;
@@ -571,7 +633,7 @@ export class PDFViewerService {
    * @param canvas 
    */
   private initPreviewCotainer(renderparams: RenderParams, ret: {overlay: ComponentRef<PageOverlay>, ref: ComponentRef<PageOverlay> | undefined}, 
-          previewContainer: HTMLDivElement, canvas: HTMLCanvasElement)
+          previewContainer: HTMLDivElement, canvas: any)
   {
     previewContainer.classList.add('cursor-pointer');
     previewContainer.classList.add('hover:border-blue-500');
@@ -580,6 +642,13 @@ export class PDFViewerService {
     canvas.classList.add("shadow-lg")
     previewContainer.appendChild(canvas);
 
+    this.setPreviewPageClick(renderparams, previewContainer, ret)
+
+  }
+
+  setPreviewPageClick(renderparams: RenderParams, previewContainer: HTMLDivElement, 
+                     ret: {overlay: ComponentRef<PageOverlay>, ref: ComponentRef<PageOverlay> | undefined})
+  {
     previewContainer.addEventListener('click', () => {
       if (!this.organizeService.organizerActive) {
         ret.overlay.instance.isActivePage = true;
@@ -758,12 +827,55 @@ export class PDFViewerService {
       })
   }
 
+
+
+  private async renderDuplicatePreview(renderparams: RenderParams)
+  {
+    const {clonedPageContainer, basePage, clonedTextBoxLayer, clonedImgBoxLayer} = this.pdfViewerHelperService.copyCanvas(renderparams)
+
+    if (basePage)
+    {
+      const clonedCanvasContainer = clonedPageContainer.querySelector(`#canvasContainer-${renderparams.pageNumber}`)!;
+      const clonedCanvas = clonedPageContainer.querySelector(`#page-${renderparams.pageNumber}`)!;
+
+      // create PageOverlay for preview
+      const ret = this.createPageOverlay(renderparams, clonedCanvasContainer as HTMLDivElement)
+      clonedCanvas.classList.add("border-1")
+      clonedCanvas.classList.add("border-black/20")
+      clonedCanvas.classList.add("shadow-lg")
+      clonedCanvas.classList.add("cursor-pointer")
+      clonedCanvasContainer.classList.add("-ml-4")
+      this.setPreviewPageClick(renderparams, clonedCanvasContainer as HTMLDivElement, ret!)
+
+      // recreate the Boxes for preview Scale
+
+      const textLayer = clonedCanvasContainer.querySelector(Constants.OVERLAY_TEXT);
+      const imgLayer = clonedCanvasContainer.querySelector(Constants.OVERLAY_IMG);
+      this.recreateObjectsForPreview(renderparams.pageNumber, renderparams.scale, 
+                                     textLayer as HTMLDivElement, imgLayer as HTMLDivElement)
+
+      // Remove old Preview and replace with new Preview
+      const overlay = renderparams.container.nativeElement.querySelector(`#PageOverlay-${renderparams.pageNumber}`)
+      const overlayNext = renderparams.container.nativeElement.querySelector(`#PageOverlay-${renderparams.pageNumber+1}`)
+
+      if (!overlay)
+        renderparams.container.nativeElement.appendChild(ret?.overlay.location.nativeElement)
+      else
+      {
+        renderparams.container.nativeElement.insertBefore( ret?.overlay.location.nativeElement, overlayNext)
+        renderparams.container.nativeElement.removeChild(overlay)
+      }
+    }
+
+
+  }
+
   
-      /**
+  /**
    * Renders a PDF page.
    * @param pageNumber => the page to render.
    * @param scale => the scale to render the page for.
-   * @param container => the container to render the page in.
+   * @param container => the container to render the page in
    */
   private async renderDuplicate(renderparams: RenderParams)
   {
@@ -777,6 +889,7 @@ export class PDFViewerService {
 
       this.pdfViewerHelperService.updateOnInsert(renderparams, renderparams.pageNumber)
 
+
       this.pdfViewerHelperService.updateContainerNumbers(clonedPageContainer, renderparams.pageNumber, 
                                                          renderparams.pageNumber + 1, renderparams.scale)
 
@@ -786,15 +899,13 @@ export class PDFViewerService {
       this.recreateObjectsForPage(renderparams.pageNumber + 1, renderparams.scale, 
                                   clonedTextBoxLayer, clonedImgBoxLayer)
       
-      
-
       renderparams.container.nativeElement.insertBefore(clonedPageContainer, container)
 
       const newPage = new Page(renderparams.pageNumber+1, basePage.viewport, basePage.blockObjects, [], basePage.height,
                               basePage.width, 0, clonedPageContainer, false, 0, 0, renderparams.scale,);
       newPage._isDuplicate = true;
       newPage.basePageNumber = renderparams.pageNumber
-      this.pdfViewerHelperService.allRenderedPages.splice(renderparams.pageNumber, 0, newPage)
+      this.pdfViewerHelperService.allRenderedPages.set(renderparams.pageNumber+1, newPage)
       // this.pdfViewerHelperService.assignPageToRendered(newPage);
       this.totalPages += 1
       this.scrollToPage(renderparams.pageNumber + 1)
@@ -838,6 +949,7 @@ export class PDFViewerService {
     const newPage = new Page(renderparams.pageNumber, viewport, ret.boxesForPage, [], viewport.height,
                               viewport.width, 0, ret.pageContainer, false, 0, 0, renderparams.scale,);
     this.pdfViewerHelperService.assignPageToRendered(newPage);
+    this.eventBusService.emit(Constants.EVENT_PAGE_RENDERED, {pageNumber: renderparams.pageNumber, updated: false})
   }
 
   /**
@@ -871,6 +983,8 @@ export class PDFViewerService {
       this.render(renderparams)
     else if (!isDummyPage && !isEmpty && !isPreviewPage && isDuplicate)
       this.renderDuplicate(renderparams)
+    else if (!isDummyPage && !isEmpty && isPreviewPage && isDuplicate)
+      this.renderDuplicatePreview(renderparams)
     else if (isDummyPage && !isEmpty && !isPreviewPage)
       this.renderDummy(renderparams)
     else if (isEmpty && !isPreviewPage )

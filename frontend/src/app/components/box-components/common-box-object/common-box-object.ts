@@ -39,6 +39,7 @@ export class CommonBoxObject {
   private resizing = false;
   private currentHandle: string | null = null;
   private resizeObserver!: ResizeObserver;
+  public resizable: Boolean = true;
 
   @ViewChild('childContainer', { read: ViewContainerRef, static: true })
   childContainer!: ViewContainerRef;
@@ -58,15 +59,15 @@ export class CommonBoxObject {
   constructor(
     public pdfViewerService: PDFViewerService,
     private entityManagerService: EntityManagerService,
-    private pdfViewerHelperService: PdfViewerHelperService,
+    public pdfViewerHelperService: PdfViewerHelperService,
   ) {}
 
   ngOnInit() {
     console.log('init CommonBoxComponent');
-
     this.resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        if (this.pdfViewerService.ignoreResizeTimeout) return;
+        if (this.pdfViewerService.ignoreResizeTimeout || !this.resizable)
+          return;
 
         const { width, height } = entry.target.getBoundingClientRect();
         const box = this.entityManagerService.blockObjects.find(
@@ -101,51 +102,53 @@ export class CommonBoxObject {
   }
 
   ngAfterViewInit() {
-    this.resizeObserver.observe(this.movableDiv.nativeElement);
-    this.movableDiv!.nativeElement.addEventListener(
-      'mousedown',
-      (e: MouseEvent) => {
-        e.preventDefault();
-        if (e.target !== this.movableDiv!.nativeElement) {
-          return; // clicked on content, ignore
-        }
-        console.log('Outer border clicked → Start move');
-        const rect = (e.target as HTMLElement).getBoundingClientRect();
-        this.dragOffsetX = e.clientX - rect.left;
-        this.dragOffsetY = e.clientY - rect.top;
+    if (this.resizable) {
+      this.resizeObserver.observe(this.movableDiv.nativeElement);
+      this.movableDiv!.nativeElement.addEventListener(
+        'mousedown',
+        (e: MouseEvent) => {
+          e.preventDefault();
+          if (e.target !== this.movableDiv!.nativeElement) {
+            return; // clicked on content, ignore
+          }
+          console.log('Outer border clicked → Start move');
+          const rect = (e.target as HTMLElement).getBoundingClientRect();
+          this.dragOffsetX = e.clientX - rect.left;
+          this.dragOffsetY = e.clientY - rect.top;
 
-        const onMouseMove = (moveEvent: MouseEvent) => {
-          const all = document.elementsFromPoint(
-            moveEvent.clientX,
-            moveEvent.clientY,
-          );
-          let pageNumber = this.boxBase.id;
-          all.forEach((o) => {
-            if (o.id?.includes('canvasContainer'))
-              pageNumber = parseInt(o.id?.split('-')[1]);
-          });
+          const onMouseMove = (moveEvent: MouseEvent) => {
+            const all = document.elementsFromPoint(
+              moveEvent.clientX,
+              moveEvent.clientY,
+            );
+            let pageNumber = this.boxBase.id;
+            all.forEach((o) => {
+              if (o.id?.includes('canvasContainer'))
+                pageNumber = parseInt(o.id?.split('-')[1]);
+            });
 
-          const payload = {
-            top: moveEvent.clientY - this.dragOffsetY,
-            left: moveEvent.clientX - this.dragOffsetX,
-            clickedPageNum: pageNumber,
+            const payload = {
+              top: moveEvent.clientY - this.dragOffsetY,
+              left: moveEvent.clientX - this.dragOffsetX,
+              clickedPageNum: pageNumber,
+            };
+            this.entityManagerService.executeMove(
+              this.boxBase,
+              payload,
+              this.boxBase.pageId,
+            );
           };
-          this.entityManagerService.executeMove(
-            this.boxBase,
-            payload,
-            this.boxBase.pageId,
-          );
-        };
 
-        const onMouseUp = () => {
-          document.removeEventListener('mousemove', onMouseMove);
-          document.removeEventListener('mouseup', onMouseUp);
-        };
+          const onMouseUp = () => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+          };
 
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-      },
-    );
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+        },
+      );
+    }
   }
 
   onDragEnd(event: DragEvent) {
@@ -173,6 +176,7 @@ export class CommonBoxObject {
   }
 
   onResizeStart(event: MouseEvent, handle: string) {
+    if (!this.resizable) return;
     event.preventDefault();
     this.resizing = true;
     this.currentHandle = handle;

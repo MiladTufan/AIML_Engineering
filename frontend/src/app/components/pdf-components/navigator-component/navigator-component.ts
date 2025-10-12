@@ -4,6 +4,8 @@ import { map } from 'rxjs/operators';
 import { PdfViewerHelperService } from '../../../services/pdf-services/pdf-viewer-helper-service';
 import { Subscription } from 'rxjs';
 import { OrganizeService } from '../../../services/pdf-services/organize-service';
+import { EventBusService } from '../../../services/communication/event-bus-service';
+import { Constants } from '../../../models/constants/constants';
 
 @Component({
   selector: 'app-navigator-component',
@@ -24,6 +26,25 @@ export class NavigatorComponent {
   );
 
   private organizeService: OrganizeService = inject(OrganizeService);
+  private eventBusService: EventBusService = inject(EventBusService);
+
+  ngOnInit() {
+    this.eventBusService
+      .on(Constants.EVENT_PAGE_RENDERED)
+      .subscribe((payload: any) => {
+        //prettier-ignore
+        if (!this.renderedPreviews.includes(payload.pageNumber as number))
+        {
+          this.renderedPreviews.push(payload.pageNumber as number)
+          this.pdfViewerService.renderPipeline(payload.pageNumber as number, 0.2, this.pdfPreviewContainer, false, true, false, false, true, true,0)
+          console.log('Rendering Page Preview: ', payload.pageNumber);
+        }
+        else if (payload.updated === true)
+        {
+          this.pdfViewerService.renderPipeline(payload.pageNumber as number, 0.2, this.pdfPreviewContainer, false, true, false, false, true, true,0)
+        }
+      });
+  }
 
   ngAfterViewInit() {
     this.pageNumberSub = this.pdfViewerService.currentPage$.subscribe((val) => {
@@ -35,12 +56,12 @@ export class NavigatorComponent {
           this.pdfViewerService.calcTargetScrolltop(val, true);
       }
     });
+  }
 
+  initNavigator() {
     this.pdfViewerService.visiblePages.subscribe((set) => {
       for (const pageNum of set) {
-        const page = this.pdfViewerHelperService.allRenderedPages.find(
-          (p) => p.pageNum === pageNum,
-        );
+        const page = this.pdfViewerHelperService.getPageWithNumber(pageNum);
 
         //prettier-ignore
         if (!this.renderedPreviews.includes(pageNum))

@@ -97,6 +97,31 @@ export class BoxCreationService {
     obj.baseWidth = boxDims.width;
   }
 
+  public createDynamicCommonBox(withStyleBlock: Boolean = true) {
+    let commonBoxContainer =
+      this.dynamicContainerRegistry.dynamicBoxContainer!.createComponent(
+        CommonBoxObject,
+      );
+    let textBoxContainer =
+      commonBoxContainer.instance.childContainer.createComponent(
+        CustomTextEditBox,
+      );
+    let textStyleBlock: any;
+
+    if (withStyleBlock) {
+      textStyleBlock =
+        commonBoxContainer.instance.childContainerAddOn.createComponent(
+          TextStyleBlock,
+        );
+    }
+
+    return {
+      commonBoxContainer: commonBoxContainer,
+      textBoxContainer: textBoxContainer,
+      textStyleBlock: textStyleBlock,
+    };
+  }
+
   /**
    * Please create an BlockObject with this.entityManagerService.createBlockObject adn then cast it to ImgBox and pass it here.
    * This function will create the Text HTML container and place it on the pageNumber specified by @pageNumber .
@@ -108,18 +133,8 @@ export class BoxCreationService {
     textBox: TextBox,
     rerender: Boolean = false,
   ) {
-    let commonBoxContainer =
-      this.dynamicContainerRegistry.dynamicBoxContainer!.createComponent(
-        CommonBoxObject,
-      );
-    let textBoxContainer =
-      commonBoxContainer.instance.childContainer.createComponent(
-        CustomTextEditBox,
-      );
-    let textStyleBlock =
-      commonBoxContainer.instance.childContainerAddOn.createComponent(
-        TextStyleBlock,
-      );
+    const { commonBoxContainer, textBoxContainer, textStyleBlock } =
+      this.createDynamicCommonBox();
 
     textBoxContainer.location.nativeElement.addEventListener(
       'mousedown',

@@ -23,6 +23,8 @@ import { PDFFileService } from '../../../services/pdf-services/pdffile-service';
 import { BoxCreationService } from '../../../services/box-services/box-creation-service';
 import { DynamicContainerRegistry } from '../../../services/shared/dynamic-container-registry';
 import { PdfViewerHelperService } from '../../../services/pdf-services/pdf-viewer-helper-service';
+import { Constants } from '../../../models/constants/constants';
+import { EventBusService } from '../../../services/communication/event-bus-service';
 (pdfjsLib as any).GlobalWorkerOptions.workerSrc = 'assets/pdf.worker.min.mjs';
 
 //=======================================================================================================================
@@ -69,6 +71,8 @@ export class PdfViewerComponent {
   private pdfViewerHelperService: PdfViewerHelperService = inject(PdfViewerHelperService);
   private textEditService: TextEditService = inject(TextEditService);
   private dynamicContainerRegistry: DynamicContainerRegistry = inject(DynamicContainerRegistry);
+  private eventBusService: EventBusService = inject(EventBusService);
+  
 
   //==================================================== Constructor ======================================================
   constructor() {
@@ -150,7 +154,7 @@ export class PdfViewerComponent {
   subscribeToVisiblePages() {
     this.pdfViewerService.visiblePages.subscribe((set) => {
       for (const pageNum of set) {
-        const page = this.pdfViewerHelperService.allRenderedPages.find((p) => p.pageNum === pageNum,);
+        const page = this.pdfViewerHelperService.getPageWithNumber(pageNum)
         if (page?.currentScale != this.pdfViewerHelperService.currentScale) {
           this.pdfViewerService.renderPipeline(pageNum, this.pdfViewerHelperService.currentScale, this.pdfContainer.nativeElement, 
                                                false, false,false,false, false, false,0)
@@ -180,7 +184,7 @@ export class PdfViewerComponent {
 
       if (entry.isIntersecting) {
         this.pdfViewerService.addVisiblePages(pageNumber);
-        if (!this.pdfViewerHelperService.allRenderedPages.find((p) => p.pageNum === pageNumber,))
+        if (!this.pdfViewerHelperService.getPageWithNumber(pageNumber))
 
         this.pdfViewerService.renderPipeline(pageNumber, this.pdfViewerHelperService.currentScale, this.pdfContainer.nativeElement, 
                                              false, false, false, false,false, false,0)
@@ -213,6 +217,7 @@ export class PdfViewerComponent {
         if (pageContainer) this.observer.observe(pageContainer);
       }
     });
+
   }
 
   /**
