@@ -23,6 +23,8 @@ import { BoxCreationService } from '../../services/box-services/box-creation-ser
 import { NavigatorComponent } from '../../components/pdf-components/navigator-component/navigator-component';
 import { PdfViewerHelperService } from '../../services/pdf-services/pdf-viewer-helper-service';
 import { ZoomController } from '../../components/pdf-components/zoom-controller/zoom-controller';
+import { EventBusService } from '../../services/communication/event-bus-service';
+import { LoggerService } from '../../services/shared/logger-service';
 
 @Component({
   selector: 'app-edit-pdfview',
@@ -60,6 +62,8 @@ export class EditPDFView {
   private pdfFileService: PDFFileService = inject(PDFFileService);
   private imgBoxService: ImgBoxService = inject(ImgBoxService);
   private boxCreationService: BoxCreationService = inject(BoxCreationService);
+  private eventBusService: EventBusService = inject(EventBusService);
+  private logger: LoggerService = inject(LoggerService);
 
   //=================================================== Constructor =======================================================
   constructor(private viewContainerRef: ViewContainerRef) {}
@@ -108,6 +112,7 @@ export class EditPDFView {
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
       this.pdfFileService.imgFile = file;
+      this.logger.info(`Selected file: ${file.name}`, this.constructor.name);
     }
   }
 
@@ -130,9 +135,6 @@ export class EditPDFView {
           entityParentContainer as HTMLElement
         ).getBoundingClientRect();
         this.imgBoxService.getImageDimensions(imgFile).then((dim) => {
-          console.log('Original width:', dim.width);
-          console.log('Original height:', dim.height);
-
           const blockObj = this.boxCreationService.createBlockObjectAndInitDims(
             pageNumber,
             this.mouseX,
@@ -151,62 +153,19 @@ export class EditPDFView {
             URL.createObjectURL(imgFile),
           );
 
-          // const ret = this.imgBoxService.placeImgBoxOntoCanvas(pageNumber, imgBox)
-
-          // ret.parent.instance.positionChanged.subscribe((event: any) => this.entityManagerService.executeMove(imgBox, event, pageNumber))
+          this.logger.info(
+            `ImgBox was created on page: ${pageNumber}`,
+            this.constructor.name,
+          );
         });
         return;
       }
-
-      console.error('Invalid Image file');
-      throw new AbortException(
-        'Invalid Image File in Edit-pdfview createImageBox.',
-      );
+      this.logger.error('Invalid Image file', this.constructor.name);
     }
   }
   //=======================================================================================================================
   // This function is responsible for placing the Textbox inside the PDF canvas.
   //=======================================================================================================================
-  // public createTextBox(event: Event) {
-  // 	if (this.canCreateTextbox) {
-  // 		this.canCreateTextbox = false;
-  // 		const containerElement = event.target as HTMLElement;
-  // 		const pageNumber = parseInt(containerElement.id?.split('-')[1]);
-
-  // 		const page = this.pdfViewService.getPageWithNumber(pageNumber)
-  // 		const text_layer = page?.htmlContainer?.querySelector(Constants.OVERLAY_TEXT)
-
-  // 		const rect = (text_layer as HTMLElement).getBoundingClientRect();
-  // 		// const rect = (this.pdfViewerRef.nativeElement as HTMLElement).getBoundingClientRect();
-  // 		const top = (this.mouseY) - rect.top
-  // 		const left = (this.mouseX) - rect.left
-  // 		const width = 110
-  // 		const height = 30
-
-  // 		const box_dims = {
-  // 			top: top,
-  // 			left: left,
-  // 			width: width * this.pdfViewService.currentScale,
-  // 			height: height * this.pdfViewService.currentScale,
-  // 			resizedHeight: 0,
-  // 			resizedWidth: 0,
-  // 			currentScale: this.pdfViewService.currentScale,
-  // 			posCreationScale: this.pdfViewService.currentScale,
-  // 			sizeCreationScale: this.pdfViewService.currentScale
-  // 		}
-
-  // 		const styleState = new TextStyle()
-  // 		styleState.textFontSize = styleState.textBaseFontSize * this.pdfViewService.currentScale
-
-  // 		// this.mouseY += (this.pdfViewService.pageHeight * (this.currentPageNumber - 1))
-  // 		this.pdfViewService.setCodeResizeTimeout()
-  // 		const ret = this.textEditService.createTextBox(box_dims, styleState, pageNumber,
-  // 			this.pdfViewService.currentScale, this.pdfViewService.currentScrollTop)
-
-  // 		ret.comp.instance.positionChanged.subscribe((event: any) => this.entityManagerService.executeMove(ret.box, event, pageNumber))
-  // 	}
-  // }
-
   public createTextBox(event: Event) {
     if (this.canCreateTextbox) {
       this.canCreateTextbox = false;
@@ -229,6 +188,15 @@ export class EditPDFView {
       );
 
       this.boxCreationService.createTextBox(blockObj, blockObj, pageNumber);
+      this.eventBusService.emit(Constants.EVENT_PAGE_RENDERED, {
+        pageNumber: blockObj.pageId,
+        updated: true,
+      });
+
+      this.logger.info(
+        `TextBox was created on page: ${pageNumber}`,
+        this.constructor.name,
+      );
     }
   }
 }

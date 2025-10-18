@@ -20,4 +20,8 @@ export class RenderParams {
     public isNavigator: Boolean = false,
     public container: any,
   ) {}
+
+  toString() {
+    return `pageNumber: ${this.pageNumber}, scale: ${this.scale}, isDummyPage: ${this.isDummyPage}, isPreviewPage: ${this.isPreviewPage}, isOrganize: ${this.isOrganize}, isNavigator: ${this.isNavigator}, rotation: ${this.rotation},`;
+  }
 }

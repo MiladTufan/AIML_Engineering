@@ -62,9 +62,6 @@ export class CustomTextEditBox {
     private cdr: ChangeDetectorRef,
     private eventBusService: EventBusService,
   ) {}
-  ngOnInit() {
-    console.log('init TextBoxComponent');
-  }
 
   ngAfterViewInit() {
     if (this.editableDiv) this.updateTextStyle();
@@ -82,10 +79,6 @@ export class CustomTextEditBox {
     if (savedBox && savedBox instanceof TextBox) {
       this.box.text = text;
       this.cdr.detectChanges();
-      // this.eventBusService.emit(Constants.EVENT_PAGE_RENDERED, {
-      //   pageNumber: this.box.pageId,
-      //   updated: true,
-      // });
     }
   }
 
@@ -121,7 +114,6 @@ export class CustomTextEditBox {
       ? 'underline'
       : '';
 
-    console.log(this.box.StyleState.textFormat.isUnderline);
     elem.style.fontFamily = this.box.StyleState.textFontFamily;
 
     if (this.box.StyleState.textStyle !== this.currentBoxStyle) {

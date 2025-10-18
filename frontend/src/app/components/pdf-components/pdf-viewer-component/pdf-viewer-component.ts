@@ -25,6 +25,7 @@ import { DynamicContainerRegistry } from '../../../services/shared/dynamic-conta
 import { PdfViewerHelperService } from '../../../services/pdf-services/pdf-viewer-helper-service';
 import { Constants } from '../../../models/constants/constants';
 import { EventBusService } from '../../../services/communication/event-bus-service';
+import { LoggerService } from '../../../services/shared/logger-service';
 (pdfjsLib as any).GlobalWorkerOptions.workerSrc = 'assets/pdf.worker.min.mjs';
 
 //=======================================================================================================================
@@ -72,6 +73,7 @@ export class PdfViewerComponent {
   private textEditService: TextEditService = inject(TextEditService);
   private dynamicContainerRegistry: DynamicContainerRegistry = inject(DynamicContainerRegistry);
   private eventBusService: EventBusService = inject(EventBusService);
+  private logger: LoggerService = inject(LoggerService);
   
 
   //==================================================== Constructor ======================================================
@@ -80,7 +82,7 @@ export class PdfViewerComponent {
       Promise.all(
         Array.from(this.pdfViewerService.renderQueue).map((pageNumber) => {
           //prettier-ignore
-          console.log('Re rendering page on zoom: ', pageNumber,' scale: ', finalScale);
+          this.logger.info(`Re rendering page: ${pageNumber} on zoom: ${finalScale}`, this.constructor.name)
           this.pdfViewerService.renderPipeline(pageNumber, finalScale, 
                                                this.pdfContainer.nativeElement, false, false, 
                                                false, false, false, false,0)
@@ -155,12 +157,12 @@ export class PdfViewerComponent {
     this.pdfViewerService.visiblePages.subscribe((set) => {
       for (const pageNum of set) {
         const page = this.pdfViewerHelperService.getPageWithNumber(pageNum)
-        if (page?.currentScale != this.pdfViewerHelperService.currentScale) {
+        if (page?.currentScale != this.pdfViewerHelperService.currentScale && page) {
           this.pdfViewerService.renderPipeline(pageNum, this.pdfViewerHelperService.currentScale, this.pdfContainer.nativeElement, 
                                                false, false,false,false, false, false,0)
 
           // this.pdfViewerService.renderPage(pageNum, false, this.pdfViewerHelperService.currentScale, this.pdfContainer.nativeElement);
-          console.log('re-rendering page: ', pageNum);
+          this.logger.info(`Starting render for Page: ${pageNum}, scale: ${page?.currentScale}`, this.constructor.name)
         }
       }
     });
@@ -501,7 +503,6 @@ export class PdfViewerComponent {
       }
 
       this.pdfViewerService.renderTrigger.next(newScale);
-      console.log(this.pdfViewerService.renderQueue);
     }
   }
 }

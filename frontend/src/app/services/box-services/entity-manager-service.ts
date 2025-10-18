@@ -11,6 +11,7 @@ import { fromEvent, Subscription } from 'rxjs';
 import { CommonBoxObject } from '../../components/box-components/common-box-object/common-box-object';
 import { DynamicContainerRegistry } from '../shared/dynamic-container-registry';
 import { PdfViewerHelperService } from '../pdf-services/pdf-viewer-helper-service';
+import { EventBusService } from '../communication/event-bus-service';
 
 /**
  * TODO Split this service into mulitple specific services for creating, moving, deleting boxes.
@@ -27,6 +28,8 @@ export class EntityManagerService {
   public pdfViewerHelperService: PdfViewerHelperService = inject(
     PdfViewerHelperService,
   );
+
+  private eventBusService: EventBusService = inject(EventBusService);
 
   constructor() {
     this.keydownSubscription = fromEvent<KeyboardEvent>(
@@ -307,6 +310,10 @@ export class EntityManagerService {
 
       // this.eventBusService.emit(Constants.EVENT_ENTITY_MANAGER_EMIT, creationPayLoad)
       // this.eventBusService.emit(Constants.EVENT_ASSIGN_AND_CREATE_NEW_OBJ, creationPayLoad, obj.id.toString(),)
+      this.eventBusService.emit(Constants.EVENT_PAGE_RENDERED, {
+        pageNumber: pageNum,
+        updated: true,
+      });
     }
 
     return {
@@ -382,8 +389,6 @@ export class EntityManagerService {
     if (box) box.StyleState.isCollapsed = !editState;
 
     if (editState) this.currentFocusBoxId = box.id;
-
-    console.log('Current focus box id: ', this.currentFocusBoxId, editState);
   }
 
   /**

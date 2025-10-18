@@ -1,4 +1,4 @@
-import { ElementRef, inject, Injectable } from '@angular/core';
+import { ElementRef, inject, Injectable, NgZone } from '@angular/core';
 import { Page } from '../../models/Page';
 import { RenderParams } from '../../models/Renderparams';
 import { PageInfoComponent } from '../../components/pdf-components/page-info-component/page-info-component';
@@ -22,6 +22,8 @@ export class PdfViewerHelperService {
   public maxScale = 10.09;
 
   private dynamicContainerRegistry: DynamicContainerRegistry = inject(DynamicContainerRegistry)
+
+  constructor(private ngZone: NgZone) {}
 
   /**
    * Get a PDF page with a certain pageNumber.
@@ -229,7 +231,10 @@ export class PdfViewerHelperService {
 
       const renderContext = { canvasContext: ctx, viewport: viewport, intent: 'print', canvas: copiedCanvas };
 
-      await page.render(renderContext).promise;
+      this.ngZone.runOutsideAngular(async () => {
+        await page.render(renderContext).promise;
+      });
+
 
       // ctx.scale(renderparams.scale, renderparams.scale);
       // ctx.drawImage(originalCanvas, 0, 0);

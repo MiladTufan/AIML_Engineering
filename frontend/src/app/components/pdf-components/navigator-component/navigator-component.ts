@@ -6,7 +6,7 @@ import { Subscription } from 'rxjs';
 import { OrganizeService } from '../../../services/pdf-services/organize-service';
 import { EventBusService } from '../../../services/communication/event-bus-service';
 import { Constants } from '../../../models/constants/constants';
-
+//prettier-ignore
 @Component({
   selector: 'app-navigator-component',
   imports: [],
@@ -15,6 +15,10 @@ import { Constants } from '../../../models/constants/constants';
 })
 export class NavigatorComponent {
   private renderedPreviews: number[] = [];
+  private receivedPageNumbers = new Set<number>();
+
+  private lastRenderedPage: number = 0;
+
   private pageNumberSub!: Subscription;
 
   @ViewChild('pdfPreviewContainer', { static: true })
@@ -32,18 +36,33 @@ export class NavigatorComponent {
     this.eventBusService
       .on(Constants.EVENT_PAGE_RENDERED)
       .subscribe((payload: any) => {
-        //prettier-ignore
-        if (!this.renderedPreviews.includes(payload.pageNumber as number))
-        {
-          this.renderedPreviews.push(payload.pageNumber as number)
-          this.pdfViewerService.renderPipeline(payload.pageNumber as number, 0.2, this.pdfPreviewContainer, false, true, false, false, true, true,0)
-          console.log('Rendering Page Preview: ', payload.pageNumber);
-        }
-        else if (payload.updated === true)
-        {
-          this.pdfViewerService.renderPipeline(payload.pageNumber as number, 0.2, this.pdfPreviewContainer, false, true, false, false, true, true,0)
-        }
+        const pageNumber: number = payload.pageNumber;
+        this.receivedPageNumbers.add(pageNumber);
+
+        // TODO: When rendering is slow these pages are not in the correct order.
+        // if (
+        //   this.lastRenderedPage + 1 === pageNumber ||
+        //   payload.updated === true
+        // ) {
+          //prettier-ignore
+          if (!this.renderedPreviews.includes(pageNumber) && payload.updated === false)
+          {
+            this.renderInitialPreview(pageNumber)
+          }
+          else if (payload.updated === true)
+          {
+            this.pdfViewerService.renderPipeline(payload.pageNumber as number, 0.2, this.pdfPreviewContainer, false, true, false, false, true, true,0)
+          }
+        // }
       });
+  }
+
+  //prettier-ignore
+  renderInitialPreview(pageNumber: number)
+  {
+    this.renderedPreviews.push(pageNumber)
+    this.lastRenderedPage = pageNumber;
+    this.pdfViewerService.renderPipeline(pageNumber, 0.2, this.pdfPreviewContainer, false, true, false, false, true, true,0)
   }
 
   ngAfterViewInit() {
@@ -54,22 +73,6 @@ export class NavigatorComponent {
       ) {
         this.pdfPreviewContainer.nativeElement.scrollTop =
           this.pdfViewerService.calcTargetScrolltop(val, true);
-      }
-    });
-  }
-
-  initNavigator() {
-    this.pdfViewerService.visiblePages.subscribe((set) => {
-      for (const pageNum of set) {
-        const page = this.pdfViewerHelperService.getPageWithNumber(pageNum);
-
-        //prettier-ignore
-        if (!this.renderedPreviews.includes(pageNum))
-        {
-          this.renderedPreviews.push(pageNum)
-          this.pdfViewerService.renderPipeline(pageNum, 0.2, this.pdfPreviewContainer, false, true, false, false, true, false,0)
-          console.log('Rendering Page Preview: ', pageNum);
-        }
       }
     });
   }

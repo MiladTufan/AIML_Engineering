@@ -6,6 +6,7 @@ import { Constants } from './models/constants/constants';
 import { ThemeService } from './services/shared/theme-service';
 import { Header } from './components/layout/header/header';
 import { DynamicContainerRegistry } from './services/shared/dynamic-container-registry';
+import { LoggerService } from './services/shared/logger-service';
 
 @Component({
   selector: 'app-root',
@@ -25,6 +26,7 @@ export class App {
     private dynamicContainerRegistry: DynamicContainerRegistry,
     public themeService: ThemeService,
     private router: Router,
+    private logger: LoggerService,
   ) {}
 
   goToCredits() {
@@ -48,6 +50,7 @@ export class App {
   // }
 
   ngOnInit() {
+    this.logger.info('Application started!', this.constructor.name);
     // this.sessionService
     //   .getAllSignedSids()
     //   .subscribe((signeds_sids: Array<string>) => {

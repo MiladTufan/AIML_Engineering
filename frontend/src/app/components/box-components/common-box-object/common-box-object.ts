@@ -66,7 +66,6 @@ export class CommonBoxObject {
   ) {}
 
   ngOnInit() {
-    console.log('init CommonBoxComponent');
     this.resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         if (this.pdfViewerService.ignoreResizeTimeout || !this.resizable)
@@ -114,7 +113,6 @@ export class CommonBoxObject {
           if (e.target !== this.movableDiv!.nativeElement) {
             return; // clicked on content, ignore
           }
-          console.log('Outer border clicked → Start move');
           const rect = (e.target as HTMLElement).getBoundingClientRect();
           this.dragOffsetX = e.clientX - rect.left;
           this.dragOffsetY = e.clientY - rect.top;

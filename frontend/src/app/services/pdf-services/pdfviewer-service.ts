@@ -25,6 +25,7 @@ import { ImgBoxService } from '../box-services/img-box-service';
 import { EventBusService } from '../communication/event-bus-service';
 import { Constants } from '../../models/constants/constants';
 import { BlockObject } from '../../models/box-models/BlockObject';
+import { LoggerService } from '../shared/logger-service';
 
 //prettier-ignore
 @Injectable({
@@ -74,6 +75,9 @@ export class PDFViewerService {
     private imgBoxService: ImgBoxService = inject(ImgBoxService);
 
   private eventBusService: EventBusService = inject(EventBusService)
+  private logger: LoggerService = inject(LoggerService)
+
+  constructor(private ngZone: NgZone) {}
 
 
   deletePage(pageNumber: number) {
@@ -192,7 +196,7 @@ export class PDFViewerService {
   scrollToPage(pageNumber: number) {
     this.jumpToPage = true;
     this.isCurrentlyJumpingTopage = pageNumber;
-    console.log('Jump to page: ', pageNumber);
+    this.logger.info(`Jump initated to page: ${pageNumber}`, this.constructor.name)
     const targetScrolltop = this.calcTargetScrolltop(pageNumber);
     // this.PdfContainer!.nativeElement.scrollTop = targetScrolltop;
 
@@ -623,7 +627,17 @@ export class PDFViewerService {
   // TODO continue from here !!!!! rework the rendering to make it easier to integrate more 
   // rendering options.
 
-
+  /**
+   * Get the current Memory Consumption
+   * @returns 
+   */
+  private getPageMemoryMB() {
+    if ((performance as any).memory) {
+      const memory = (performance as any).memory;
+      return memory.usedJSHeapSize / 1024 / 1024;
+    }
+    return 0;
+  }
 
  
 
@@ -740,13 +754,17 @@ export class PDFViewerService {
       renderparams.container.nativeElement.appendChild(ret.overlay.location.nativeElement);
 
       const renderContext = { canvasContext: context, viewport: viewport};
-      await page.render(renderContext).promise;
+      this.ngZone.runOutsideAngular(async () => {
+        await page.render(renderContext).promise;
+      });
 
       const payLoad = {pageNum: renderparams.pageNumber,preview: ret.overlay};
 
       this.htmlPreviewPages.push(payLoad);
       if (renderparams.isOrganize)
         this.organizeService.setComprefSafely(renderparams.pageNumber, ret.overlay);
+
+      this.logger.info(`Rendered Preview Page: ${renderparams.pageNumber}, IsDummyPage: ${renderparams.isDummyPage}`, this.constructor.name + " " + this.renderPreview.name)
     }
   }
 
@@ -762,6 +780,8 @@ export class PDFViewerService {
 
     ret.canvas.width = Page.widthA4 * renderparams.scale
     ret.canvas.height = Page.heightA4 * renderparams.scale
+
+    this.logger.info(`Rendered Dummy Page: ${renderparams.pageNumber}, IsDummyPage: ${renderparams.isDummyPage}`, this.constructor.name + " " + this.renderDummy.name)
   }
 
   /**
@@ -801,6 +821,8 @@ export class PDFViewerService {
       this.htmlPreviewPages.push(payLoad);
       if (renderparams.isOrganize)
         this.organizeService.setComprefSafely(renderparams.pageNumber, ret.overlay);
+
+      this.logger.info(`Rendered Empty Preview Page: ${renderparams.pageNumber}, IsDummyPage: ${renderparams.isDummyPage}`, this.constructor.name + " " + this.renderEmptyPreview.name)
     }
   }
 
@@ -838,6 +860,7 @@ export class PDFViewerService {
                              ret.pageContainer, null, 0, 0, renderparams.scale,);
 
     this.pdfViewerHelperService.assignPageToRendered(newPage);
+    this.logger.info(`Rendered Empty Page: ${renderparams.pageNumber}, IsDummyPage: ${renderparams.isDummyPage}`, this.constructor.name + " " + this.renderEmpty.name)
   }
 
   /**
@@ -871,6 +894,8 @@ export class PDFViewerService {
    */
   private async renderDuplicatePreview(renderparams: RenderParams)
   {
+    const startTime = performance.now();
+    const memBefore = this.getPageMemoryMB();
 
     const page = await this.getCachedPage(renderparams.pageNumber)
     const viewport = page.getViewport({ scale: renderparams.scale, rotation: renderparams.rotation });
@@ -915,10 +940,17 @@ export class PDFViewerService {
 
         if (renderparams.isOrganize)
           this.organizeService.setComprefSafely(renderparams.pageNumber, ret.overlay);
+        
+
+        // start logging
+        const endTime = performance.now();
+        const memAfter = this.getPageMemoryMB();
+        const renderTime = endTime - startTime;
+        let delta = memAfter - memBefore;
+        delta = delta > 0 ? delta : 0
+        this.logger.info(`Rendered Duplicate Preview Page: ${renderparams.pageNumber}, IsDummyPage: ${renderparams.isDummyPage}, renderTime: ${(renderTime).toFixed(2)} ms, ${(delta).toFixed(2)} mb`, this.constructor.name + " " + this.renderDuplicatePreview.name)
       }
     })
-
-   
   }
   
   /**
@@ -929,6 +961,9 @@ export class PDFViewerService {
    */
   private async renderDuplicate(renderparams: RenderParams)
   {
+    const startTime = performance.now();
+    const memBefore = this.getPageMemoryMB();
+
     const page = await this.getCachedPage(renderparams.pageNumber)
     const viewport = page.getViewport({ scale: renderparams.scale, rotation: renderparams.rotation });
     this.pdfViewerHelperService.copyCanvas(renderparams, page, viewport).then((retVal: any) => {
@@ -964,9 +999,17 @@ export class PDFViewerService {
           this.getCachedPage(renderparams.pageNumber).then(page => {
             this.insertIntoPageCache(renderparams.pageNumber + 1, page)
           })
+
+          // start logging
+          const endTime = performance.now();
+          const memAfter = this.getPageMemoryMB();
+          const renderTime = endTime - startTime;
+          let delta = memAfter - memBefore;
+          delta = delta > 0 ? delta : 0
+          this.logger.info(`Rendered Duplicate Page: ${renderparams.pageNumber}, IsDummyPage: ${renderparams.isDummyPage}, renderTime: ${(renderTime).toFixed(2)} ms, ${(delta).toFixed(2)} mb`, this.constructor.name + " " + this.renderDuplicate.name)
         }
     })
-  
+    
   }
 
   /**
@@ -977,6 +1020,10 @@ export class PDFViewerService {
    */
   private async render(renderparams: RenderParams)
   {
+    const startTime = performance.now();
+    const memBefore = this.getPageMemoryMB();
+
+    // start Render
     const page = await this.getCachedPage(renderparams.pageNumber)
     const viewport = page.getViewport({ scale: renderparams.scale, rotation: renderparams.rotation });
     this.setPageHeight(viewport.height);
@@ -996,14 +1043,23 @@ export class PDFViewerService {
 
     const renderContext = { canvasContext: context, viewport: viewport,intent: 'print', canvas: ret.canvas };
 
-    // this.ngZone.runOutsideAngular(async () => {
+    this.ngZone.runOutsideAngular(async () => {
       await page.render(renderContext).promise;
-    // });
+    });
 
     const newPage = new Page(renderparams.pageNumber, viewport, ret.boxesForPage, [], viewport.height,
                               viewport.width, 0, ret.pageContainer, false, 0, 0, renderparams.scale,);
     this.pdfViewerHelperService.assignPageToRendered(newPage);
     this.eventBusService.emit(Constants.EVENT_PAGE_RENDERED, {pageNumber: renderparams.pageNumber, updated: false})
+    // end render
+    
+    // start logging
+    const endTime = performance.now();
+    const memAfter = this.getPageMemoryMB();
+    const renderTime = endTime - startTime;
+    let delta = memAfter - memBefore;
+    delta = delta > 0 ? delta : 0
+    this.logger.info(`Rendered Page: ${renderparams.pageNumber}, IsDummyPage: ${renderparams.isDummyPage}, renderTime: ${(renderTime).toFixed(2)} ms, ${(delta).toFixed(2)} mb`, this.constructor.name + " " + this.render.name)
   }
 
   /**
@@ -1030,8 +1086,15 @@ export class PDFViewerService {
                        isDuplicate: Boolean = false,
                        rotation: number = 0)
   {
+    const memBefore = this.getPageMemoryMB();
+    const startTime = performance.now();
+
+
     const renderparams = new RenderParams(pageNumber, rotation, scale, isDummyPage, isPreviewPage, isOrganize, isNavigator, container)
-    if (pageNumber === 1) renderparams.isDummyPage = false;
+    if (pageNumber === 1 && isDummyPage) 
+    {
+      renderparams.isDummyPage = false;
+    }
 
     if (!isDummyPage && !isEmpty && !isPreviewPage && !isDuplicate)
       this.render(renderparams)
@@ -1047,5 +1110,22 @@ export class PDFViewerService {
       this.renderPreview(renderparams)
     else if (isPreviewPage && isEmpty)
       this.renderEmptyPreview(renderparams)
+
+
+    const memAfter = this.getPageMemoryMB();
+    let delta = memAfter - memBefore;
+    delta = delta > 0 ? delta : 0;
+
+    const endTime = performance.now();
+    const renderTime = endTime - startTime;
+
+    if (renderTime > 100)
+      this.logger.warn(`Rendering took long: ${renderTime.toFixed(2)} ms with params: ${renderparams}`, this.constructor.name + " " + this.renderPipeline.name)
+
+    if (delta > 20)
+      this.logger.warn(`Rendering took much memory: ${delta.toFixed(2)} mb with params: ${renderparams}`, this.constructor.name + " " + this.renderPipeline.name)
+
+
+    this.logger.info(`Current heap memory used: ${this.getPageMemoryMB().toFixed(2)} mb`, this.constructor.name)
   }
 }
