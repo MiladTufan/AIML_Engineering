@@ -28,15 +28,13 @@ yarn-error.log*
 logs/
 
 
-# Ignore environment variables files
-.env
-*.env
-
 # Ignore virtual environment folders
 venv/
 env/
 ENV/
 
+backend/*.db
+backend/db.env
 
 #ignore test
 test_images

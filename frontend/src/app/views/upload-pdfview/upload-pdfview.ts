@@ -41,10 +41,9 @@ export class UploadPDFView {
 	private _uploadPDF(file: File)
 	{
 		const signed_sid = this.sessionService.getSessionIdFromBrowser("session_id")
-		
-
 		if (signed_sid)
 		{
+			console.log("DEBUG: Sending SID to backend:", signed_sid);
 			this.sessionService.uploadPDF(file, signed_sid).subscribe({
 				next: (res) => {
 					console.log("Upload success: ", res)

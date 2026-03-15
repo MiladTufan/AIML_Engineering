@@ -39,6 +39,7 @@
     }
   </button> -->
 
+    @if (IsOrganizePreview) {
   <button
     class="hover:bg-gray-200/100 dark:hover:bg-[var(--main_dark_hover_color)] pageInfoStyle flex items-center text-center justify-center"
     [style.width.px]="width"
@@ -88,6 +89,7 @@
       class="w-[65%] absolute h-full opacity-0 hover:opacity-100 hover:scale-120 transform transition-transform duration-500"
     />
   </button>
+}
 
   @if (!IsOrganizePreview) {
     <button

@@ -54,23 +54,35 @@ class Database:
             cleanup_interval (int): How often to run cleanup (in seconds).
         """
         self.logger = logging.getLogger(__name__)
-        if not load_dotenv(dotenv_path=os.path.join("db", "db.env")):
-            self.logger.critical(f"No db.env found at: {os.path.join('db', 'db.env')}. Terminating Program.")
-            raise RuntimeError("Fatal error no db.env file found! There is no valid Database!")
-        
-        DB_USER = os.getenv("DB_USER")
-        DB_PASS = os.getenv("DB_PASS")
-        DB_NAME = os.getenv("DB_NAME")
-        DB_HOST = os.getenv("DB_HOST", "localhost")
-        DB_PORT = os.getenv("DB_PORT", 5432)
+        env_path = os.path.join("db", "db.env")
 
-        DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-        engine = create_engine(DATABASE_URL, echo=False)  # echo=True prints SQL queries
+        if load_dotenv(dotenv_path=env_path):
+            self.logger.info("Database configuration loaded from db.env. Using PostgreSQL.")
+            
+            DB_USER = os.getenv("DB_USER")
+            DB_PASS = os.getenv("DB_PASS")
+            DB_NAME = os.getenv("DB_NAME")
+            DB_HOST = os.getenv("DB_HOST", "localhost")
+            DB_PORT = os.getenv("DB_PORT", 5432)
+            
+            DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+            connect_args = {}
+        else:
+            self.logger.warning("No db.env found. Falling back to local SQLite database for preview.")
+            DATABASE_URL = "sqlite:///./pdf_editor.db"
+            connect_args = {"check_same_thread": False}
+
+        # 3. Create Engine and Session
+        engine = create_engine(DATABASE_URL, echo=False, connect_args=connect_args)
         SessionLocal = sessionmaker(autocommit=False, autoflush=True, bind=engine, expire_on_commit=True)
-        
-        Base.metadata.create_all(engine)
-        
-        self.db = SessionLocal()
+
+        try:
+            Base.metadata.create_all(engine)
+            self.db = SessionLocal()
+            self.logger.info("Database initialized successfully.")
+        except Exception as e:
+            self.logger.critical(f"Failed to initialize database: {e}")
+            raise RuntimeError("Could not establish a database connection.")
         
         self.timeout = timedelta(minutes=timeout_minutes)
         self.cleanup_interval = cleanup_interval
@@ -143,7 +155,7 @@ class Database:
             self.logger.warning(f"No Edits found in Edits table.")
             return None
     
-    def update_last_access(self, sid: str, last_access: datetime = datetime.now(timezone.utc).isoformat()):
+    def update_last_access(self, sid: str, last_access: datetime = datetime.now(timezone.utc)):
         session_obj = self.db.query(Session).filter(Session.sid == sid).first()
         if session_obj:
             session_obj.last_access = last_access
@@ -163,7 +175,7 @@ class Database:
         session_obj = self.db.query(Session).filter(Session.sid == sid).first()
         if session_obj:
             session_obj.data = data
-            session_obj.last_access = datetime.now(timezone.utc).isoformat()
+            session_obj.last_access = datetime.now(timezone.utc)
             self.db.commit()
             self.db.refresh(session_obj)
             self.logger.info(f"Successfully updated data and last_access in Session table.")
@@ -194,7 +206,7 @@ class Database:
     def cleanup(self):
         cutoff = datetime.now(timezone.utc) - self.timeout
         
-        old_sessions = self.db.query(Session).filter(Session.last_access < cutoff.isoformat()).all()
+        old_sessions = self.db.query(Session).filter(Session.last_access < cutoff).all()
         for session in old_sessions:
             self.db.delete(session)
             self.db.commit()

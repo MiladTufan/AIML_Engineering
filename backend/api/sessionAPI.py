@@ -1,14 +1,13 @@
 from fastapi import FastAPI, Request, Response, Cookie
 from datetime import datetime, timedelta, timezone
 import sqlite3
+from sqlalchemy import Column, DateTime
+from sqlalchemy.sql import func
 import uuid
 import os 
-import json
 import hmac
 import hashlib
 import secrets
-import threading
-import time
 import logging
 from io import BytesIO
 from dotenv import load_dotenv
@@ -21,13 +20,7 @@ class SessionAPI:
         self.logger = logging.getLogger(__name__)
         self.db = Database()
         self.secret_key = None
-        if load_dotenv(dotenv_path=os.path.join("db", "dev.env")):
-            self.secret_key = os.environ.get("SECRET_TOKEN")
-        else:
-            with open(os.path.join("db", "dev.env"), "w") as f:
-                f.write(f"SECRET_TOKEN={secrets.token_hex(32)}\n")
-
-            load_dotenv(dotenv_path=os.path.join("db", "dev.env"))
+        if load_dotenv(dotenv_path=os.path.join("db", "token.env")):
             self.secret_key = os.environ.get("SECRET_TOKEN")
 
         if not self.secret_key:
@@ -104,7 +97,8 @@ class SessionAPI:
         sid, sig = self.sign_id(str(uuid.uuid4())).split(".")
         
         init_payload.signed_id = sig
-        data = Data(sid, sig, b'', datetime.now(timezone.utc).isoformat(), init_payload)
+  
+        data = Data(sid, sig, b'', datetime.now(timezone.utc), init_payload)
         self.db.add_row(data)
    
         self.logger.info(f"Created new session!")
@@ -127,12 +121,13 @@ class SessionAPI:
         if last_access_dt.tzinfo is None:
             last_access_dt = last_access_dt.replace(tzinfo=timezone.utc)  # make aware
 
+        last_access = Column(DateTime, default=func.now())
         if datetime.now(timezone.utc) - last_access_dt > self.db.timeout:
             self.logger.info(f"Session expired, deleting")
             self.db.delete_session(sid)
             return {"exits" : False}
         
-        self.db.update_last_access(sid, datetime.now(timezone.utc).isoformat())
+        self.db.update_last_access(sid, datetime.now(timezone.utc))
         
         self.logger.debug(f"Session accessed and last_access updated")
         return data
