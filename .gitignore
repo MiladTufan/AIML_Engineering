@@ -1,59 +1,63 @@
-# Angular specific
-/dist/
-/out-tsc/
-/tmp/
-/coverage/
-/e2e/test-output/
-/.angular/
-.angular/
-
-# Node modules and dependency files
-/node_modules/
-/package-lock.json
-/yarn.lock
-
-# Environment files
-/.env
-# Angular CLI and build artefacts
-/.angular-cli.json
-/.ng/
-
-# TypeScript cache
-*.tsbuildinfo
-
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-logs/
-
-
-# Ignore virtual environment folders
-venv/
-env/
-ENV/
-
-backend/*.db
-backend/db.env
-
-#ignore test
-test_images
-
-# Byte-compiled / optimized / DLL files
+# ---- Python ----
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Distribution / packaging
+# Virtual environments (any name commonly used)
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+**/venv/
+**/.venv/
+**/env/
+
+# Python build / packaging
 build/
 dist/
-*.egg-info/
 .eggs/
+*.egg-info/
+pip-wheel-metadata/
 
-# IDE/editor files
+# Python tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# ---- Node / TypeScript ----
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# TypeScript build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+
+# IDE / Editor
 .vscode/
 .idea/
 *.swp
+.DS_Store
 
-# resources
-test_pdfs/
+# ---- General caches ----
+.cache/
+.tmp/
+temp/

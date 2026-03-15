@@ -1,0 +1,17 @@
+<cdk-virtual-scroll-viewport itemSize="60" class="h-[90vh] w-full">
+  <div class="px-100" *cdkVirtualFor="let msg of chatService.chatHistory; trackBy: trackByIndex">
+    @if (msg.sender === 'user') {
+      <div class="flex justify-end">
+        <div class="inline-block border border-gray-200 bg-gray-100 justify-end p-4 rounded-md mt-10">
+            {{ msg.text }}
+        </div>
+        </div>
+    }
+
+    @if (msg.sender === 'ai') {
+          <div class="flex p-4 rounded-md mt-1">
+            {{ msg.text }}
+        </div>
+    }
+  </div>
+</cdk-virtual-scroll-viewport>

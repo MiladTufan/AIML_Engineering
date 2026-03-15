@@ -1,0 +1,72 @@
+<div class="flex flex-row justify-center gap-4">
+
+  <div 
+    class="w-[52%] h-14 flex items-center border border-gray-300 mt-3 ml-80 rounded-xl transition-colors"
+    [class.bg-gray-50]="!isKnowledgeUploaded"
+    [class.bg-white]="isKnowledgeUploaded"
+  >
+    
+    <textarea #messageBox 
+      (keydown)="handleKeydown($event)" 
+      [(ngModel)]="messageText"
+      [disabled]="!isKnowledgeUploaded"
+      [placeholder]="isKnowledgeUploaded ? 'Ask a question...' : 'Upload knowledge to start chatting by pressing the + button on the top left...'"
+      class="w-full h-16 p-4 resize-none placeholder-gray-400 focus:outline-none mt-1.5 bg-transparent disabled:cursor-not-allowed"
+    ></textarea>
+    
+    <button 
+      [disabled]="!isKnowledgeUploaded"
+      class="flex bg-black rounded-xl hover:bg-gray-700 w-10 h-10 items-center justify-center mr-2 cursor-pointer transition-colors disabled:bg-gray-300 disabled:opacity-60 disabled:cursor-not-allowed" 
+      (click)="Enter(messageText)">
+        <img src="/assets/images/ArrowUp.svg" alt="Send">
+    </button>
+    
+  </div>
+
+<div class="w-[20%] mt-3 relative">
+    
+    <div class="w-[50%] h-14 flex items-center justify-between border border-gray-300 rounded-xl px-4 bg-white focus-within:border-gray-500 focus-within:ring-1 focus-within:ring-gray-500 transition-all">
+      
+      <input 
+        type="text"
+        [(ngModel)]="selectedModel"
+        (focus)="openDropdown()"
+        (keydown.enter)="addNewOption()"
+        placeholder="Select or type..."
+        class="w-full h-full bg-transparent focus:outline-none text-gray-700 truncate"
+      />
+
+      <svg 
+        (click)="toggleDropdown()"
+        class="w-5 h-5 text-gray-500 transition-transform duration-200 cursor-pointer shrink-0 ml-2" 
+        [class.rotate-180]="isDropdownOpen"
+        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+      </svg>
+    </div>
+
+    <div 
+      *ngIf="isDropdownOpen"
+      class="absolute bottom-[calc(100%+0.5rem)] left-0 w-full bg-white border border-gray-200 rounded-xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-10 overflow-hidden max-h-60 overflow-y-auto">
+      <ul class="flex flex-col">
+        
+        <li 
+          *ngFor="let option of modelOptions"
+          (click)="selectOption(option)"
+          class="p-4 hover:bg-gray-100 cursor-pointer text-gray-700 transition-colors border-b border-gray-100 last:border-b-0">
+          {{ option }}
+        </li>
+
+        <li 
+          *ngIf="canAddNewOption()" 
+          (click)="addNewOption()"
+          class="p-4 bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium cursor-pointer transition-colors border-t border-gray-200">
+          + Add "{{ selectedModel }}"
+        </li>
+
+      </ul>
+    </div>
+
+  </div>
+
+</div>

@@ -1,0 +1,27 @@
+<div class="w-90 bg-gray-100 border-gray-200 border  overflow-auto">
+    <h1 class="p-5 w-50 mx-auto text-md font-semibold"> Current Knowledge </h1>
+    <div class="border border-gray-200"></div>
+    <button class="flex mx-auto hover:bg-white p-2 cursor-pointer mt-1 rounded-md" (click)="folderInput.click()">
+        <img [src]="themeService.assetConstants.PLUS_ICON_BLACK" class="hover:scale-120 transform transition-transform duration-300">
+    </button>
+    <cdk-virtual-scroll-viewport class="h-[95vh] w-85 mt-1 mx-auto" itemSize="20" >
+        <div *cdkVirtualFor="let base of knowledgeBase;">
+            <div class="flex px-5 gap-2 mt-1 border rounded-md border-gray-400 py-2 ">
+                <img src="/assets/images/pdfIcon.svg">
+                <p>{{base}}</p>
+                <button class="w-12 flex items-center text-center justify-center  transition duration-200 ease-in-out cursor-pointer" (click)="DeleteKnowledge(base)">
+                        <img [src]="themeService.assetConstants.TRASHCAN_RED" class="hover:opacity-100 hover:scale-120 transform transition-transform duration-500"/>
+                </button>
+            </div>
+        </div>
+    </cdk-virtual-scroll-viewport>
+
+    <input
+      #folderInput
+      type="file"
+      accept="application/pdf"
+      style="display: none"
+      (change)="AddKnowledge($event)"
+    />
+
+</div>
